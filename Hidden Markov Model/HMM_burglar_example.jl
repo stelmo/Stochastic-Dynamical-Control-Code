@@ -43,7 +43,7 @@ filter = forward(hmm, initial, observations)
 # Smoothing
 fbs = zeros(length(initial), length(observations))
 for k=1:length(observations)
-  fbs[:, k] = smooth(hmm, initial, observations, k) # works!
+  fbs[:, k] = smooth(hmm, initial, observations, k)
 end
 
 # Viterbi

@@ -51,7 +51,7 @@ filter_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(filter_handler) do
   @test maximum(abs(filter_me - filter_barber)) < 1e-4
 end
-# Smoother/Baum Welch Inference
+# Smoother Inference
 smooth_handler(r::Test.Success) = println("Successful smoothing test!")
 smooth_handler(r::Test.Failure) = error("Failure with the moothing test: $(r.expr)")
 smooth_handler(r::Test.Error) = rethrow(r)
