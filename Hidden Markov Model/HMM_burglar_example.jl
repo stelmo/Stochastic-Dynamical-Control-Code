@@ -25,7 +25,7 @@ observations = zeros(Int64, T)
 
 # Initialise
 # initial = normalise(rand(n*n)) # no idea where the burglar is
-initial = zeros(n*n)
+initial = zeros(n*n) # know the burglar is near the entrance of the house
 initial[1:2*n] = 1.0/(2.*n)
 
 # Measurement and actual movements
@@ -37,32 +37,73 @@ for t=1:T
 end
 
 ## Inference
+# Forward Filter
 filter = forward(hmm, initial, observations)
+
+#Baum-Welch
 bw = zeros(length(initial), length(observations))
 for k=1:length(observations)
   bw[:, k] = baum_welch(hmm, initial, observations, k) # works!
 end
+
+# Viterbi
 vtb = viterbi(hmm, initial, observations)
-mlmove = zeros(Int64,n,n,T)
+mlmove = zeros(Int64,n,n,T) # construct floor matrices showing the viterbi path
 for k=1:length(observations)
   temp = zeros(Int64, n,n)
   temp[vtb[k]] = 1.0
   mlmove[:,:, k] = temp
 end
 
+# Prediction
+predmove = zeros(n, n, T)
+predmove[:,:,1] = reshape(initial, n, n) # first time step is just the prior
+for k=2:T
+  pstate, = prediction(hmm, initial, observations[1:k-1])
+  predmove[:,:, k] = reshape(pstate, n, n)
+end
+
 # Plotting
-figure(1)
+figure(1) # Inference - no prediction
 for t=1:T
   subplot(4, T, t)
   imshow(movements[:,:, t], cmap="Greys", interpolation="nearest")
-  axis("off")
+  title("t=$(t)")
+  t==1 && ylabel("True Location")
+  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
+  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+
   subplot(4, T, t+T)
   imshow(reshape(filter[:, t], n,n), cmap="Greys",interpolation="nearest")
-  axis("off")
+  t==1 && ylabel("Forward Filtering")
+  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
+  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+
   subplot(4, T, t+2*T)
   imshow(reshape(bw[:, t], n,n), cmap="Greys",interpolation="nearest")
-  axis("off")
+  t==1 && ylabel("Baum-Welch Smoothing")
+  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
+  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+
   subplot(4, T, t+3*T)
   imshow(mlmove[:,:, t], cmap="Greys",interpolation="nearest")
-  axis("off")
+  t==1 && ylabel("Viterbi Inference")
+  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
+  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+end
+
+figure(2) # Inference - prediction
+for t=1:T
+  subplot(2, T, t)
+  imshow(movements[:,:, t], cmap="Greys", interpolation="nearest")
+  title("t=$(t)")
+  t==1 && ylabel("True Location")
+  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
+  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+
+  subplot(2, T, t+T)
+  imshow(predmove[:,:, t], cmap="Greys", interpolation="nearest")
+  t==1 && ylabel("Predicted Location")
+  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
+  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
 end
