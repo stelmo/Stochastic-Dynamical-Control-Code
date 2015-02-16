@@ -25,11 +25,11 @@ evidence = [1,1,2,1,2,1,2] # evidence/observations
 filter_me = forward(mod1, initial, evidence)
 filter_barber = readcsv("filter.csv") # read in the ideal answers
 
-bw_me = zeros(length(initial), length(evidence))
+fbs_me = zeros(length(initial), length(evidence))
 for k=1:length(evidence)
-  bw_me[:, k] = baum_welch(mod1, initial, evidence, k) # works!
+  fbs_me[:, k] = smooth(mod1, initial, evidence, k) # works!
 end
-bw_barber = readcsv("smooth.csv") #read in the ideal answers
+fbs_barber = readcsv("smooth.csv") #read in the ideal answers
 
 vtb_me = viterbi(mod1, initial, evidence) # works!
 vtb_barber = [1, 3, 3, 3, 3, 3, 3] # Barber's answer
@@ -52,9 +52,9 @@ Test.with_handler(filter_handler) do
   @test maximum(abs(filter_me - filter_barber)) < 1e-4
 end
 # Smoother/Baum Welch Inference
-smooth_handler(r::Test.Success) = println("Successful Baum-Welch test!")
-smooth_handler(r::Test.Failure) = error("Failure with the Baum-Welch test: $(r.expr)")
+smooth_handler(r::Test.Success) = println("Successful smoothing test!")
+smooth_handler(r::Test.Failure) = error("Failure with the moothing test: $(r.expr)")
 smooth_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(smooth_handler) do
-  @test maximum(abs(bw_me - bw_barber)) < 1e-4
+  @test maximum(abs(fbs_me - fbs_barber)) < 1e-4
 end

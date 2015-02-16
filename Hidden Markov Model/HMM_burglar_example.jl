@@ -40,10 +40,10 @@ end
 # Forward Filter
 filter = forward(hmm, initial, observations)
 
-#Baum-Welch
-bw = zeros(length(initial), length(observations))
+# Smoothing
+fbs = zeros(length(initial), length(observations))
 for k=1:length(observations)
-  bw[:, k] = baum_welch(hmm, initial, observations, k) # works!
+  fbs[:, k] = smooth(hmm, initial, observations, k) # works!
 end
 
 # Viterbi
@@ -75,13 +75,13 @@ for t=1:T
 
   subplot(4, T, t+T)
   imshow(reshape(filter[:, t], n,n), cmap="Greys",interpolation="nearest")
-  t==1 && ylabel("Forward Filtering")
+  t==1 && ylabel("Filtering")
   tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
   tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
 
   subplot(4, T, t+2*T)
-  imshow(reshape(bw[:, t], n,n), cmap="Greys",interpolation="nearest")
-  t==1 && ylabel("Baum-Welch Smoothing")
+  imshow(reshape(fbs[:, t], n,n), cmap="Greys",interpolation="nearest")
+  t==1 && ylabel("Smoothing")
   tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
   tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
 

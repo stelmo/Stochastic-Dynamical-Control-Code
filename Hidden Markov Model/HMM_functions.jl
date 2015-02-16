@@ -3,7 +3,7 @@
 module HMM_functions
 
 # Add export functions
-export  HMM, forward, normalise, baum_welch, viterbi, prediction
+export  HMM, forward, normalise, smooth, viterbi, prediction
 
 immutable HMM #time invariant
   tp :: Array{Float64, 2} #transmission probability table
@@ -71,7 +71,7 @@ function backward(model::HMM, evidence::Array{Int64,1})
   return beta
 end
 
-function baum_welch(model::HMM, initial::Array{Float64,1}, evidence::Array{Int64,1}, timeLocation::Int64)
+function smooth(model::HMM, initial::Array{Float64,1}, evidence::Array{Int64,1}, timeLocation::Int64)
   # Forwards-Backwards algorithm. Note that it is required to split the evidence
   # accordingly.
   forwardEvidence = evidence[1:timeLocation]
