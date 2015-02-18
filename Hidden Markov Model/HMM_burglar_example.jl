@@ -23,10 +23,11 @@ movements = zeros(Int64,n,n,T)
 locs = zeros(Int64, T)
 observations = zeros(Int64, T)
 
-# Initialise
-# initial = normalise(rand(n*n)) # no idea where the burglar is
+# Initial distribution
+# initial = normalise(rand(n*n)) # no idea where the burglar is - not good
 initial = zeros(n*n) # know the burglar is near the entrance of the house
-initial[1:2*n] = 1.0/(2.*n)
+# initial[1:2*n] = 1.0/(2.*n) # two column initial guess
+initial[1:n] = 1.0/(n) # one column initial guess
 
 # Measurement and actual movements
 for t=1:T
@@ -60,50 +61,44 @@ predmove = zeros(n, n, T)
 predmove[:,:,1] = reshape(initial, n, n) # first time step is just the prior
 for k=2:T
   pstate, = prediction(hmm, initial, observations[1:k-1])
-  predmove[:,:, k] = reshape(pstate, n, n)
+  predmove[:,:, k] = round(reshape(pstate, n, n), 2) # round to make predictions stand out more
 end
 
-# Plotting
+fs = 18 #font size
 figure(1) # Inference - no prediction
 for t=1:T
   subplot(4, T, t)
   imshow(movements[:,:, t], cmap="Greys", interpolation="nearest")
-  title("t=$(t)")
-  t==1 && ylabel("True Location")
-  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
-  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+  title("t=$(t)",fontsize=fs)
+  t==1 && ylabel("True Location", fontsize=fs)
+  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
   subplot(4, T, t+T)
   imshow(reshape(filter[:, t], n,n), cmap="Greys",interpolation="nearest")
-  t==1 && ylabel("Filtering")
-  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
-  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+  t==1 && ylabel("Filtering", fontsize=fs)
+  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
   subplot(4, T, t+2*T)
   imshow(reshape(fbs[:, t], n,n), cmap="Greys",interpolation="nearest")
-  t==1 && ylabel("Smoothing")
-  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
-  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+  t==1 && ylabel("Smoothing", fontsize=fs)
+  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
   subplot(4, T, t+3*T)
   imshow(mlmove[:,:, t], cmap="Greys",interpolation="nearest")
-  t==1 && ylabel("Viterbi Inference")
-  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
-  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+  t==1 && ylabel("Viterbi Inference", fontsize=fs)
+  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 end
 
 figure(2) # Inference - prediction
 for t=1:T
   subplot(2, T, t)
   imshow(movements[:,:, t], cmap="Greys", interpolation="nearest")
-  title("t=$(t)")
-  t==1 && ylabel("True Location")
-  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
-  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+  title("t=$(t)", fontsize=fs)
+  t==1 && ylabel("True Location", fontsize=fs)
+  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
   subplot(2, T, t+T)
   imshow(predmove[:,:, t], cmap="Greys", interpolation="nearest")
-  t==1 && ylabel("Predicted Location")
-  tick_params(axis="x", which="both", bottom="off", top="off", labelbottom="off")
-  tick_params(axis="y", which="both", bottom="off", top="off", labelbottom="off")
+  t==1 && ylabel("Predicted Location", fontsize=fs)
+  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 end
