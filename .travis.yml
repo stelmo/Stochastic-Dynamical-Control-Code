@@ -2,4 +2,4 @@ language: julia
 julia:
   - release
 script:
-  - julia -e 'include("testAll.jl")'
+  - julia testAll.jl
