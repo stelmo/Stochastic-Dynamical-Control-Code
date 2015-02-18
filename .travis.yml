@@ -4,4 +4,4 @@ julia:
 notifications:
   email: true
 script:
-  - julia './Hidden Markov Model/HMM_tests.jl'
+  - julia -e 'println(pwd())'
