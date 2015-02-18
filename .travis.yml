@@ -1,4 +1,5 @@
 language: julia
 julia:
   - release
-  - nightly
+script:
+  - julia testAll.jl
