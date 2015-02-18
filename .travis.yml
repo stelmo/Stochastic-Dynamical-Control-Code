@@ -1,5 +1,7 @@
 language: julia
 julia:
   - release
+notifications:
+  email: true
 script:
-  - julia testAll.jl
+  - julia './Hidden Markov Model/HMM_tests.jl'
