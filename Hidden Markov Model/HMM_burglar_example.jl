@@ -10,8 +10,8 @@
 
 using Distributions
 using PyPlot
-importall HMM_functions
-importall Burglar_functions
+using HMM_functions
+using Burglar_functions
 
 T = 10
 n = 5

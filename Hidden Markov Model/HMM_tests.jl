@@ -12,7 +12,7 @@
 # I used: HMMforward, HMMsmooth and HMMviterbi
 
 using Base.Test
-importall HMM_functions
+using HMM_functions
 
 # Discrete model
 A = [0.5 0.0 0.0;0.3 0.6 0.0;0.2 0.4 1.0] #transition probabilities
