@@ -22,6 +22,7 @@ hmm = createHMM(house) # create the hidden markov model
 movements = zeros(Int64,n,n,T)
 locs = zeros(Int64, T)
 observations = zeros(Int64, T)
+noises = zeros(Int64,2,2,T)
 
 # Initial distribution
 # initial = normalise(rand(n*n)) # no idea where the burglar is - not good
@@ -35,6 +36,15 @@ for t=1:T
   movements[:,:,t] = house.floor
   observations[t] = rand(Categorical(hmm.ep[:,locs[t]]))
   move!(house)
+  if observations[t] == 1
+    noises[:,:,t] = [1 1;1 1]
+  elseif observations[t] == 2
+    noises[:,:,t] = [1 0;1 0]
+  elseif observations[t] == 3
+    noises[:,:,t] = [0 1;0 1]
+  else
+    noises[:,:,t] = [0 0;0 0]
+  end
 end
 
 ## Inference
@@ -67,38 +77,46 @@ end
 fs = 18 #font size
 figure(1) # Inference - no prediction
 for t=1:T
-  subplot(4, T, t)
-  imshow(movements[:,:, t], cmap="Greys", interpolation="nearest")
+  subplot(6, T, t)
+  imshow(noises[:,:, t], cmap="Greys", interpolation="nearest", vmin=0.0, vmax=1.0)
   title("t=$(t)",fontsize=fs)
+  t==1 && ylabel("Noises", fontsize=fs)
+  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
+
+  subplot(6, T, t+T)
+  imshow(movements[:,:, t], cmap="Greys", interpolation="nearest")
   t==1 && ylabel("True Location", fontsize=fs)
   tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
-  subplot(4, T, t+T)
+  subplot(6, T, t+2*T)
   imshow(reshape(filter[:, t], n,n), cmap="Greys",interpolation="nearest")
   t==1 && ylabel("Filtering", fontsize=fs)
   tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
-  subplot(4, T, t+2*T)
+  subplot(6, T, t+3*T)
   imshow(reshape(fbs[:, t], n,n), cmap="Greys",interpolation="nearest")
   t==1 && ylabel("Smoothing", fontsize=fs)
   tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
-  subplot(4, T, t+3*T)
+  subplot(6, T, t+4*T)
   imshow(mlmove[:,:, t], cmap="Greys",interpolation="nearest")
-  t==1 && ylabel("Viterbi Inference", fontsize=fs)
-  tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
-end
-
-figure(2) # Inference - prediction
-for t=1:T
-  subplot(2, T, t)
-  imshow(movements[:,:, t], cmap="Greys", interpolation="nearest")
-  title("t=$(t)", fontsize=fs)
-  t==1 && ylabel("True Location", fontsize=fs)
+  t==1 && ylabel("Viterbi", fontsize=fs)
   tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 
-  subplot(2, T, t+T)
+  subplot(6, T, t+5*T)
   imshow(predmove[:,:, t], cmap="Greys", interpolation="nearest")
-  t==1 && ylabel("Predicted Location", fontsize=fs)
+  t==1 && ylabel("Prediction", fontsize=fs)
   tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
 end
+
+figure(2) # Observations
+fs = 34 #much larger because the pictures are bigger
+subplot(1,2,1)
+imshow(house.creaks, cmap="Greys", interpolation="nearest")
+title("Creaks",fontsize=fs)
+tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
+
+subplot(1,2,2)
+imshow(house.bumps, cmap="Greys", interpolation="nearest")
+title("Bumps",fontsize=fs)
+tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
