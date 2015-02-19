@@ -4,4 +4,5 @@ julia:
 notifications:
   email: true
 script:
+  - julia Hidden_Markov_Model/HMM_functions
   - julia Hidden_Markov_Model/HMM_tests.jl
