@@ -4,4 +4,4 @@ julia:
 notifications:
   email: true
 script:
-  - julia -e 'cd(".\\Hidden_Markov_Model"); require("HMM_functions.jl"); include("HMM_tests.jl")'
+  - julia -e 'require(".\\Hidden_Markov_Model\\HMM_functions.jl"); include(".\\Hidden_Markov_Model\\HMM_tests.jl")'
