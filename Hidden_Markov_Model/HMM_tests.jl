@@ -14,8 +14,21 @@
 using Base.Test
 using HMM_functions
 
-#First get current working directory
-println(pwd())
+#First get current working directory - to make Travis happy
+# dircontent = readdir()
+# if "smooth.csv" in dircontent
+#   fbs_barber = readcsv("smooth.csv") #read in the ideal answers
+# else
+#   fbs_barber = readcsv("/Hidden_Markov_Model/smooth.csv")
+# end
+# if "smooth.csv" in dircontent
+#   filter_barber = readcsv("filter.csv") # read in the ideal answers
+# else
+#   filter_barber = readcsv("/Hidden_Markov_Model/filter.csv")
+# end
+
+fbs_barber = readcsv("smooth.csv") #read in the ideal answers
+filter_barber = readcsv("filter.csv") # read in the ideal answers
 
 # Discrete model
 A = [0.5 0.0 0.0;0.3 0.6 0.0;0.2 0.4 1.0] #transition probabilities
@@ -26,13 +39,13 @@ initial = [0.9, 0.1, 0.0] # initial state distribution
 evidence = [1,1,2,1,2,1,2] # evidence/observations
 
 filter_me = forward(mod1, initial, evidence)
-filter_barber = readcsv("filter.csv") # read in the ideal answers
+
 
 fbs_me = zeros(length(initial), length(evidence))
 for k=1:length(evidence)
   fbs_me[:, k] = smooth(mod1, initial, evidence, k) # works!
 end
-fbs_barber = readcsv("smooth.csv") #read in the ideal answers
+
 
 vtb_me = viterbi(mod1, initial, evidence) # works!
 vtb_barber = [1, 3, 3, 3, 3, 3, 3] # Barber's answer
