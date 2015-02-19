@@ -15,20 +15,20 @@ using Base.Test
 using HMM_functions
 
 #First get current working directory - to make Travis happy
-# dircontent = readdir()
-# if "smooth.csv" in dircontent
-#   fbs_barber = readcsv("smooth.csv") #read in the ideal answers
-# else
-#   fbs_barber = readcsv("/Hidden_Markov_Model/smooth.csv")
-# end
-# if "smooth.csv" in dircontent
-#   filter_barber = readcsv("filter.csv") # read in the ideal answers
-# else
-#   filter_barber = readcsv("/Hidden_Markov_Model/filter.csv")
-# end
+dircontent = readdir()
+if "smooth.csv" in dircontent
+  fbs_barber = readcsv("smooth.csv") #read in the ideal answers
+else
+  fbs_barber = readcsv(string(pwd(),"/Hidden_Markov_Model/smooth.csv"))
+end
+if "smooth.csv" in dircontent
+  filter_barber = readcsv("filter.csv") # read in the ideal answers
+else
+  filter_barber = readcsv(string(pwd(),"/Hidden_Markov_Model/filter.csv"))
+end
 
-fbs_barber = readcsv("smooth.csv") #read in the ideal answers
-filter_barber = readcsv("filter.csv") # read in the ideal answers
+# fbs_barber = readcsv("smooth.csv") #read in the ideal answers
+# filter_barber = readcsv("filter.csv") # read in the ideal answers
 
 # Discrete model
 A = [0.5 0.0 0.0;0.3 0.6 0.0;0.2 0.4 1.0] #transition probabilities
