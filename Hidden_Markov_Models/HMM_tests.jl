@@ -19,12 +19,12 @@ dircontent = readdir()
 if "smooth.csv" in dircontent
   fbs_barber = readcsv("smooth.csv") #read in the ideal answers
 else
-  fbs_barber = readcsv(string(pwd(),"/Hidden_Markov_Model/smooth.csv"))
+  fbs_barber = readcsv(string(pwd(),"/Hidden_Markov_Models/smooth.csv"))
 end
 if "smooth.csv" in dircontent
   filter_barber = readcsv("filter.csv") # read in the ideal answers
 else
-  filter_barber = readcsv(string(pwd(),"/Hidden_Markov_Model/filter.csv"))
+  filter_barber = readcsv(string(pwd(),"/Hidden_Markov_Models/filter.csv"))
 end
 
 # fbs_barber = readcsv("smooth.csv") #read in the ideal answers

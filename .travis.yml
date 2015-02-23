@@ -2,6 +2,6 @@ language: julia
 julia:
   - release
 notifications:
-  email: false
+  email: true
 script:
-  - julia -e 'include(string(pwd(),"/Hidden_Markov_Model/HMM_functions.jl")); include(string(pwd(),"/Hidden_Markov_Model/HMM_tests.jl"))'
+  - julia -e 'include(string(pwd(),"/Hidden_Markov_Models/HMM_functions.jl")); include(string(pwd(),"/Hidden_Markov_Models/HMM_tests.jl"))'
