@@ -1,4 +1,4 @@
-# Stochastic Dynamical Control
+# Stochastic Dynamical Control [![Build Status](https://travis-ci.org/stelmo/Stochastic-Dynamical-Control-Code.svg?branch=master)](https://travis-ci.org/stelmo/Stochastic-Dynamical-Control-Code)
 Code for M. Eng. in Control Engineering
 
 ## Julia Packages Required:
