@@ -59,43 +59,49 @@ function step_update(pmean::Array{Float64,1}, pvar::Array{Float64, 2}, unow::Arr
   return updatedMean, updatedVar
 end
 
-function smooth(kmeans::Array{Float64, 2}, kcovars::Array{Float64, 2}, us::Array{Float64, 2}, model::LLDS)
+function smooth(kmeans::Array{Float64, 2}, kcovars::Array{Float64, 3}, us::Array{Float64, 2}, model::LLDS)
   # Returns the smoothed means and covariances
   rows, cols = size(kmeans)
   smoothedmeans = zeros(rows, cols)
-  smoothedvars = zeros(rows, rows*cols)
+  smoothedvars = zeros(rows, rows, cols)
   smoothedmeans[:, end] = kmeans[:, end]
-  smoothedvars[:, end-5:end] = kcovars[:, end-5:end]
+  smoothedvars[:, :, end] = kcovars[:, :, end]
 
   for t=cols-1:-1:1
-    Pt = model.A*kcovars[:, (1+(t-1)*6):t*6]*transpose(model.A) + model.Q
-    Jt = kcovars[:, (1+(t-1)*6):t*6]*transpose(model.A)*inv(Pt)
+    Pt = model.A*kcovars[:, :, t]*transpose(model.A) + model.Q
+    Jt = kcovars[:, :, t]*transpose(model.A)*inv(Pt)
     smoothedmeans[:, t] = kmeans[:, t] + Jt*(smoothedmeans[:, t+1] - model.A*kmeans[:, t] - model.B*us[:, t])
-    smoothedvars[:, (1+(t-1)*6):t*6] = kcovars[:, (1+(t-1)*6):t*6] + Jt*(smoothedvars[:, (1+(t)*6):(t+1)*6] - Pt)*transpose(Jt)
+    smoothedvars[:,:, t] = kcovars[:,:, t] + Jt*(smoothedvars[:,:, t+1] - Pt)*transpose(Jt)
   end
 
   return smoothedmeans, smoothedvars
 end
 
-function predict_visible(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us::Array{Float64, 2}, n::Int64, model::LLDS)
+function predict_visible(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us::Array{Float64, 2}, model::LLDS)
   # Predict the visible states n steps into the future given the controller action.
   rows, = size(kmean)
+  rus, n = size(us)
   predicted_means = zeros(rows, n)
-  predicted_covars = zeros(rows, rows*n)
+  predicted_covars = zeros(rows, rows, n)
 
-  predicted_means[:,1] = model.A*kmeans + model.B*us[:,1]
-  predicted_covars[:, rows] = model.Q + model.A*kcovar*transpose(model.A)
+  predicted_means[:, 1] = model.A*kmean + model.B*us[:,1]
+  predicted_covars[:, :, 1] = model.Q + model.A*kcovar*transpose(model.A)
 
   for k=2:n #cast the state forward
-    predicted_means[:, k], predicted_covars[:, 1+(k-1):k*rows] = step_predict(predicted_means[:,k-1], predicted_covars[:, 1+(k-2):(k-1)*rows],us[:,k], model)
+    predicted_means[:, k], predicted_covars[:, :, k] = step_predict(predicted_means[:,k-1], predicted_covars[:, :, k-1],us[:,k], model)
   end
+
+  rows, cols = size(model.R)
+  predicted_vis_means = zeros(rows, n)
+  predicted_vis_covars = zeros(rows, cols, n)
 
   for k=1:n # convert the hidden state to the observed state
-    predicted_means[:,k] = model.C*predicted_means[:,k]+model.D*us[:,k]
-    predicted_covars[:, 1+(k-1):k*rows] = model.R + model.C*predicted_covars[:, 1+(k-1):k*rows]*transpose(model.C)
+    predicted_vis_means[:, k] = model.C*predicted_means[:,k] + model.D*us[:,k]
+
+    predicted_vis_covars[:, :, k] = model.R + model.C*predicted_covars[:, :, k]*transpose(model.C)
   end
 
-  return predicted_means, predicted_covars
+  return predicted_vis_means, predicted_vis_covars
 end
 
 end #module

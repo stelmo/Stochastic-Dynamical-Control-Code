@@ -53,9 +53,9 @@ else
   visiblestates = readcsv(string(pwd(),"/Latent_Linear_Dynamic_Models/visiblestates.csv"))
 end
 if "filtercovar.csv" in dircontent
-  filtercovar = readcsv("filtercovar.csv") #read in the ideal answers
+  filtercovar = reshape(readcsv("filtercovar.csv"), 6,6,T) #read in the ideal answers
 else
-  filtercovar = readcsv(string(pwd(),"/Latent_Linear_Dynamic_Models/filtercovar.csv"))
+  filtercovar = reshape(readcsv(string(pwd(),"/Latent_Linear_Dynamic_Models/filtercovar.csv")), 6, 6, T)
 end
 if "filtermeans.csv" in dircontent
   filtermeans = readcsv("filtermeans.csv") #read in the ideal answers
@@ -63,9 +63,9 @@ else
   filtermeans = readcsv(string(pwd(),"/Latent_Linear_Dynamic_Models/filtermeans.csv"))
 end
 if "smoothcovar.csv" in dircontent
-  smoothedcovar = readcsv("smoothcovar.csv") #read in the ideal answers
+  smoothedcovar = reshape(readcsv("smoothcovar.csv"), 6,6, T) #read in the ideal answers
 else
-  smoothedcovar = readcsv(string(pwd(),"/Latent_Linear_Dynamic_Models/smoothcovar.csv"))
+  smoothedcovar = reshape(readcsv(string(pwd(),"/Latent_Linear_Dynamic_Models/smoothcovar.csv")),6,6,T)
 end
 if "smoothmeans.csv" in dircontent
   smoothedmeans = readcsv("smoothmeans.csv") #read in the ideal answers
@@ -76,21 +76,31 @@ end
 # Filter
 ucontrol = zeros(1) # no control so this is really only a dummy variable.
 filtermeans_own = zeros(6, T)
-filtercovar_own = zeros(6, T*6)
-filtermeans_own[:, 1], filtercovar_own[:, 1:6] = LLDS_functions.init_filter(init_mean, init_covar, ucontrol, visiblestates[:,1], model)
+filtercovar_own = zeros(6, 6, T)
+filtermeans_own[:, 1], filtercovar_own[:, :, 1] = LLDS_functions.init_filter(init_mean, init_covar, ucontrol, visiblestates[:,1], model)
 for t=2:T
-  filtermeans_own[:, t], filtercovar_own[:, (1+(t-1)*6):t*6] = LLDS_functions.step_filter(filtermeans_own[:, t-1], filtercovar_own[:,(1+(t-2)*6):((t-1)*6)], ucontrol, visiblestates[:,t], model)
+  filtermeans_own[:, t], filtercovar_own[:, :, t] = LLDS_functions.step_filter(filtermeans_own[:, t-1], filtercovar_own[:,:, t-1], ucontrol, visiblestates[:,t], model)
 end
 
 # Smoothed
 ucontrols = zeros(1, T) # no control so this is really only a dummy variable.
 smoothedmeans_own = zeros(6, T)
-smoothedcovar_own = zeros(6, T*6)
+smoothedcovar_own = zeros(6, 6, T)
 
 smoothedmeans_own, smoothedcovar_own = LLDS_functions.smooth(filtermeans_own, filtercovar_own, ucontrols, model)
 
 # Run the tests
 tol = 0.01
+function unroll(a::Array{Float64, 3}, b::Array{Float64, 3}, T::Int64)
+  # Finds maximum difference between two 3d matrices.
+  maxdiff = 0.0
+  for t=1:T
+    tempdiff = maximum(abs(a[:,:,t] - b[:,:,t]))
+    (maxdiff < tempdiff) && (maxdiff = tempdiff)
+  end
+  return maxdiff
+end
+
 # Filter Inference
 filtermean_handler(r::Test.Success) = println("Successful filter mean test!")
 filtermean_handler(r::Test.Failure) = error("Failure with the filter mean test: $(r.expr)")
@@ -102,7 +112,7 @@ filtercovar_handler(r::Test.Success) = println("Successful filter covariance tes
 filtercovar_handler(r::Test.Failure) = error("Failure with the filter covariance test: $(r.expr)")
 filtercovar_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(filtercovar_handler) do
-  @test maximum(abs(filtercovar_own - filtercovar)) < tol
+  @test unroll(filtercovar_own, filtercovar, T) < tol
 end
 
 # Smoothing Inference
@@ -116,5 +126,5 @@ smoothingcovar_handler(r::Test.Success) = println("Successful smoothing covarian
 smoothingcovar_handler(r::Test.Failure) = error("Failure with the smoothing covariance test: $(r.expr)")
 smoothingcovar_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(smoothingcovar_handler) do
-  @test maximum(abs(smoothedcovar_own - smoothedcovar)) < tol
+  @test unroll(smoothedcovar_own, smoothedcovar, T) < tol
 end
