@@ -27,9 +27,6 @@ else
   filter_barber = readcsv(string(pwd(),"/Hidden_Markov_Models/filter.csv"))
 end
 
-# fbs_barber = readcsv("smooth.csv") #read in the ideal answers
-# filter_barber = readcsv("filter.csv") # read in the ideal answers
-
 # Discrete model
 A = [0.5 0.0 0.0;0.3 0.6 0.0;0.2 0.4 1.0] #transition probabilities
 B = [0.7 0.4 0.8;0.3 0.6 0.2] # emission probabilities
@@ -45,7 +42,6 @@ fbs_me = zeros(length(initial), length(evidence))
 for k=1:length(evidence)
   fbs_me[:, k] = smooth(mod1, initial, evidence, k) # works!
 end
-
 
 vtb_me = viterbi(mod1, initial, evidence) # works!
 vtb_barber = [1, 3, 3, 3, 3, 3, 3] # Barber's answer
