@@ -16,14 +16,16 @@ immutable LLDS
   R :: Array{Float64, 2} # Measurement Noise
 end
 
-function step(xprev::Array{Float64,1}, unow::Array{Float64,1}, model::LLDS)
+function step(xprev_noisy::Array{Float64,1}, unow::Array{Float64,1}, model::LLDS)
   # Controlled, move multivariate model one time step forward.
   dprocess = MvNormal(model.Q)
   dmeasure = MvNormal(model.R)
-  xnow = model.A*xprev + model.B*unow + rand(dprocess)
-  ynow = model.C*xnow +model.D*unow + rand(dmeasure)
 
-  return xnow, ynow
+  xnow_noisy = model.A*xprev_noisy + model.B*unow + rand(dprocess)
+  ynow_noisy = model.C*xnow_noisy +model.D*unow + rand(dmeasure)
+  ynow = model.C*xnow_noisy +model.D*unow
+
+  return xnow_noisy, ynow_noisy, ynow
 end
 
 function init_filter(initmean::Array{Float64, 1}, initvar::Array{Float64, 2}, unow::Array{Float64, 1}, ynow::Array{Float64, 1}, model::LLDS)
@@ -75,5 +77,25 @@ function smooth(kmeans::Array{Float64, 2}, kcovars::Array{Float64, 2}, us::Array
   return smoothedmeans, smoothedvars
 end
 
+function predict_visible(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us::Array{Float64, 2}, n::Int64, model::LLDS)
+  # Predict the visible states n steps into the future given the controller action.
+  rows, = size(kmean)
+  predicted_means = zeros(rows, n)
+  predicted_covars = zeros(rows, rows*n)
+
+  predicted_means[:,1] = model.A*kmeans + model.B*us[:,1]
+  predicted_covars[:, rows] = model.Q + model.A*kcovar*transpose(model.A)
+
+  for k=2:n #cast the state forward
+    predicted_means[:, k], predicted_covars[:, 1+(k-1):k*rows] = step_predict(predicted_means[:,k-1], predicted_covars[:, 1+(k-2):(k-1)*rows],us[:,k], model)
+  end
+
+  for k=1:n # convert the hidden state to the observed state
+    predicted_means[:,k] = model.C*predicted_means[:,k]+model.D*us[:,k]
+    predicted_covars[:, 1+(k-1):k*rows] = model.R + model.C*predicted_covars[:, 1+(k-1):k*rows]*transpose(model.C)
+  end
+
+  return predicted_means, predicted_covars
+end
 
 end #module
