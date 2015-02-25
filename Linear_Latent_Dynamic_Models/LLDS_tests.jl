@@ -14,6 +14,7 @@
 # demoLDSTracking.m
 
 using Base.Test
+using Distributions
 
 import LLDS_functions
 
