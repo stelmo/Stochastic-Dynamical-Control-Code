@@ -5,4 +5,4 @@ notifications:
   email: true
 script:
   - julia -e 'include(string(pwd(),"/Hidden_Markov_Models/HMM_functions.jl")); include(string(pwd(),"/Hidden_Markov_Models/HMM_tests.jl"))'
-  - julia -e 'include(string(pwd(),"/Linear_Latent_Dynamic_Models/LLDS_functions.jl")); include(string(pwd(),"/Linear_Latent_Dynamic_Models/LLDS_tests.jl"))'
+  - julia -e 'using Distributions; include(string(pwd(),"/Linear_Latent_Dynamic_Models/LLDS_functions.jl")); include(string(pwd(),"/Linear_Latent_Dynamic_Models/LLDS_tests.jl"))'
