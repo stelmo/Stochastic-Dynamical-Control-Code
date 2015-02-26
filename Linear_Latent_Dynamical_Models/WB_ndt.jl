@@ -1,6 +1,7 @@
 # Wood Berry Column without dead time.
 # The model is taken from: Terminal composition control of a binary distillation
 # column by R.K. Wood and M.W. Berry. From Chemical Engineering Science 1973.
+# See the folder: literature/control on dropbox
 # The model is:
 # [xD] = [P11 P12] [R]
 # [xB] = [P21 P22] [S]
@@ -63,11 +64,12 @@ pmeans, pcovars = LLDS_functions.predict_visible(filtermeans[:, pstart-1], filte
 
 # Plotting
 figure(1) # Filtering
-plot(time, visible_states_nn[1,:]', "r")
-plot(time, visible_states_nn[2,:]', "b")
-plot(time, visible_states[1,:]', "rx")
-plot(time, visible_states[2,:]', "bx")
-plot(time[1:10:end], inferred_visible_states[1, 1:10:end]', "r>")
-plot(time[1:10:end], inferred_visible_states[2, 1:10:end]', "b>")
-plot(time[pstart:10:pend], pmeans[1, 1:10:end]', "rs")
-plot(time[pstart:10:pend], pmeans[2, 1:10:end]', "bs")
+vs1_nn, = plot(time, visible_states_nn[1,:]', "r")
+vs2_nn, = plot(time, visible_states_nn[2,:]', "b")
+vs1, = plot(time, visible_states[1,:]', "rx")
+vs2, = plot(time, visible_states[2,:]', "bx")
+ivs1, = plot(time[1:10:end], inferred_visible_states[1, 1:10:end]', "r>")
+ivs2, = plot(time[1:10:end], inferred_visible_states[2, 1:10:end]', "b>")
+pvs1, = plot(time[pstart:10:pend], pmeans[1, 1:10:end]', "rs")
+pvs2, =plot(time[pstart:10:pend], pmeans[2, 1:10:end]', "bs")
+legend([vs1_nn,vs2_nn, vs1, vs2, ivs1, ivs2, pvs1, pvs2], ["X_D","X_B","Measured X_D","Measured X_B","Filtered X_D","Filtered X_B","Predicted X_D","Predicted X_B"])
