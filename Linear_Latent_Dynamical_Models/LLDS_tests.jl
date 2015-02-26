@@ -28,6 +28,7 @@ model = begin
   A[3,6] = dt
   A[4,3] = dt
   B = zeros(6,1) # input transition
+  b = zeros(6) # constant in the transition function
   C = zeros(2,6) # state observation
   C[1,2] = 1.0
   C[2,4] = 1.0
@@ -38,7 +39,7 @@ model = begin
   Q = sigmaQ^2*eye(6) # process noise covariance
   R = sigmaR^2*eye(2) # measurement noise covariance
 
-  LLDS_functions.LLDS(A, B, C, D, Q, R)
+  LLDS_functions.LLDS(A, B, b, C, D, Q, R)
 end
 
 # Specify initial conditions

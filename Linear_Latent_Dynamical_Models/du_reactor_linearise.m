@@ -32,6 +32,7 @@ ss3 = [0.23; 4.71];
 J = @(x) [fx1(x) fx2(x); gx1(x) gx2(x)]; % the jacobian
 
 J1 = J(xss1);
+dlmwrite('j_ss1.csv', J1, 'precision', '%.10f')
 J2 = J(xss2);
 J3 = J(xss3);
 

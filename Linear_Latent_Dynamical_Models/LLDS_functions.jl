@@ -6,10 +6,11 @@ immutable LLDS
   # Assume zero mean transition and emission functions.
   # The linear latent dynamical system should have the
   # state space form:
-  # x(t+1) = A*x(t) + Bu(t+1) + Q
-  # y(t+1) = C*x(t+1) + Du(t+1) + R
+  # x(t+1) = A*x(t) + Bu(t) + b + Q
+  # y(t+1) = C*x(t+1) + Du(t) + R
   A :: Array{Float64, 2}
   B :: Array{Float64, 2}
+  b :: Array{Float64, 1}
   C :: Array{Float64, 2}
   D :: Array{Float64, 2}
   Q :: Array{Float64, 2} # Process Noise
@@ -21,8 +22,8 @@ function step(xprev_noisy::Array{Float64,1}, unow::Array{Float64,1}, model::LLDS
   dprocess = MvNormal(model.Q)
   dmeasure = MvNormal(model.R)
 
-  xnow_noisy = model.A*xprev_noisy + model.B*unow + rand(dprocess)
-  ynow_noisy = model.C*xnow_noisy +model.D*unow + rand(dmeasure)
+  xnow_noisy = model.A*xprev_noisy + model.B*unow + model.b + rand(dprocess)
+  ynow_noisy = model.C*xnow_noisy + model.D*unow + rand(dmeasure)
   ynow = model.C*xnow_noisy +model.D*unow
 
   return xnow_noisy, ynow_noisy, ynow
@@ -44,7 +45,7 @@ end
 
 function step_predict(xprev::Array{Float64,1}, varprev::Array{Float64, 2}, unow::Array{Float64,1}, model::LLDS)
   # Return the one step ahead predicted mean and covariance.
-  pmean = model.A*xprev + model.B*unow
+  pmean = model.A*xprev + model.B*unow + model.b
   pvar =  model.Q + model.A*varprev*transpose(model.A)
   return pmean, pvar
 end
@@ -84,7 +85,7 @@ function predict_visible(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us
   predicted_means = zeros(rows, n)
   predicted_covars = zeros(rows, rows, n)
 
-  predicted_means[:, 1] = model.A*kmean + model.B*us[:,1]
+  predicted_means[:, 1] = model.A*kmean + model.B*us[:,1] + model.b
   predicted_covars[:, :, 1] = model.Q + model.A*kcovar*transpose(model.A)
 
   for k=2:n #cast the state forward

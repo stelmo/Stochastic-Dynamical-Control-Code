@@ -34,10 +34,10 @@ function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::DuReactor)
   return xnow
 end
 
-function reactor_kappa(x::Float64, model::DuReactor)
+function kappa(x::Float64, model::DuReactor)
   # Evaluates the kappa function in the ode describing the reactor.
-  kappa :: Float64 = exp(x/(1.0+x/model.lambda))
-  return kappa
+  kappa_eval :: Float64 = exp(x/(1.0+x/model.lambda))
+  return kappa_eval
 end
 
 end # module

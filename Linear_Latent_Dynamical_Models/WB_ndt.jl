@@ -15,13 +15,14 @@ A = readcsv("WB_A.csv")
 B = readcsv("WB_B.csv")
 C = readcsv("WB_C.csv")
 D = readcsv("WB_D.csv")
+b = zeros(4)
 
 sigmaPlant = 0.1
 sigmaMeasure = 10.0
 Q = sigmaPlant^2*eye(4) # modelling errors
 R = sigmaMeasure^2*eye(2) # measurement noise
 
-wb = LLDS_functions.LLDS(A,B,C,D,Q,R)
+wb = LLDS_functions.LLDS(A,B,b,C,D,Q,R)
 
 T = 1000; time = [1:1:T] # simulation time
 hidden_states = zeros(4, T) # hidden states
