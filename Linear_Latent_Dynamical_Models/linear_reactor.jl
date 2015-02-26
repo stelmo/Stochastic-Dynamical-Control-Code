@@ -36,9 +36,10 @@ lindu = begin
   b = -h*J*ss
   C = zeros(1,2)
   C[1] = 1.0
+  C[2] = 0.0 # change this and get better results!
   D = zeros(1,1)
-  Q = eye(2)*1e-7 # plant mismatch/noise
-  R = eye(1)*1e-5 # measurement noise
+  Q = eye(2)*1e-6 # plant mismatch/noise
+  R = eye(1)*1e-6 # measurement noise
   LLDS_functions.LLDS(A, B, b, C, D, Q, R)
 end
 
@@ -46,23 +47,50 @@ linxs = zeros(2, N)
 linys = zeros(N)
 linxs[:, 1] = [0.8; 0.83]
 
-
+us = zeros(N) # simulate some control movement
+us[700:end] = 0.3
+us[1200:end] = -0.1
 # Simulate plant
 ys[1] = (lindu.C*xs[:, 1] + rand(Normal(0.0, sqrt(lindu.R[1]))))[1] # measure from actual plant
 linys[1] = (lindu.C*xs[:, 1] + rand(Normal(0.0, sqrt(lindu.R[1]))))[1] # model observations
 for t=2:N
-  xs[:, t] = DuReactor_functions.run_reactor(xs[:, t-1], 0.0, h, du) # actual plant
+  xs[:, t] = DuReactor_functions.run_reactor(xs[:, t-1], us[t], h, du) # actual plant
   ys[t] = (lindu.C*xs[:, t] + rand(Normal(0.0, sqrt(lindu.R[1]))))[1] # measured from actual plant
-  xtemp, ytemp, ytemp_noiseless = LLDS_functions.step(linxs[:, t-1], [0.0], lindu)
+  xtemp, ytemp, ytemp_noiseless = LLDS_functions.step(linxs[:, t-1], [us[t]], lindu)
   linys[t] = ytemp[1]
   linxs[:, t] = xtemp
 end
 
-figure(1) # Sanity check - the model and the plant coincide
+# Filter
+init_mean = [0.8; 0.83]
+init_covar = eye(2)*1e-03 # vague
+filtermeans = zeros(2, N)
+filtercovars = zeros(2,2, N)
+filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, [us[1]], [ys[1]] , lindu)
+for t=2:N
+  filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], [us[t]], [ys[t]], lindu)
+end
+
+figure(1) # Sanity check - the model and the plant coincide (remember to set the control to 0)
+subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "r")
-x2, = plot(ts, xs[2,:]', "b")
+linx1, = plot(ts, linxs[1,:]', "g--")
 y1, = plot(ts, ys, "r.")
-linx1, = plot(ts, linxs[1,:]', "r--")
-linx2, = plot(ts, linxs[2,:]', "b--")
-liny1, = plot(ts, linys, "rx")
-legend([x1,x2,y1,linx1,linx2, liny1],["Plant C_A","Plant T","Plant Measure C_A","Model C_A","Model T","Model Measure C_A"], loc="best")
+# liny1, = plot(ts, linys, "rx") # this is just to check that the noise order of magnitude is the same
+legend([x1,y1,linx1],["Plant C_A","Plant Measure C_A","Model C_A"], loc="best")
+
+subplot(2,1,2)
+x2, = plot(ts, xs[2,:]', "b")
+linx2, = plot(ts, linxs[2,:]', "g--")
+legend([x2,linx2],["Plant T","Model T"], loc="best")
+
+figure(2) # check the filter results
+subplot(2,1,1)
+x1, = plot(ts, xs[1,:]', "r")
+k1, = plot(ts[1:10:end], filtermeans[1, 1:10:end]', "gx")
+legend([x1,k1],["Plant C_A","Filter Mean C_A"], loc="best")
+
+subplot(2,1,2)
+x2, = plot(ts, xs[2,:]', "b")
+k2, = plot(ts[1:10:end], filtermeans[2, 1:10:end]', "gx")
+legend([x2,k2],["Plant C_A","Filter Mean T"], loc="best")
