@@ -38,8 +38,8 @@ lindu = begin
   C[1] = 1.0
   C[2] = 0.0 # change this and get better results!
   D = zeros(1,1)
-  Q = eye(2)*1e-6 # plant mismatch/noise
-  R = eye(1)*1e-6 # measurement noise
+  Q = eye(2)*1e-5 # plant mismatch/noise
+  R = eye(1)*1e-5 # measurement noise
   LLDS_functions.LLDS(A, B, b, C, D, Q, R)
 end
 
@@ -48,7 +48,7 @@ linys = zeros(N)
 linxs[:, 1] = [0.8; 0.83]
 
 us = zeros(N) # simulate some control movement
-us[700:end] = 0.3
+us[700:end] = 0.1
 us[1200:end] = -0.1
 # Simulate plant
 ys[1] = (lindu.C*xs[:, 1] + rand(Normal(0.0, sqrt(lindu.R[1]))))[1] # measure from actual plant
@@ -63,7 +63,7 @@ end
 
 # Filter
 init_mean = [0.8; 0.83]
-init_covar = eye(2)*1e-03 # vague
+init_covar = eye(2)*1e-3 # vague
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, [us[1]], [ys[1]] , lindu)
@@ -71,7 +71,16 @@ for t=2:N
   filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], [us[t]], [ys[t]], lindu)
 end
 
+# Prediction
+pstart = 1000 # start predicting here (inclusive)
+pend = N # prediction horizon
+pred_us = zeros(1, pend-pstart+1)
+pred_us[1,:] = us[pstart:pend]
+pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lindu)
+
+
 figure(1) # Sanity check - the model and the plant coincide (remember to set the control to 0)
+suptitle("Modelling")
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "r")
 linx1, = plot(ts, linxs[1,:]', "g--")
@@ -85,6 +94,7 @@ linx2, = plot(ts, linxs[2,:]', "g--")
 legend([x2,linx2],["Plant T","Model T"], loc="best")
 
 figure(2) # check the filter results
+suptitle("Filtering")
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "r")
 k1, = plot(ts[1:10:end], filtermeans[1, 1:10:end]', "gx")
@@ -94,3 +104,15 @@ subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "b")
 k2, = plot(ts[1:10:end], filtermeans[2, 1:10:end]', "gx")
 legend([x2,k2],["Plant C_A","Filter Mean T"], loc="best")
+
+figure(3) # check the prediction results
+suptitle("Predicting")
+subplot(2,1,1)
+x1, = plot(ts, xs[1,:]', "r")
+k1, = plot(ts[pstart:end], pmeans[1,:]', "gx")
+legend([x1,k1],["Plant C_A","Predicted Mean C_A"], loc="best")
+
+subplot(2,1,2)
+x2, = plot(ts, xs[2,:]', "b")
+k2, = plot(ts[pstart:end], pmeans[2, :]', "gx")
+legend([x2,k2],["Plant C_A","Predicted Mean T"], loc="best")

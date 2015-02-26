@@ -105,4 +105,21 @@ function predict_visible(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us
   return predicted_vis_means, predicted_vis_covars
 end
 
+function predict_hidden(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us::Array{Float64, 2}, model::LLDS)
+  # Predict the hidden states n steps into the future given the controller action.
+  rows, = size(kmean)
+  rus, n = size(us)
+  predicted_means = zeros(rows, n)
+  predicted_covars = zeros(rows, rows, n)
+
+  predicted_means[:, 1] = model.A*kmean + model.B*us[:,1] + model.b
+  predicted_covars[:, :, 1] = model.Q + model.A*kcovar*transpose(model.A)
+
+  for k=2:n #cast the state forward
+    predicted_means[:, k], predicted_covars[:, :, k] = step_predict(predicted_means[:,k-1], predicted_covars[:, :, k-1],us[:,k], model)
+  end
+
+  return predicted_means, predicted_covars
+end
+
 end #module
