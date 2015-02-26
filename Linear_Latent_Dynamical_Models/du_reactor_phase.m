@@ -1,4 +1,4 @@
-% Du reactor
+% Du reactor phase portrait
 clear all
 close all
 clc
@@ -15,7 +15,7 @@ u = 0.0; % controller input!
 k = @(x) exp(x/(1+x/lambda)); 
 
 f = @(t, x) [-phi*x(1)*k(x(2))+q*(x1f-x(1)); 
-             beta*phi*k(x(2))-(q+delta)*x(2)+delta*u+q*x2f]; % For ODE solving
+             beta*phi*x(1)*k(x(2))-(q+delta)*x(2)+delta*u+q*x2f]; % For ODE solving
 F = @(x) [-phi*x(1)*k(x(2))+q*(x1f-x(1)); 
           beta*phi*x(1)*k(x(2))-(q+delta)*x(2)+delta*u+q*x2f]; % For SS solving
 
@@ -28,8 +28,9 @@ ss3 = [0.23; 4.71];
 [xss3, fval] = fsolve(F,ss3);
 
 %% Create a phase portrait
-x1 = linspace(0.6, 1.0, 50);
-x2 = linspace(0.6, 1.0, 50);
+x1 = linspace(0.0, 1, 20);
+x2 = linspace(0.0, 6, 20); 
+% [tout, xs] = ode45(f, [0 100], [0.24; 4.8]);
 
 [x1s, x2s] = meshgrid(x1, x2);
 u = zeros(size(x1s));
@@ -45,8 +46,9 @@ end
 %% Plotting
 figure(1)
 quiver(x1s, x2s, u, v,'r')
+% plot(xs(:,1), xs(:,2), 'r')
 hold on
-% plot(xss1(1), xss1(2), 'bx');
+plot(xss1(1), xss1(2), 'bx');
 % plot(xss2(1), xss2(2), 'bx');
 % plot(xss3(1), xss3(2), 'bx');
 hold off
