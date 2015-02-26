@@ -50,27 +50,27 @@ dircontent = readdir()
 if "visiblestates.csv" in dircontent
   visiblestates = readcsv("visiblestates.csv") #read in the ideal answers
 else
-  visiblestates = readcsv(string(pwd(),"/Linear_Latent_Dynamic_Models/visiblestates.csv"))
+  visiblestates = readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/visiblestates.csv"))
 end
 if "filtercovar.csv" in dircontent
   filtercovar = reshape(readcsv("filtercovar.csv"), 6,6,T) #read in the ideal answers
 else
-  filtercovar = reshape(readcsv(string(pwd(),"/Linear_Latent_Dynamic_Models/filtercovar.csv")), 6, 6, T)
+  filtercovar = reshape(readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/filtercovar.csv")), 6, 6, T)
 end
 if "filtermeans.csv" in dircontent
   filtermeans = readcsv("filtermeans.csv") #read in the ideal answers
 else
-  filtermeans = readcsv(string(pwd(),"/Linear_Latent_Dynamic_Models/filtermeans.csv"))
+  filtermeans = readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/filtermeans.csv"))
 end
 if "smoothcovar.csv" in dircontent
   smoothedcovar = reshape(readcsv("smoothcovar.csv"), 6,6, T) #read in the ideal answers
 else
-  smoothedcovar = reshape(readcsv(string(pwd(),"/Linear_Latent_Dynamic_Models/smoothcovar.csv")),6,6,T)
+  smoothedcovar = reshape(readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/smoothcovar.csv")),6,6,T)
 end
 if "smoothmeans.csv" in dircontent
   smoothedmeans = readcsv("smoothmeans.csv") #read in the ideal answers
 else
-  smoothedmeans = readcsv(string(pwd(),"/Linear_Latent_Dynamic_Models/smoothmeans.csv"))
+  smoothedmeans = readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/smoothmeans.csv"))
 end
 
 # Filter
