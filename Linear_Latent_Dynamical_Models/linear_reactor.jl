@@ -38,7 +38,7 @@ lindu = begin
   C[1] = 1.0
   C[2] = 0.0 # change this and get better results!
   D = zeros(1,1)
-  Q = eye(2)*1e-5 # plant mismatch/noise
+  Q = eye(2)*1e-3 # plant mismatch/noise
   R = eye(1)*1e-5 # measurement noise
   LLDS_functions.LLDS(A, B, b, C, D, Q, R)
 end
@@ -48,8 +48,8 @@ linys = zeros(N)
 linxs[:, 1] = [0.8; 0.83]
 
 us = zeros(N) # simulate some control movement
-us[700:end] = 0.1
-us[1200:end] = -0.1
+us[700:end] = 2.
+us[1200:end] = -0.5
 # Simulate plant
 ys[1] = (lindu.C*xs[:, 1] + rand(Normal(0.0, sqrt(lindu.R[1]))))[1] # measure from actual plant
 linys[1] = (lindu.C*xs[:, 1] + rand(Normal(0.0, sqrt(lindu.R[1]))))[1] # model observations
