@@ -17,40 +17,40 @@ immutable LLDS
   R :: Array{Float64, 2} # Measurement Noise
 end
 
-function step(xprev_noisy::Array{Float64,1}, unow::Array{Float64,1}, model::LLDS)
+function step(xprev_noisy::Array{Float64,1}, uprev::Array{Float64,1}, model::LLDS)
   # Controlled, move multivariate model one time step forward.
   dprocess = MvNormal(model.Q)
   dmeasure = MvNormal(model.R)
 
-  xnow_noisy = model.A*xprev_noisy + model.B*unow + model.b + rand(dprocess)
+  xnow_noisy = model.A*xprev_noisy + model.B*uprev + model.b + rand(dprocess)
   ynow_noisy = model.C*xnow_noisy  + rand(dmeasure)
   ynow = model.C*xnow_noisy
 
   return xnow_noisy, ynow_noisy, ynow
 end
 
-function init_filter(initmean::Array{Float64, 1}, initvar::Array{Float64, 2}, unow::Array{Float64, 1}, ynow::Array{Float64, 1}, model::LLDS)
+function init_filter(initmean::Array{Float64, 1}, initvar::Array{Float64, 2}, ynow::Array{Float64, 1}, model::LLDS)
   # Initialise the filter. No prediction step, only a measurement update step.
-  updatedMean ::Array{Float64, 1}, updatedVar :: Array{Float64, 2} = step_update(initmean, initvar, unow, ynow, model)
+  updatedMean ::Array{Float64, 1}, updatedVar :: Array{Float64, 2} = step_update(initmean, initvar, ynow, model)
   return updatedMean, updatedVar
 end
 
-function step_filter(prevmean::Array{Float64, 1}, prevvar::Array{Float64, 2}, unow::Array{Float64,1},ynow::Array{Float64, 1}, model::LLDS)
+function step_filter(prevmean::Array{Float64, 1}, prevvar::Array{Float64, 2}, uprev::Array{Float64,1}, ynow::Array{Float64, 1}, model::LLDS)
   # Return the posterior over the current state given the observation and previous
   # filter result.
-  pmean :: Array{Float64, 1}, pvar :: Array{Float64, 2} = step_predict(prevmean, prevvar, unow, model)
-  updatedMean ::Array{Float64, 1}, updatedVar :: Array{Float64, 2} = step_update(pmean, pvar, unow, ynow, model)
+  pmean :: Array{Float64, 1}, pvar :: Array{Float64, 2} = step_predict(prevmean, prevvar, uprev, model)
+  updatedMean ::Array{Float64, 1}, updatedVar :: Array{Float64, 2} = step_update(pmean, pvar, ynow, model)
   return updatedMean, updatedVar
 end
 
-function step_predict(xprev::Array{Float64,1}, varprev::Array{Float64, 2}, unow::Array{Float64,1}, model::LLDS)
+function step_predict(xprev::Array{Float64,1}, varprev::Array{Float64, 2}, uprev::Array{Float64,1}, model::LLDS)
   # Return the one step ahead predicted mean and covariance.
-  pmean = model.A*xprev + model.B*unow + model.b
+  pmean = model.A*xprev + model.B*uprev + model.b
   pvar =  model.Q + model.A*varprev*transpose(model.A)
   return pmean, pvar
 end
 
-function step_update(pmean::Array{Float64,1}, pvar::Array{Float64, 2}, unow::Array{Float64,1}, ymeas::Array{Float64,1}, model::LLDS)
+function step_update(pmean::Array{Float64,1}, pvar::Array{Float64, 2}, ymeas::Array{Float64,1}, model::LLDS)
   # Return the one step ahead measurement updated mean and covar.
   kalmanGain = pvar*transpose(model.C)*inv(model.C*pvar*transpose(model.C) + model.R)
   ypred = model.C*pmean #predicted measurement
@@ -68,18 +68,26 @@ function smooth(kmeans::Array{Float64, 2}, kcovars::Array{Float64, 3}, us::Array
   smoothedmeans[:, end] = kmeans[:, end]
   smoothedvars[:, :, end] = kcovars[:, :, end]
 
-  for t=cols-1:-1:1
+  for t=cols-1:-1:2
     Pt = model.A*kcovars[:, :, t]*transpose(model.A) + model.Q
     Jt = kcovars[:, :, t]*transpose(model.A)*inv(Pt)
-    smoothedmeans[:, t] = kmeans[:, t] + Jt*(smoothedmeans[:, t+1] - model.A*kmeans[:, t] - model.B*us[:, t])
+    smoothedmeans[:, t] = kmeans[:, t] + Jt*(smoothedmeans[:, t+1] - model.A*kmeans[:, t] - model.B*us[:, t-1])
     smoothedvars[:,:, t] = kcovars[:,:, t] + Jt*(smoothedvars[:,:, t+1] - Pt)*transpose(Jt)
   end
+
+  Pt = model.A*kcovars[:, :, 1]*transpose(model.A) + model.Q
+  Jt = kcovars[:, :, 1]*transpose(model.A)*inv(Pt)
+  smoothedmeans[:, 1] = kmeans[:, 1] + Jt*(smoothedmeans[:, 2] - model.A*kmeans[:, 1]) # no control for the prior
+  smoothedvars[:,:, 1] = kcovars[:,:, 1] + Jt*(smoothedvars[:,:, 2] - Pt)*transpose(Jt)
+
 
   return smoothedmeans, smoothedvars
 end
 
 function predict_visible(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us::Array{Float64, 2}, model::LLDS)
   # Predict the visible states n steps into the future given the controller action.
+  # Note: us[t] predicts xs[t+1]
+
   rows, = size(kmean)
   rus, n = size(us)
   predicted_means = zeros(rows, n)
@@ -107,6 +115,8 @@ end
 
 function predict_hidden(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us::Array{Float64, 2}, model::LLDS)
   # Predict the hidden states n steps into the future given the controller action.
+  # Note: us[t] predicts xs[t+1]
+
   rows, = size(kmean)
   rus, n = size(us)
   predicted_means = zeros(rows, n)

@@ -46,7 +46,7 @@ linxs = zeros(2, N)
 linys = zeros(N)
 linxs[:, 1] = [0.8; 0.83]
 
-us = zeros(N) # simulate some control movement. NOTE: us[1] = u(0), us[2] = u(1)...
+us = zeros(N) # simulate some control movement. NOTE: us[1] = u(1), us[2] = u(2)... There is n
 us[700:end] = 0.1
 us[1200:end] = -0.1
 # Simulate plant

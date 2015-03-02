@@ -76,7 +76,7 @@ end
 ucontrol = zeros(1) # no control so this is really only a dummy variable.
 filtermeans_own = zeros(6, T)
 filtercovar_own = zeros(6, 6, T)
-filtermeans_own[:, 1], filtercovar_own[:, :, 1] = LLDS_functions.init_filter(init_mean, init_covar, ucontrol, visiblestates[:,1], model)
+filtermeans_own[:, 1], filtercovar_own[:, :, 1] = LLDS_functions.init_filter(init_mean, init_covar, visiblestates[:,1], model)
 for t=2:T
   filtermeans_own[:, t], filtercovar_own[:, :, t] = LLDS_functions.step_filter(filtermeans_own[:, t-1], filtercovar_own[:,:, t-1], ucontrol, visiblestates[:,t], model)
 end
