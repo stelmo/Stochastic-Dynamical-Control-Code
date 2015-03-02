@@ -32,14 +32,12 @@ model = begin
   C = zeros(2,6) # state observation
   C[1,2] = 1.0
   C[2,4] = 1.0
-  D = zeros(2,1) # input observation
-
   sigmaQ = 0.00001 # standard deviation of process noise
   sigmaR = 50.0 # standard deviation of measurement noise
   Q = sigmaQ^2*eye(6) # process noise covariance
   R = sigmaR^2*eye(2) # measurement noise covariance
 
-  LLDS_functions.LLDS(A, B, b, C, D, Q, R)
+  LLDS_functions.LLDS(A, B, b, C, Q, R)
 end
 
 # Specify initial conditions

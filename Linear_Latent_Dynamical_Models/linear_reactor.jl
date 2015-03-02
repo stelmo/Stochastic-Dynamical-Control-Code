@@ -37,17 +37,16 @@ lindu = begin
   C = zeros(1,2)
   C[1] = 1.0
   C[2] = 0.0 # change this and get better results!
-  D = zeros(1,1)
   Q = eye(2)*1e-6 # plant mismatch/noise
   R = eye(1)*1e-6 # measurement noise
-  LLDS_functions.LLDS(A, B, b, C, D, Q, R)
+  LLDS_functions.LLDS(A, B, b, C, Q, R)
 end
 
 linxs = zeros(2, N)
 linys = zeros(N)
 linxs[:, 1] = [0.8; 0.83]
 
-us = zeros(N) # simulate some control movement. NOTE: us[1] = u(0), us[2] = u(1)... 
+us = zeros(N) # simulate some control movement. NOTE: us[1] = u(0), us[2] = u(1)...
 us[700:end] = 0.1
 us[1200:end] = -0.1
 # Simulate plant
