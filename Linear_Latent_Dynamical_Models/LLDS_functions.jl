@@ -7,12 +7,12 @@ immutable LLDS
   # The linear latent dynamical system should have the
   # state space form:
   # x(t+1) = A*x(t) + Bu(t) + b + Q
-  # y(t+1) = C*x(t+1) + Du(t) + R
+  # y(t+1) = C*x(t+1) + R (there could be Du(t) term here but we assume the inputs don't affect
+  # the measurements directly.)
   A :: Array{Float64, 2}
   B :: Array{Float64, 2}
   b :: Array{Float64, 1}
   C :: Array{Float64, 2}
-  D :: Array{Float64, 2}
   Q :: Array{Float64, 2} # Process Noise
   R :: Array{Float64, 2} # Measurement Noise
 end
@@ -23,8 +23,8 @@ function step(xprev_noisy::Array{Float64,1}, unow::Array{Float64,1}, model::LLDS
   dmeasure = MvNormal(model.R)
 
   xnow_noisy = model.A*xprev_noisy + model.B*unow + model.b + rand(dprocess)
-  ynow_noisy = model.C*xnow_noisy + model.D*unow + rand(dmeasure)
-  ynow = model.C*xnow_noisy +model.D*unow
+  ynow_noisy = model.C*xnow_noisy  + rand(dmeasure)
+  ynow = model.C*xnow_noisy
 
   return xnow_noisy, ynow_noisy, ynow
 end
@@ -53,7 +53,7 @@ end
 function step_update(pmean::Array{Float64,1}, pvar::Array{Float64, 2}, unow::Array{Float64,1}, ymeas::Array{Float64,1}, model::LLDS)
   # Return the one step ahead measurement updated mean and covar.
   kalmanGain = pvar*transpose(model.C)*inv(model.C*pvar*transpose(model.C) + model.R)
-  ypred = model.C*pmean + model.D*unow #predicted measurement
+  ypred = model.C*pmean #predicted measurement
   updatedMean = pmean + kalmanGain*(ymeas - ypred)
   rows, cols = size(pvar)
   updatedVar = (eye(rows) - kalmanGain*model.C)*pvar
@@ -97,7 +97,7 @@ function predict_visible(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us
   predicted_vis_covars = zeros(rows, cols, n)
 
   for k=1:n # convert the hidden state to the observed state
-    predicted_vis_means[:, k] = model.C*predicted_means[:,k] + model.D*us[:,k]
+    predicted_vis_means[:, k] = model.C*predicted_means[:,k]
 
     predicted_vis_covars[:, :, k] = model.R + model.C*predicted_covars[:, :, k]*transpose(model.C)
   end
