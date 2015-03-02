@@ -7,6 +7,10 @@ Code for M. Eng. in Control Engineering
 2. PyPlot
 3. Gadfly
 
+## Running the Code
+
+Please see the README inside each folder for details about running the code in each section.
+
 ## Testing
 All testing is automated with Travis-CI but manually tests may also be performed by executing the following scripts:
 
