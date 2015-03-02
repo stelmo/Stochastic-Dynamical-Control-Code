@@ -46,7 +46,8 @@ linxs = zeros(2, N)
 linys = zeros(N)
 linxs[:, 1] = [0.8; 0.83]
 
-us = zeros(N) # simulate some control movement. NOTE: us[1] = u(1), us[2] = u(2)... There is n
+us = zeros(N) # simulate some control movement. NOTE: us[1] = u(1), us[2] = u(2)...
+# There is no control
 us[700:end] = 0.1
 us[1200:end] = -0.1
 # Simulate plant
@@ -65,7 +66,7 @@ init_mean = [0.8; 0.83]
 init_covar = eye(2)*1e-3 # vague
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
-filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, [us[1]], [ys[1]] , lindu)
+filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, [ys[1]] , lindu)
 for t=2:N
   filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], [us[t]], [ys[t]], lindu)
 end
@@ -74,7 +75,7 @@ end
 pstart = 1000 # start predicting here (inclusive)
 pend = N # prediction horizon
 pred_us = zeros(1, pend-pstart+1)
-pred_us[1,:] = us[pstart:pend]
+pred_us[1,:] = us[pstart-1:pend-1]
 pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lindu)
 
 
