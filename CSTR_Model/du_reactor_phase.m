@@ -28,8 +28,8 @@ ss3 = [0.23; 4.71];
 [xss3, fval] = fsolve(F,ss3);
 
 %% Create a phase portrait
-x1 = linspace(0.0, 1, 20);
-x2 = linspace(0.0, 6, 20); 
+x1 = linspace(0.0, 1, 10);
+x2 = linspace(0.0, 6, 10); 
 % [tout, xs] = ode45(f, [0 100], [0.24; 4.8]);
 
 [x1s, x2s] = meshgrid(x1, x2);
