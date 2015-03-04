@@ -33,11 +33,11 @@ guess3 = [0.99, 310.];
 [xss3, ~] = fsolve(@(x) sys(1.0, x, 0.0), guess3, options);      
 
 J1 = J(xss1);
-% e1 = eig(J1) $stability for critical point
+e1 = eig(J1); %stability for critical point
 J2 = J(xss2);
-% e2 = eig(J2) $stability for critical point
+e2 = eig(J2); %stability for critical point
 J3 = J(xss3);
-% e3 = eig(J3) $stability for critical point
+e3 = eig(J3); %stability for critical point
 
 lin1 = @(x, Q) J1*x - J1*xss1' + [0.0; 1./(rho*Cp*V)]*Q;
 lin2 = @(x, Q) J2*x - J2*xss2' + [0.0; 1./(rho*Cp*V)]*Q;
@@ -48,7 +48,7 @@ init = [0.57; 390];
 tend = 5;
 h = 0.001;
 ts = 0:h:tend;
-Qin = -500.0; %input
+Qin = 500.0; %input
 %% Approximation 1
 [tnl, ynl] = ode45(@(t,x) sys(t,x, Qin), [0 tend], init);
 
@@ -66,23 +66,23 @@ end
 
 figure(1)
 subplot(2,1,1)
-p1 = plot(tnl,ynl(:,1),'k');
+p1 = plot(tnl,ynl(:,1),'k','LineWidth',3);
 hold on
-p1lin1 = plot(ts, y1lin(1,:),'r--');
-p2lin1 = plot(ts, y2lin(1,:),'g--');
-p3lin1 = plot(ts, y3lin(1,:),'b--');
+p1lin1 = plot(ts, y1lin(1,:),'r--','LineWidth',3);
+p2lin1 = plot(ts, y2lin(1,:),'g--','LineWidth',3);
+p3lin1 = plot(ts, y3lin(1,:),'b--','LineWidth',3);
 ylim([0.0, 1.0])
 hold off
 legend([p1, p1lin1, p2lin1, p3lin1],'Nonlinear ODE','Linearised ODE x^0_1','Linearised ODE x^0_2','Linearised ODE x^0_3');
-ylabel('Concentration [C_A]','fontsize', 18)
+ylabel('Concentration [kmol.m^{-3}]','fontsize', 18)
 set(gca,'fontsize', 18);
 
 subplot(2,1,2)
-p2 = plot(tnl,ynl(:,2),'k');
+p2 = plot(tnl,ynl(:,2),'k','LineWidth',3);
 hold on
-p1lin2 = plot(ts, y1lin(2,:),'r--');
-p2lin2 = plot(ts, y2lin(2,:),'g--');
-p3lin2 = plot(ts, y3lin(2,:),'b--');
+p1lin2 = plot(ts, y1lin(2,:),'r--','LineWidth',3);
+p2lin2 = plot(ts, y2lin(2,:),'g--','LineWidth',3);
+p3lin2 = plot(ts, y3lin(2,:),'b--','LineWidth',3);
 ylim([250, 550])
 hold off
 legend([p2, p1lin2,p2lin2, p3lin2],'Nonlinear ODE','Linearised ODE x^0_1','Linearised ODE x^0_2','Linearised ODE x^0_3');

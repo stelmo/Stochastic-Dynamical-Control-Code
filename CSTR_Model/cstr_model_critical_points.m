@@ -70,14 +70,18 @@ guess3 = xss3(round(N/2), :);
 figure(1)
 plot(xss1(:,1), xss1(:,2),'b','LineWidth',6)
 hold on
-plot(xss2(:,1), xss2(:,2),'y','LineWidth',6)
+plot(xss2(:,1), xss2(:,2),'g','LineWidth',6)
 plot(xss3(:,1), xss3(:,2),'r','LineWidth',6)
 plot(xss1_Q0(1), xss1_Q0(2),'kx','LineWidth',6,'MarkerSize', 20)
 plot(xss2_Q0(1), xss2_Q0(2),'kx','LineWidth',6,'MarkerSize', 20)
 plot(xss3_Q0(1), xss3_Q0(2),'kx','LineWidth',6,'MarkerSize', 20)
 hold off
-xlabel('Concentration [C_A]','fontsize', 18)
+xlabel('Concentration [kmol.m^{-3}]','fontsize', 18)
 ylabel('Temperature [K]','fontsize', 18)
 set(gca,'fontsize', 18);
-
+h=gcf;
+set(h,'PaperOrientation','landscape');
+set(h,'PaperUnits','normalized');
+set(h,'PaperPosition', [0 0 1 1]);
+print(gcf, '-dpdf', 'cstr_model_stat_points.pdf');
 
