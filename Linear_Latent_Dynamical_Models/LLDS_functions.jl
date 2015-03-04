@@ -15,7 +15,7 @@ immutable LLDS{T}
   A :: Array{Float64, 2}
   B :: Array{Float64, 2}
   b :: Array{Float64, 1}
-  C :: T
+  C :: Array{Float64, 2}
   Q :: Array{Float64, 2} # Process Noise
   R :: T # Measurement Noise VARIANCE
 end
@@ -50,6 +50,12 @@ function init_filter(initmean::Array{Float64, 1}, initvar::Array{Float64, 2}, yn
   return updatedMean, updatedVar
 end
 
+function init_filter(initmean::Array{Float64, 1}, initvar::Array{Float64, 2}, ynow::Float64, model::LLDS{Float64})
+  # Initialise the filter. No prediction step, only a measurement update step.
+  updatedMean ::Array{Float64, 1}, updatedVar :: Array{Float64, 2} = step_update(initmean, initvar, ynow, model)
+  return updatedMean, updatedVar
+end
+
 function step_filter(prevmean::Array{Float64, 1}, prevvar::Array{Float64, 2}, uprev::Array{Float64,1}, ynow::Array{Float64, 1}, model::LLDS{Array{Float64, 2}})
   # Return the posterior over the current state given the observation and previous
   # filter result.
@@ -58,9 +64,25 @@ function step_filter(prevmean::Array{Float64, 1}, prevvar::Array{Float64, 2}, up
   return updatedMean, updatedVar
 end
 
+function step_filter(prevmean::Array{Float64, 1}, prevvar::Array{Float64, 2}, uprev::Float64, ynow::Float64, model::LLDS{Float64})
+  # Return the posterior over the current state given the observation and previous
+  # filter result.
+
+  pmean :: Array{Float64, 1}, pvar :: Array{Float64, 2} = step_predict(prevmean, prevvar, uprev, model)
+  updatedMean ::Array{Float64, 1}, updatedVar :: Array{Float64, 2} = step_update(pmean, pvar, ynow, model)
+  return updatedMean, updatedVar
+end
+
 function step_predict(xprev::Array{Float64,1}, varprev::Array{Float64, 2}, uprev::Array{Float64,1}, model::LLDS{Array{Float64, 2}})
   # Return the one step ahead predicted mean and covariance.
   pmean = model.A*xprev + model.B*uprev + model.b
+  pvar =  model.Q + model.A*varprev*transpose(model.A)
+  return pmean, pvar
+end
+
+function step_predict(xprev::Array{Float64,1}, varprev::Array{Float64, 2}, uprev::Float64, model::LLDS{Float64})
+  # Return the one step ahead predicted mean and covariance.
+  pmean = model.A*xprev + model.B[:, 1]*uprev + model.b # fix so that Array{Float64, 1} output
   pvar =  model.Q + model.A*varprev*transpose(model.A)
   return pmean, pvar
 end
@@ -75,8 +97,19 @@ function step_update(pmean::Array{Float64,1}, pvar::Array{Float64, 2}, ymeas::Ar
   return updatedMean, updatedVar
 end
 
+function step_update(pmean::Array{Float64,1}, pvar::Array{Float64, 2}, ymeas::Float64, model::LLDS{Float64})
+  # Return the one step ahead measurement updated mean and covar.
+  kalmanGain = pvar*transpose(model.C)*inv(model.C*pvar*transpose(model.C) + model.R)
+  ypred = model.C*pmean #predicted measurement
+  updatedMean = pmean + kalmanGain*(ymeas - ypred)
+  rows, cols = size(pvar)
+  updatedVar = (eye(rows) - kalmanGain*model.C)*pvar
+  return updatedMean, updatedVar
+end
+
 function smooth(kmeans::Array{Float64, 2}, kcovars::Array{Float64, 3}, us::Array{Float64, 2}, model::LLDS{Array{Float64, 2}})
   # Returns the smoothed means and covariances
+  # Note, this is only for matrix entries!
   rows, cols = size(kmeans)
   smoothedmeans = zeros(rows, cols)
   smoothedvars = zeros(rows, rows, cols)
@@ -175,7 +208,7 @@ function predict_hidden(kmean::Array{Float64, 1}, kcovar::Array{Float64, 2}, us:
   predicted_means = zeros(rows, n)
   predicted_covars = zeros(rows, rows, n)
 
-  predicted_means[:, 1] = model.A*kmean + model.B*us[1] + model.b
+  predicted_means[:, 1] = model.A*kmean + model.B[:, 1]*us[1] + model.b # fix so that Array{Float64, 1}
   predicted_covars[:, :, 1] = model.Q + model.A*kcovar*transpose(model.A)
 
   for k=2:n #cast the state forward

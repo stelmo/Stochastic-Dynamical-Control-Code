@@ -2,23 +2,20 @@
 # Taken from the paper "Modeling and control of a continuous stirred tank reactor
 # based on mixed logical dynamical model" by J. Du, C. Song and P. Li (2007). See
 # the folder: literature/control on dropbox
-module LinearReactor_functions
+module Linear_Reactor_functions
 
 type LinearReactor
   # Supplies the parameters of the reactor. They may change i.e. drift...
-  V :: Float64
-  R :: Float64
-  CA0 :: Float64
-  TA0 :: Float64
-  dH :: Float64
-  k0 :: Float64
-  E :: Float64
-  Cp :: Float64
-  rho :: Float64
-  F :: Float64
+  phi :: Float64
+  q :: Float64
+  beta:: Float64
+  delta:: Float64
+  lambda :: Float64
+  x1f :: Float64
+  x2f :: Float64
 end
 
-function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::DuReactor)
+function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::LinearReactor)
   # Use Runga-Kutta method to solve for the next time step using the full
   # nonlinear model.
   k1 :: Array{Float64, 1} = reactor_ode(xprev, u, model)
@@ -29,7 +26,7 @@ function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::Du
   return xnow
 end
 
-function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::DuReactor)
+function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::LinearReactor)
   # Evaluate the ODE functions describing the reactor.
   xnow :: Array{Float64, 1} = zeros(2)
   xnow[1] = -model.phi*xprev[1]*kappa(xprev[2], model) + model.q*(model.x1f-xprev[1])
@@ -37,7 +34,7 @@ function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::DuReactor)
   return xnow
 end
 
-function kappa(x::Float64, model::DuReactor)
+function kappa(x::Float64, model::LinearReactor)
   # Evaluates the kappa function in the ode describing the reactor.
   kappa_eval :: Float64 = exp(x/(1.0+x/model.lambda))
   return kappa_eval
