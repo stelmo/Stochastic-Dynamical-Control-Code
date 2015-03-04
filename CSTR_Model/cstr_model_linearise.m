@@ -44,11 +44,11 @@ lin2 = @(x, Q) J2*x - J2*xss2' + [0.0; 1./(rho*Cp*V)]*Q;
 lin3 = @(x, Q) J3*x - J3*xss3' + [0.0; 1./(rho*Cp*V)]*Q;
 
 %% Check Approximations
-init = [0.57; 390];
-tend = 5;
+init = [0.5; 410];
+tend = 1.0;
 h = 0.001;
 ts = 0:h:tend;
-Qin = 500.0; %input
+Qin = 0.0; %input
 %% Approximation 1
 [tnl, ynl] = ode45(@(t,x) sys(t,x, Qin), [0 tend], init);
 
@@ -58,10 +58,25 @@ y2lin = zeros(2,length(ts));
 y2lin(:, 1) = init;
 y3lin = zeros(2,length(ts));
 y3lin(:, 1) = init;
+ynlfe = zeros(2,length(ts));
+ynlfe(:, 1) = init;
 for k=2:length(ts)
     y1lin(:,k) = y1lin(:,k-1) + h*lin1(y1lin(:,k-1), Qin);
     y2lin(:,k) = y2lin(:,k-1) + h*lin2(y2lin(:,k-1), Qin);
     y3lin(:,k) = y3lin(:,k-1) + h*lin3(y3lin(:,k-1), Qin);
+    ynlfe(:,k) = ynlfe(:,k-1) + h*sys(0.0, ynlfe(:,k-1), Qin); 
+end
+
+%% Norm distance
+n1 = zeros(1,length(ts));
+n2 = zeros(1,length(ts));
+err1 = zeros(1,length(ts));
+err2 = zeros(1,length(ts));
+for k=1:length(ts)
+    n1(1,k) = norm(y1lin(:,k)'-xss1);
+    n2(1,k) = norm(y2lin(:,k)'-xss2);
+    err1(1,k) = norm(y1lin(:,k)'-ynlfe(:,k)');
+    err2(1,k) = norm(y2lin(:,k)'-ynlfe(:,k)');
 end
 
 figure(1)
@@ -73,7 +88,8 @@ p2lin1 = plot(ts, y2lin(1,:),'g--','LineWidth',3);
 p3lin1 = plot(ts, y3lin(1,:),'b--','LineWidth',3);
 ylim([0.0, 1.0])
 hold off
-legend([p1, p1lin1, p2lin1, p3lin1],'Nonlinear ODE','Linearised ODE x^0_1','Linearised ODE x^0_2','Linearised ODE x^0_3');
+legend([p1, p1lin1],'Nonlinear ODE','Linearised ODE (C_A, T_R)^0_1','Location', 'northeast','Orientation','horizontal');
+legend('boxoff')
 ylabel('Concentration [kmol.m^{-3}]','fontsize', 18)
 set(gca,'fontsize', 18);
 
@@ -85,8 +101,37 @@ p2lin2 = plot(ts, y2lin(2,:),'g--','LineWidth',3);
 p3lin2 = plot(ts, y3lin(2,:),'b--','LineWidth',3);
 ylim([250, 550])
 hold off
-legend([p2, p1lin2,p2lin2, p3lin2],'Nonlinear ODE','Linearised ODE x^0_1','Linearised ODE x^0_2','Linearised ODE x^0_3');
+legend([p2lin2, p3lin2],'Linearised ODE (C_A, T_R)^0_2','Linearised ODE (C_A, T_R)^0_3','Location', 'southeast','Orientation','horizontal');
+legend('boxoff')
 xlabel('Time [min]','fontsize', 18)
 ylabel('Temperature [K]','fontsize', 18)
 set(gca,'fontsize', 18);
+
+figure(2)
+subplot(2,1,1)
+pedist1 = plot(ts, n1(1,:),'r-','LineWidth',3);
+hold on
+pedist2 = plot(ts, n2(1,:),'g-','LineWidth',3);
+hold off
+ylim([0, 200])
+ylabel('Euclidean Distance','fontsize', 18)
+set(gca,'fontsize', 18);
+legend([pedist1, pedist2],'Linearised ODE (C_A, T_R)^0_1', 'Linearised ODE (C_A, T_R)^0_2','Location', 'southeast');
+
+subplot(2,1,2)
+perr1 = plot(ts, err1(1,:),'r-','LineWidth',3);
+hold on
+perr2 = plot(ts, err2(1,:),'g-','LineWidth',3);
+hold off
+ylim([0, 200])
+legend([perr1, perr2],'Linearised ODE (C_A, T_R)^0_1', 'Linearised ODE (C_A, T_R)^0_2','Location', 'northwest');
+xlabel('Time [min]','fontsize', 18)
+ylabel('Euclidean Error','fontsize', 18)
+set(gca,'fontsize', 18);
+% 
+% h=gcf;
+% set(h,'PaperOrientation','landscape');
+% set(h,'PaperUnits','normalized');
+% set(h,'PaperPosition', [0 0 1 1]);
+% print(gcf, '-dpdf', 'cstr_op5.pdf');
 
