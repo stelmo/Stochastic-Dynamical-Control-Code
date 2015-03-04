@@ -1,9 +1,9 @@
-# This script will run the linear Du reactor.
+# This script will run the linear cstr reactor.
 
 using PyPlot
-using LLDS_functions
 using Distributions
-import Linear_Reactor_functions
+import LLDS_functions
+import Reactor_functions
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
@@ -15,15 +15,18 @@ function Base.convert(::Type{Float64}, x::Array{Float64, 2})
 end
 
 # Specify the system parameters
-du = begin
-  phi = 0.072
-  q = 1.0
-  beta = 8.0
-  delta = 0.3
-  lambda = 20.0
-  x1f = 1.0
-  x2f = 0.0
-  Linear_Reactor_functions.LinearReactor(phi, q, beta, delta, lambda, x1f, x2f)
+cstr = begin
+  V = 0.1; #m3
+  R = 8.314; #kJ/kmol.K
+  CA0 = 1.0; #kmol/m3
+  TA0 = 310.0; #K
+  dH = -4.78e4; #kJ/kmol
+  k0 = 72.0e9; #1/min
+  E = 8.314e4; #kJ/kmol
+  Cp = 0.239; #kJ/kgK
+  rho = 1000.0; #kg/m3
+  F = 100e-3; #m3/min
+  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 h = 0.1 # time discretisation
@@ -37,7 +40,7 @@ ys = zeros(N) # only one measurement
 # Specify linear model
 J = readcsv("j_ss1.csv")
 ss = [0.856030685166100; 0.885965014362748] # steady state corresponding to J
-lindu = begin
+lin_cstr = begin
   A = eye(2)+h*J
   B = zeros(2,1)
   B[2] = h*delta
@@ -55,15 +58,15 @@ linxs[:, 1] = [0.8; 0.83]
 
 us = zeros(N) # simulate some control movement. NOTE: us[1] = u(1), us[2] = u(2)...
 # There is no control
-us[700:end] = 0.1
-us[1200:end] = -0.1
+us[700:end] = 0.0
+us[1200:end] = 0.0
 # Simulate plant
-ys[1] = lindu.C*xs[:, 1] + rand(Normal(0.0, sqrt(lindu.R))) # measure from actual plant
-linys[1] = lindu.C*xs[:, 1] + rand(Normal(0.0, sqrt(lindu.R))) # model observations
+ys[1] = lin_cstr.C*xs[:, 1] + rand(Normal(0.0, sqrt(lin_cstr.R))) # measure from actual plant
+linys[1] = lin_cstr.C*xs[:, 1] + rand(Normal(0.0, sqrt(lin_cstr.R))) # model observations
 for t=2:N
-  xs[:, t] = Linear_Reactor_functions.run_reactor(xs[:, t-1], us[t], h, du) # actual plant
-  ys[t] = lindu.C*xs[:, t] + rand(Normal(0.0, sqrt(lindu.R))) # measured from actual plant
-  xtemp, ytemp, ytemp_noiseless = LLDS_functions.step(linxs[:, t-1], us[t], lindu)
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t], h, cstr) # actual plant
+  ys[t] = lin_cstr.C*xs[:, t] + rand(Normal(0.0, sqrt(lin_cstr.R))) # measured from actual plant
+  xtemp, ytemp, ytemp_noiseless = LLDS_functions.step(linxs[:, t-1], us[t], lin_cstr)
   linys[t] = ytemp
   linxs[:, t] = xtemp
 end
@@ -73,9 +76,9 @@ init_mean = [0.8; 0.83]
 init_covar = eye(2)*1e-3 # vague
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
-filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, ys[1], lindu)
+filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, ys[1], lin_cstr)
 for t=2:N
-  filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t], ys[t], lindu)
+  filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t], ys[t], lin_cstr)
 end
 
 # Prediction
@@ -83,7 +86,7 @@ pstart = 1000 # start predicting here (inclusive)
 pend = N # prediction horizon
 pred_us = zeros(pend-pstart+1)
 pred_us[:] = us[pstart-1:pend-1]
-pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lindu)
+pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
 
 figure(1) # Sanity check - the model and the plant coincide (remember to set the control to 0)
