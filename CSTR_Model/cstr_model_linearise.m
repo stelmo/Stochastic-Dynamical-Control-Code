@@ -2,7 +2,7 @@
 clear all
 close all
 clc
-format short
+format long
 options = optimset('Display','off');
 
 %% Specify the reactor parameters
@@ -33,6 +33,8 @@ guess3 = [0.99, 310.];
 [xss3, ~] = fsolve(@(x) sys(1.0, x, 0.0), guess3, options);      
 
 J1 = J(xss1);
+dlmwrite('J_ss.csv', J1, 'precision','%.10f') % write the jacobian
+dlmwrite('ss.csv', xss1, 'precision','%.10f') % write the steady state 
 e1 = eig(J1); %stability for critical point
 J2 = J(xss2);
 e2 = eig(J2); %stability for critical point
