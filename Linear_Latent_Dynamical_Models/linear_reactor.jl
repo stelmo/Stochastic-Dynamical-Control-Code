@@ -30,8 +30,8 @@ cstr = begin
 end
 
 init_state = [0.05; 520]
-h = 0.001 # time discretisation
-tend = 0.5 # end simulation time
+h = 0.0001 # time discretisation
+tend = 0.05 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -89,35 +89,59 @@ end
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
 
-figure(1) # Sanity check - the model and the plant coincide (remember to set the control to 0)
+# figure(1) # Sanity check - the model and the plant coincide (remember to set the control to 0)
+# subplot(2,1,1)
+# x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+# linx1, = plot(ts, linxs[1,:]', "r--", linewidth=3)
+# ylabel(L"Concentration $[kmol.m^{-3}]$")
+# legend([x1,linx1],[L"Nonlinear Model $C_A$",L"Linear Model $C_A$"], loc="best")
+#
+# subplot(2,1,2)
+# x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+# linx2, = plot(ts, linxs[2,:]', "r--", linewidth=3)
+# y2, = plot(ts, ys, "rx", markersize=4)
+# ylabel(L"Temperature $[K]$")
+# xlabel(L"Time $[min]$")
+# legend([x2, linx2, y2],[L"Nonlinear Model $T_R$",L"Linear Model $T_R$", L"Nonlinear Model Measured $T_R$"], loc="best")
+#
+# rc("font",size=22)
+#
+# figure(2) # check the filter results
+# subplot(2,1,1)
+# x1, = plot(ts, xs[1,:]', "k")
+# k1, = plot(ts[1:10:end], filtermeans[1, 1:10:end]', "mo")
+# ylabel(L"Concentration $[kmol.m^{-3}]$")
+# legend([x1,k1],[L"Nonlinear Model $C_A$",L"Filtered $C_A$"], loc="best")
+#
+# subplot(2,1,2)
+# x2, = plot(ts, xs[2,:]', "k")
+# k2, = plot(ts[1:10:end], filtermeans[2, 1:10:end]', "mo")
+# y2, = plot(ts, ys, "rx", markersize=4)
+# ylabel(L"Temperature $[K]$")
+# xlabel(L"Time $[min]$")
+# legend([x2,k2, y2],[L"Nonlinear Model $T_R$",L"Filtered $T_R$",L"Nonlinear Model Measured $T_R$"], loc="best")
+#
+# rc("font",size=22)
+
+figure(3) # Combined
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 linx1, = plot(ts, linxs[1,:]', "r--", linewidth=3)
+k1, = plot(ts[1:10:end], filtermeans[1, 1:10:end]', "mo")
 ylabel(L"Concentration $[kmol.m^{-3}]$")
-legend([x1,linx1],[L"Nonlinear Model $C_A$",L"Linear Model $C_A$"], loc="best")
-
+legend([x1,linx1, k1],["Nonlinear Model","Noisy Linear Model", "Filtered"], loc="best")
+xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 linx2, = plot(ts, linxs[2,:]', "r--", linewidth=3)
-y2, = plot(ts, ys, "rx", markersize=4)
+y2, = plot(ts, ys, "rx", markersize=5, markeredgewidth=1)
+k2, = plot(ts[1:10:end], filtermeans[2, 1:10:end]', "mo")
 ylabel(L"Temperature $[K]$")
 xlabel(L"Time $[min]$")
-legend([x2, linx2, y2],[L"Nonlinear Model $T_R$",L"Linear Model $T_R$", L"Nonlinear Model Measured $T_R$"], loc="best")
-
+legend([y2],["Nonlinear Model Measured"], loc="best")
+xlim([0, tend])
 rc("font",size=22)
 
-figure(2) # check the filter results
-subplot(2,1,1)
-x1, = plot(ts, xs[1,:]', "r")
-k1, = plot(ts[1:10:end], filtermeans[1, 1:10:end]', "gx")
-legend([x1,k1],[L"Nonlinear Model $C_A$",L"Filtered $C_A$"], loc="best")
-
-subplot(2,1,2)
-x2, = plot(ts, xs[2,:]', "b")
-k2, = plot(ts[1:10:end], filtermeans[2, 1:10:end]', "gx")
-legend([x2,k2],[L"Nonlinear Model $T_R$",L"Filtered $T_R$"], loc="best")
-
-rc("font",size=22)
 
 
 # figure(3) # check the prediction results
