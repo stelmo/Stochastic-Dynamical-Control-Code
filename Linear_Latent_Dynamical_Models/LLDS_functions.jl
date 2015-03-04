@@ -36,7 +36,6 @@ function step(xprev_noisy::Array{Float64,1}, uprev::Float64, model::LLDS{Float64
   # Controlled, move multivariate model one time step forward.
   dprocess = MvNormal(model.Q)
   dmeasure = Normal(0.0, sqrt(model.R))
-
   xnow_noisy = model.A*xprev_noisy + model.B*uprev + model.b + rand(dprocess)
   ynow_noisy = model.C*xnow_noisy  + rand(dmeasure)
   ynow = model.C*xnow_noisy
