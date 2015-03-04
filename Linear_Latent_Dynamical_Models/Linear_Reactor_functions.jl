@@ -2,17 +2,20 @@
 # Taken from the paper "Modeling and control of a continuous stirred tank reactor
 # based on mixed logical dynamical model" by J. Du, C. Song and P. Li (2007). See
 # the folder: literature/control on dropbox
-module DuReactor_functions
+module LinearReactor_functions
 
-type DuReactor
+type LinearReactor
   # Supplies the parameters of the reactor. They may change i.e. drift...
-  phi :: Float64
-  q :: Float64
-  beta :: Float64
-  delta :: Float64
-  lambda :: Float64
-  x1f :: Float64 # feed concentration A
-  x2f :: Float64 # feed temperature
+  V :: Float64
+  R :: Float64
+  CA0 :: Float64
+  TA0 :: Float64
+  dH :: Float64
+  k0 :: Float64
+  E :: Float64
+  Cp :: Float64
+  rho :: Float64
+  F :: Float64
 end
 
 function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::DuReactor)

@@ -37,7 +37,7 @@ model = begin
   Q = sigmaQ^2*eye(6) # process noise covariance
   R = sigmaR^2*eye(2) # measurement noise covariance
 
-  LLDS_functions.LLDS(A, B, b, C, Q, R)
+  LLDS_functions.LLDS{Array{Float64, 2}}(A, B, b, C, Q, R)
 end
 
 # Specify initial conditions
@@ -101,28 +101,28 @@ function unroll(a::Array{Float64, 3}, b::Array{Float64, 3}, T::Int64)
 end
 
 # Filter Inference
-filtermean_handler(r::Test.Success) = println("Successful filter mean test!")
-filtermean_handler(r::Test.Failure) = error("Failure with the filter mean test: $(r.expr)")
+filtermean_handler(r::Test.Success) = println("Successful filter mean test for LLDS!")
+filtermean_handler(r::Test.Failure) = error("Failure with the filter mean test  for LLDS: $(r.expr)")
 filtermean_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(filtermean_handler) do
   @test maximum(abs(filtermeans_own - filtermeans)) < tol
 end
-filtercovar_handler(r::Test.Success) = println("Successful filter covariance test!")
-filtercovar_handler(r::Test.Failure) = error("Failure with the filter covariance test: $(r.expr)")
+filtercovar_handler(r::Test.Success) = println("Successful filter covariance test for LLDS!")
+filtercovar_handler(r::Test.Failure) = error("Failure with the filter covariance test for LLDS: $(r.expr)")
 filtercovar_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(filtercovar_handler) do
   @test unroll(filtercovar_own, filtercovar, T) < tol
 end
 
 # Smoothing Inference
-smoothingmean_handler(r::Test.Success) = println("Successful smoothing mean test!")
-smoothingmean_handler(r::Test.Failure) = error("Failure with the smoothing mean test: $(r.expr)")
+smoothingmean_handler(r::Test.Success) = println("Successful smoothing mean test for LLDS!")
+smoothingmean_handler(r::Test.Failure) = error("Failure with the smoothing mean test for LLDS: $(r.expr)")
 smoothingmean_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(smoothingmean_handler) do
   @test maximum(abs(smoothedmeans_own - smoothedmeans)) < tol
 end
-smoothingcovar_handler(r::Test.Success) = println("Successful smoothing covariance test!")
-smoothingcovar_handler(r::Test.Failure) = error("Failure with the smoothing covariance test: $(r.expr)")
+smoothingcovar_handler(r::Test.Success) = println("Successful smoothing covariance test for LLDS!")
+smoothingcovar_handler(r::Test.Failure) = error("Failure with the smoothing covariance test for LLDS: $(r.expr)")
 smoothingcovar_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(smoothingcovar_handler) do
   @test unroll(smoothedcovar_own, smoothedcovar, T) < tol

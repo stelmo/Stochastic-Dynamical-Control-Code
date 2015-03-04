@@ -8,14 +8,17 @@ reload("DuReactor_functions.jl")
 
 # Specify the system parameters
 du = begin
-  phi = 0.072
-  q = 1.0
-  beta = 8.0
-  delta = 0.3
-  lambda = 20.0
-  x1f = 1.0
-  x2f = 0.0
-  DuReactor_functions.DuReactor(phi, q, beta, delta, lambda, x1f, x2f)
+  V = 0.1; %m3
+  R = 8.314; %kJ/kmol.K
+  CA0 = 1.0; %kmol/m3
+  TA0 = 310.0; %K
+  dH = -4.78e4; %kJ/kmol
+  k0 = 72.0e9; %1/min
+  E = 8.314e4; %kJ/kmol
+  Cp = 0.239; %kJ/kgK
+  rho = 1000.0; %kg/m3
+  F = 100e-3; %m3/min
+  Linear_Reactor_functions.LinearReactor(phi, q, beta, delta, lambda, x1f, x2f)
 end
 
 h = 0.1 # time discretisation
