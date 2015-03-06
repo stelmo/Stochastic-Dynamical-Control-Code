@@ -54,6 +54,7 @@ function resample!(particles::Particles)
     particles.x[:,p] = copyparticles[:, resample[p]]
     particles.w[p] = 1./N
   end
+  roughen!(particles)
 end
 
 function numberEffectiveParticles(particles::Particles)
@@ -86,16 +87,28 @@ function filter!(particles::Particles, u, y, plantdist, measuredist, model::Mode
   end
 end
 
-function roughen()
+function roughen!(particles::Particles)
+  # Roughening the samples to promote diversity
+  xN, N = size(particles.x)
+  sig = zeros(xN)
 
+  K= 0.2 # parameter...
+
+  for k=1:xN
+    sig[k] = K*(maximum(particles.x[k,:]) - minimum(particles.x[k,:]))*N^(-1./xN)
+  end
+
+  sigma = diagm(sig.^2)
+  jitter = MvNormal(sigma)
+  for p=1:N
+    particles.x[:, p] = particles.x[:, p] + rand(jitter)
+  end
 end
-
 
 function getStats(particles::Particles)
   # Return the Gaussian statistics of the particles.
-  fitted = fit(MvNormal, particles.x)
+  fitted = fit(MvNormal, particles.x, particles.w)
   return mean(fitted), cov(fitted)
 end
-
 
 end # Module
