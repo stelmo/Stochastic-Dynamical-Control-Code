@@ -9,70 +9,69 @@ type Model
   g::Function # state observation model
 end
 
-type Particle
+type Particles
   # Implements a particle
-  x::Array{Float64, 1} # state
+  x::Array{Float64, 2} # collection of particles
 end
 
-function init_PF(dist, nP::Int64, nY::Int64)
+function init_PF(dist, nP::Int64, xN::Int64)
   # Initialise the particle filter.
-  # dist => a distribution from the package Distributions. Implicitly specifies
-  # the number of states per particle.
-  # nY => number of observations per particle.
+  # dist => a distribution from the package Distributions.
+  # nX => number of states per particle.
   # Return an array of nP particles.
 
-  particles = Array(Particle, nP)
-
+  particles = Particles(zeros(xN, nP))
   for p=1:nP
-    xs = rand(dist) # draw from the proposed prior
-    ys = zeros(nY) # initialise to zero the observations
-    w = 1.0/nP # uniform weight
-    particles[p] = Particle(xs, ys, w)
+    drawx = rand(dist) # draw from the proposed prior
+    particles.x[:, p] = drawx
   end
 
   return particles
 end
 
-function init_filter(particles::Array{Particle, 1}, u, y, plantdist, measuredist, model::Model)
+function init_filter!(particles::Particles, u, y, plantdist, measuredist, model::Model)
   # Performs only the update step.
-  N::Int64 = length(particles)
+  nX, N = size(particles.x)
   w = zeros(N)
 
   for p=1:N
-    w[p] = logpdf(measuredist, observation - model.g(particles[p].x)) # weight of each particle
+    w[p] = pdf(measuredist, y - model.g(particles.x[:, p])) # weight of each particle
   end
 
-  w = w./cumsum(w) # normalise weights
+  w = w./sum(w) # normalise weights
   resample = rand(Categorical(w), N) # draw N samples from weighted Categorical
-  copyparticles = copy(particles)
+  copyparticles = copy(particles.x)
   for p=1:N # resample
-    particles[p].x = copyparticles[resample[p]].x
+    particles.x[:,p] = copyparticles[:, resample[p]]
   end
-
 end
 
-function filter(particles::Array{Particle, 1}, u, y, plantdist, measuredist, model::Model)
+function filter!(particles::Particles, u, y, plantdist, measuredist, model::Model)
   # Performs the state prediction step.
   # plantnoise => distribution from whence the noise cometh
-  N::Int64 = length(particles)
+  nX, N = size(particles.x)
   w = zeros(N)
 
   for p=1:N
     noise = rand(plantdist)
-    particles[p].x = model.f(particles[p].x, u, noise)
-    w[p] = logpdf(measuredist, observation - model.g(particles[p].x)) # weight of each particle
+    particles.x[:, p] = model.f(particles.x[:, p], u, noise) # predict
+    w[p] = pdf(measuredist, y - model.g(particles.x[:, p])) # update weight of each particle
   end
 
-  w = w./cumsum(w) # normalise weights
+  w = w./sum(w) # normalise weights
   resample = rand(Categorical(w), N) # draw N samples from weighted Categorical
-  copyparticles = copy(particles)
+  copyparticles = copy(particles.x)
   for p=1:N # resample
-    particles[p].x = copyparticles[resample[p]].x
+    particles.x[:,p] = copyparticles[:, resample[p]]
   end
 end
 
-function roughen()
+function getStats(particles::Particles)
 
+  fitted = fit(MvNormal, particles.x)
+
+  return mean(fitted), cov(fitted)
 end
 
-end
+
+end # Module
