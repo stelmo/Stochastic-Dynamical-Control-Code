@@ -35,14 +35,19 @@ function init_PF(dist, nP::Int64, nY::Int64)
   return particles
 end
 
-function predict(particles::Array{Particle, 1}, model::Model)
+function predict!(particles::Array{Particle, 1}, model::Model, plantnoise)
   # Performs the state prediction step.
+  # dist => distribution from whence the noise cometh
   N::Int64 = length(particles)
-
+  for p=1:N
+    noise = rand(plantnoise)
+    particles[p].x = model.f(particles[p].x, noise)
+  end
 end
 
-function update()
-
+function update!(particles::Array{Particle, 1}, model::Model, measurementnoise, observation)
+  # Performs the Bayesian update step given observations.
+  
 end
 
 function roughen()

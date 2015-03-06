@@ -3,7 +3,8 @@
 using PyPlot
 using Distributions
 import LLDS_functions
-import Reactor_functions
+cd("..\\CSTR_Model")
+using Reactor_functions
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
