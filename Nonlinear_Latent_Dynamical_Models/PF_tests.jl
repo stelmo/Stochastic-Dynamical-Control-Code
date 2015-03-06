@@ -17,9 +17,7 @@ cd("..\\Nonlinear_Latent_Dynamical_Models")
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
   return x[1]
 end
-# function Base.convert(::Type{Float64}, x::Array{Float64, 2})
-#   return x[1]
-# end
+
 
 # Specify the nonlinear model
 cstr_model = begin
@@ -37,8 +35,8 @@ cstr_model = begin
 end
 
 init_state = [0.57; 395] # initial state
-h = 0.001 # time discretisation
-tend = 1.0 # end simulation time
+h = 0.01 # time discretisation
+tend = 10.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -52,12 +50,14 @@ cstr_pf = PF.Model(f,g)
 # Initialise the PF
 nP = 500 #number of particles.
 init_state_mean = init_state # initial state mean
-init_state_covar = eye(2)*1e-8 # initial covariance
+init_state_covar = eye(2)*1e-3 # initial covariance
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
-state_covar = eye(2)*1e-6 # state covariance
+state_covar = eye(2) # state covariance
+state_covar[1] = 0.0001
+state_covar[2] = 2.
 state_dist = MvNormal(state_covar) # state distribution
-meas_covar = eye(1)*1e-6 # measurement covariance
+meas_covar = eye(1)*2 # measurement covariance
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 fmeans = zeros(2, N)
@@ -79,15 +79,15 @@ figure(3) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
-ylabel(L"Concentration $[kmol.m^{-3}]$")
+ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts, ys, "rx", markersize=5, markeredgewidth=1)
+y2, = plot(ts[1:10:end], ys[1:10:end], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
-ylabel(L"Temperature $[K]$")
-xlabel(L"Time $[min]$")
+ylabel("Temperature [K]")
+xlabel("Time [min]")
 legend([y2],["Nonlinear Model Measured"], loc="best")
 xlim([0, tend])
 rc("font",size=22)

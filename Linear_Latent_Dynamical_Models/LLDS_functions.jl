@@ -20,28 +20,24 @@ immutable LLDS{T}
   R :: T # Measurement Noise VARIANCE
 end
 
-function step(xprev_noisy::Array{Float64,1}, uprev::Array{Float64}, model::LLDS{Array{Float64, 2}})
+function step(xprev::Array{Float64,1}, uprev, model::LLDS{Array{Float64, 2}})
   # Controlled, move multivariate model one time step forward.
-  dprocess = MvNormal(model.Q)
-  dmeasure = MvNormal(model.R)
 
-  xnow_noisy = model.A*xprev_noisy + model.B*uprev + model.b + rand(dprocess)
-  ynow_noisy = model.C*xnow_noisy  + rand(dmeasure)
-  ynow = model.C*xnow_noisy
+  xnow = model.A*xprev + model.B*uprev + model.b
+  ynow = model.C*xnow
 
-  return xnow_noisy, ynow_noisy, ynow
+  return xnow,  ynow
 end
 
-function step(xprev_noisy::Array{Float64,1}, uprev::Float64, model::LLDS{Float64})
+function step(xprev::Array{Float64,1}, uprev, model::LLDS{Float64})
   # Controlled, move multivariate model one time step forward.
-  dprocess = MvNormal(model.Q)
-  dmeasure = Normal(0.0, sqrt(model.R))
-  xnow_noisy = model.A*xprev_noisy + model.B*uprev + model.b + rand(dprocess)
-  ynow_noisy = model.C*xnow_noisy  + rand(dmeasure)
-  ynow = model.C*xnow_noisy
 
-  return xnow_noisy, ynow_noisy, ynow
+  xnow = model.A*xprev + model.B*uprev + model.b
+  ynow = model.C*xnow
+
+  return xnow,  ynow
 end
+
 
 function init_filter(initmean::Array{Float64, 1}, initvar::Array{Float64, 2}, ynow::Array{Float64, 1}, model::LLDS{Array{Float64, 2}})
   # Initialise the filter. No prediction step, only a measurement update step.
