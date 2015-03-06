@@ -5,6 +5,7 @@ using Distributions
 import LLDS_functions
 cd("..\\CSTR_Model")
 using Reactor_functions
+cd("..\\Linear_Latent_Dynamical_Models")
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!

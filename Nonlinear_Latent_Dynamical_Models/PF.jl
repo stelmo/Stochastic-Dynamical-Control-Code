@@ -12,8 +12,6 @@ end
 type Particle
   # Implements a particle
   x::Array{Float64, 1} # state
-  y::Array{Float64, 1} # observation
-  w::Float64 # weight
 end
 
 function init_PF(dist, nP::Int64, nY::Int64)
@@ -35,25 +33,46 @@ function init_PF(dist, nP::Int64, nY::Int64)
   return particles
 end
 
-function predict!(particles::Array{Particle, 1}, model::Model, plantnoise)
-  # Performs the state prediction step.
-  # dist => distribution from whence the noise cometh
+function init_filter(particles::Array{Particle, 1}, u, y, plantdist, measuredist, model::Model)
+  # Performs only the update step.
   N::Int64 = length(particles)
+  w = zeros(N)
+
   for p=1:N
-    noise = rand(plantnoise)
-    particles[p].x = model.f(particles[p].x, noise)
+    w[p] = logpdf(measuredist, observation - model.g(particles[p].x)) # weight of each particle
   end
+
+  w = w./cumsum(w) # normalise weights
+  resample = rand(Categorical(w), N) # draw N samples from weighted Categorical
+  copyparticles = copy(particles)
+  for p=1:N # resample
+    particles[p].x = copyparticles[resample[p]].x
+  end
+
 end
 
-function update!(particles::Array{Particle, 1}, model::Model, measurementnoise, observation)
-  # Performs the Bayesian update step given observations.
-  
+function filter(particles::Array{Particle, 1}, u, y, plantdist, measuredist, model::Model)
+  # Performs the state prediction step.
+  # plantnoise => distribution from whence the noise cometh
+  N::Int64 = length(particles)
+  w = zeros(N)
+
+  for p=1:N
+    noise = rand(plantdist)
+    particles[p].x = model.f(particles[p].x, u, noise)
+    w[p] = logpdf(measuredist, observation - model.g(particles[p].x)) # weight of each particle
+  end
+
+  w = w./cumsum(w) # normalise weights
+  resample = rand(Categorical(w), N) # draw N samples from weighted Categorical
+  copyparticles = copy(particles)
+  for p=1:N # resample
+    particles[p].x = copyparticles[resample[p]].x
+  end
 end
 
 function roughen()
 
 end
-
-
 
 end
