@@ -12,6 +12,7 @@ end
 type Particles
   # Implements a particle
   x::Array{Float64, 2} # collection of particles
+  w::Array{Float64, 1} # collection of particle weights
 end
 
 function init_PF(dist, nP::Int64, xN::Int64)
@@ -20,10 +21,11 @@ function init_PF(dist, nP::Int64, xN::Int64)
   # nX => number of states per particle.
   # Return an array of nP particles.
 
-  particles = Particles(zeros(xN, nP))
+  particles = Particles(zeros(xN, nP), zeros(nP))
   for p=1:nP
     drawx = rand(dist) # draw from the proposed prior
     particles.x[:, p] = drawx
+    particles.w[p] = 1./nP # uniform initial weight
   end
 
   return particles
@@ -32,44 +34,66 @@ end
 function init_filter!(particles::Particles, u, y, plantdist, measuredist, model::Model)
   # Performs only the update step.
   nX, N = size(particles.x)
-  w = zeros(N)
 
   for p=1:N
-    w[p] = pdf(measuredist, y - model.g(particles.x[:, p])) # weight of each particle
+    particles.w[p] = particles.w[p]*pdf(measuredist, y - model.g(particles.x[:, p])) # weight of each particle
   end
 
-  w = w./sum(w) # normalise weights
-  resample = rand(Categorical(w), N) # draw N samples from weighted Categorical
+  particles.w = particles.w ./ sum(particles.w) # normalise weights
+
+  if numberEffectiveParticles(particles) < N/2
+    resample!(particles)
+  end
+end
+
+function resample!(particles::Particles)
+  N = length(particles.w)
+  resample = rand(Categorical(particles.w), N) # draw N samples from weighted Categorical
   copyparticles = copy(particles.x)
   for p=1:N # resample
     particles.x[:,p] = copyparticles[:, resample[p]]
+    particles.w[p] = 1./N
   end
+end
+
+function numberEffectiveParticles(particles::Particles)
+  # Return the effective number of particles.
+  N = length(particles.w)
+  numeff = 0.0
+  for p=1:N
+    numeff += particles.w[p]^2
+  end
+  return 1./numeff
 end
 
 function filter!(particles::Particles, u, y, plantdist, measuredist, model::Model)
   # Performs the state prediction step.
   # plantnoise => distribution from whence the noise cometh
+  # measuredist => distribution from whence the plant uncertainty cometh
+
   nX, N = size(particles.x)
-  w = zeros(N)
 
   for p=1:N
     noise = rand(plantdist)
     particles.x[:, p] = model.f(particles.x[:, p], u, noise) # predict
-    w[p] = pdf(measuredist, y - model.g(particles.x[:, p])) # update weight of each particle
+    particles.w[p] = particles.w[p]*pdf(measuredist, y - model.g(particles.x[:, p])) # weight of each particle
   end
 
-  w = w./sum(w) # normalise weights
-  resample = rand(Categorical(w), N) # draw N samples from weighted Categorical
-  copyparticles = copy(particles.x)
-  for p=1:N # resample
-    particles.x[:,p] = copyparticles[:, resample[p]]
+  particles.w = particles.w ./ sum(particles.w) # normalise weights
+
+  if numberEffectiveParticles(particles) < N/2
+    resample!(particles)
   end
 end
 
+function roughen()
+
+end
+
+
 function getStats(particles::Particles)
-
+  # Return the Gaussian statistics of the particles.
   fitted = fit(MvNormal, particles.x)
-
   return mean(fitted), cov(fitted)
 end
 
