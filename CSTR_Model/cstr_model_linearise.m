@@ -33,13 +33,14 @@ guess3 = [0.99, 310.];
 [xss3, ~] = fsolve(@(x) sys(1.0, x, 0.0), guess3, options);      
 
 J1 = J(xss1);
-dlmwrite('J_ss.csv', J1, 'precision','%.10f') % write the jacobian
-dlmwrite('ss.csv', xss1, 'precision','%.10f') % write the steady state 
 e1 = eig(J1); %stability for critical point
 J2 = J(xss2);
 e2 = eig(J2); %stability for critical point
 J3 = J(xss3);
 e3 = eig(J3); %stability for critical point
+
+dlmwrite('J_ss.csv', J2, 'precision','%.10f') % write the jacobian
+dlmwrite('ss.csv', xss2, 'precision','%.10f') % write the steady state 
 
 lin1 = @(x, Q) J1*x - J1*xss1' + [0.0; 1./(rho*Cp*V)]*Q;
 lin2 = @(x, Q) J2*x - J2*xss2' + [0.0; 1./(rho*Cp*V)]*Q;
