@@ -6,7 +6,4 @@ notifications:
 before_script:
   - julia -e 'Pkg.add("Distributions")'
 script:
-  - julia -e 'include(string(pwd(),"/Hidden_Markov_Models/HMM_functions.jl"))'
   - julia -e 'include(string(pwd(),"/Hidden_Markov_Models/HMM_tests.jl"))'
-  - julia -e 'include(string(pwd(),"/Linear_Latent_Dynamical_Models/LLDS_functions.jl"))'
-  - julia -e 'include(string(pwd(),"/Linear_Latent_Dynamical_Models/LLDS_tests.jl"))'

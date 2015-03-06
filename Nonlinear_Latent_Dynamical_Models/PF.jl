@@ -35,7 +35,9 @@ function init_PF(dist, nP::Int64, nY::Int64)
   return particles
 end
 
-function predict()
+function predict(particles::Array{Particle, 1}, model::Model)
+  # Performs the state prediction step.
+  N::Int64 = length(particles)
 
 end
 

@@ -12,10 +12,16 @@
 # I used: HMMforward, HMMsmooth and HMMviterbi
 
 using Base.Test
-using HMM_functions
 
-#First get current working directory - to make Travis happy
+# First get current working directory - to make Travis happy
 dircontent = readdir()
+if "HMM_functions.jl" in dircontent
+  using HMM_functions
+else
+  push!(LOAD_PATH, "/Hidden_Markov_Models/")
+  using HMM_functions
+end
+
 if "smooth.csv" in dircontent
   fbs_barber = readcsv("smooth.csv") #read in the ideal answers
 else
