@@ -15,6 +15,7 @@ using Base.Test
 using HMM_functions
 
 # First get current working directory - to make Travis happy
+dircontent = readdir()
 if "smooth.csv" in dircontent
   fbs_barber = readcsv("smooth.csv") #read in the ideal answers
 else
