@@ -79,7 +79,6 @@ function filter!(particles::Particles, u, y, plantdist, measuredist, model::Mode
     particles.x[:, p] = model.f(particles.x[:, p], u, noise) # predict
     particles.w[p] = particles.w[p]*pdf(measuredist, y - model.g(particles.x[:, p])) # weight of each particle
   end
-
   particles.w = particles.w ./ sum(particles.w) # normalise weights
 
   if numberEffectiveParticles(particles) < N/2
