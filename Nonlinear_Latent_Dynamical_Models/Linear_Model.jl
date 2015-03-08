@@ -36,7 +36,7 @@ end
 
 init_state = [0.57; 395] # initial state
 h = 0.001 # time discretisation
-tend = 5.0 # end simulation time
+tend = 2.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -56,7 +56,7 @@ g(x) = [0.0 1.0]*x# state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 500 #number of particles.
+nP = 100 #number of particles.
 init_state_mean = init_state # initial state mean
 init_state_covar = eye(2)*1e-6 # initial covariance
 init_state_covar = 1.0
@@ -66,7 +66,7 @@ state_covar = eye(2) # state covariance
 state_covar[1] = 1e-6
 state_covar[2] = 2.
 state_dist = MvNormal(state_covar) # state distribution
-meas_covar = eye(1)*2 # measurement covariance
+meas_covar = eye(1)*2.0 # measurement covariance
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 fmeans = zeros(2, N)
