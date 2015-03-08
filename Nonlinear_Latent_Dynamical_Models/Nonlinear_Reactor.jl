@@ -7,7 +7,6 @@
 using PyPlot
 using Distributions
 import PF
-reload("PF.jl")
 cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
@@ -37,7 +36,7 @@ end
 
 init_state = [0.57; 395] # initial state
 h = 0.01 # time discretisation
-tend = 10.0 # end simulation time
+tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -51,11 +50,12 @@ cstr_pf = PF.Model(f,g)
 # Initialise the PF
 nP = 50 #number of particles.
 init_state_mean = init_state # initial state mean
-init_state_covar = eye(2)*1e-3 # initial covariance
+init_state_covar = eye(2)*1e-6 # initial covariance
+init_state_covar = 1.0
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
 state_covar = eye(2) # state covariance
-state_covar[1] = 0.0001
+state_covar[1] = 1e-6
 state_covar[2] = 2.
 state_dist = MvNormal(state_covar) # state distribution
 meas_covar = eye(1)*2 # measurement covariance
@@ -76,7 +76,20 @@ for t=2:N
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
 end
 
-figure(3) # Plot filtered results
+skip = 50
+figure(1) # Kalman Filter Demonstration
+x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+b1 = 0.0
+for k=1:skip:N
+  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+  b1, = plot(p1, p2, "b")
+end
+ylabel("Temperature [K]")
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
+
+figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
