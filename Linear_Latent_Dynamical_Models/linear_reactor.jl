@@ -64,6 +64,10 @@ linys = zeros(N)
 linxs[:, 1] = init_state
 us = zeros(N) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t=1)...
 
+
+# Simulate plant
+norm_dist = Normal(0.0, sqrt(lin_cstr.R))
+ys[1] = lin_cstr.C*xs[:, 1] + rand(norm_dist) # measure from actual plant
 # Filter
 init_mean = init_state
 init_covar = eye(2) # vague
@@ -72,10 +76,6 @@ init_covar[4] = 2.
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, ys[1], lin_cstr)
-
-# Simulate plant
-norm_dist = Normal(0.0, sqrt(lin_cstr.R))
-ys[1] = lin_cstr.C*xs[:, 1] + rand(norm_dist) # measure from actual plant
 for t=2:N
   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t], h, cstr) # actual plant
   ys[t] = lin_cstr.C*xs[:, t] + rand(norm_dist) # measured from actual plant
@@ -90,12 +90,12 @@ end
 # pred_us[:] = us[pstart-1:pend-1]
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
-skip = 50
+skip = 150
 figure(1) # Kalman Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-f1, = plot(filtermeans[1, int(N/3):skip:end][:], filtermeans[2, int(N/3):skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
-for k=int(N/3):skip:N
+for k=1:skip:N
   p1, p2 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
   b1, = plot(p1, p2, "b")
 end
@@ -108,7 +108,7 @@ figure(2) # Filtering
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 linx1, = plot(ts, linxs[1,:]', "r--", linewidth=3)
-k1, = plot(ts[1:10:end], filtermeans[1, 1:10:end]', "mo")
+k1, = plot(ts[1:15:end], filtermeans[1, 1:15:end]', "mo")
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,linx1],["Nonlinear Model","Linear Model"], loc="best")
 xlim([0, tend])
@@ -116,11 +116,11 @@ ylim([0, 1])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 linx2, = plot(ts, linxs[2,:]', "r--", linewidth=3)
-y2, = plot(ts, ys, "rx", markersize=5, markeredgewidth=1)
-k2, = plot(ts[1:10:end], filtermeans[2, 1:10:end]', "mo")
+y2, = plot(ts[1:3:end], ys[1:3:end], "rx", markersize=5, markeredgewidth=1)
+k2, = plot(ts[1:15:end], filtermeans[2, 1:15:end]', "mo")
 ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
-ylim([250, 400])
+ylim([350, 400])
 rc("font",size=22)
