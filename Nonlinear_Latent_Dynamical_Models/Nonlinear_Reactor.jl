@@ -10,6 +10,8 @@ import PF
 reload("PF.jl")
 cd("..\\CSTR_Model")
 using Reactor_functions
+cd("..\\Linear_Latent_Dynamical_Models")
+using Confidence
 cd("..\\Nonlinear_Latent_Dynamical_Models")
 
 # Add a definition for convert to make our lives easier!

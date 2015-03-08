@@ -6,6 +6,7 @@ import LLDS_functions
 cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
+import Confidence
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
@@ -33,7 +34,7 @@ end
 
 init_state = [0.57; 395]
 h = 0.001 # time discretisation
-tend = 10. # end simulation time
+tend = 2.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -51,7 +52,7 @@ lin_cstr = begin
   C = zeros(1,2)
   C[2] = 1.0 #measure temperature
   Q = eye(2) # plant mismatch/noise
-  Q[1] = 1e-4
+  Q[1] = 1e-6
   Q[4] = 4.
   R = 2.0 # measurement noise
   LLDS_functions.LLDS{Float64}(A, B, b, C, Q, R)
@@ -66,7 +67,7 @@ us = zeros(N) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t
 # Filter
 init_mean = init_state
 init_covar = eye(2) # vague
-init_covar[1] = 1e-4
+init_covar[1] = 1e-6
 init_covar[4] = 2.
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
@@ -89,8 +90,21 @@ end
 # pred_us[:] = us[pstart-1:pend-1]
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
+skip = 50
+figure(1) # Kalman Filter Demonstration
+x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+f1, = plot(filtermeans[1, int(N/3):skip:end][:], filtermeans[2, int(N/3):skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+b1 = 0.0
+for k=int(N/3):skip:N
+  p1, p2 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
+  b1, = plot(p1, p2, "b")
+end
+ylabel("Temperature [K]")
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
-figure(3) # Filtering
+
+figure(2) # Filtering
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 linx1, = plot(ts, linxs[1,:]', "r--", linewidth=3)
@@ -106,7 +120,7 @@ y2, = plot(ts, ys, "rx", markersize=5, markeredgewidth=1)
 k2, = plot(ts[1:10:end], filtermeans[2, 1:10:end]', "mo")
 ylabel("Temperature [K]")
 xlabel("Time [min]")
-legend([y2, k2],["Nonlinear Model Measured", "Filtered"], loc="best")
+legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
 ylim([250, 400])
 rc("font",size=22)
