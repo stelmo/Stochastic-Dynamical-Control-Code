@@ -18,7 +18,6 @@ function Base.convert(::Type{Float64}, x::Array{Float64, 1})
   return x[1]
 end
 
-
 # Specify the nonlinear model
 cstr_model = begin
   V = 0.1; #m3
