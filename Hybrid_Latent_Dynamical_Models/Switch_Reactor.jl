@@ -32,8 +32,8 @@ cstr_model = begin
 end
 
 init_state = [0.57; 395] # initial state
-h = 0.001 # time discretisation
-tend = 2.0 # end simulation time
+h = 0.01 # time discretisation
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -96,14 +96,16 @@ end
 fun3(x, u, w) = lin3.A*x + lin3.B*u + lin3.b + w
 gun3(x) = lin3.C*x
 
-A = [0.8 0.3 0.01;0.19 0.4 0.19;0.01 0.3 0.8]
-switch = SPF.Switch(A)
+A = [0.9 0.3 0.01;
+     0.09 0.4 0.09;
+     0.01 0.3 0.9]
 F = [fun1, fun2, fun3]
 G = [gun1, gun2, gun3]
 ydists = [MvNormal(eye(1)*lin1.R);MvNormal(eye(1)*lin2.R);MvNormal(eye(1)*lin3.R)]
-cstr = SPF.Model(F,G, ydists)
+xdists = [MvNormal(lin1.Q); MvNormal(lin2.Q); MvNormal(lin3.Q)]
+cstr = SPF.Model(F, G, A, xdists, ydists)
 
-nP = 50
+nP = 100
 initial_states = [0.57, 395]
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
@@ -111,3 +113,53 @@ initial_covar[4] = 1.0
 xdist = MvNormal(initial_states, initial_covar)
 sdist = Categorical([0.1, 0.8, 0.1])
 particles = SPF.init_SPF(xdist, sdist, nP, 2)
+fmeans = zeros(2, N)
+fcovars = zeros(2,2, N)
+
+us = zeros(N)
+xs[:,1] = initial_states
+ys[1] = [0.0 1.0]*xs[:, 1] + rand(meas_dist) # measured from actual plant
+SPF.init_filter!(particles, 0.0, ys[1], cstr)
+fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
+measurements = MvNormal(eye(1)*R)
+# Loop through the rest of time
+for t=2:N
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
+  ys[t] = [0.0 1.0]*xs[:, t] + rand(measurements) # measured from actual plant
+  SPF.filter!(particles, us[t-1], ys[t], cstr)
+  fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
+  if ts[t] > 3
+    us[t] = 800
+  end
+end
+
+skip = 50
+figure(1) # Kalman Filter Demonstration
+x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+b1 = 0.0
+for k=1:skip:N
+  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+  b1, = plot(p1, p2, "b")
+end
+ylabel("Temperature [K]")
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
+
+
+figure(2) # Plot filtered results
+subplot(2,1,1)
+x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
+ylabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+xlim([0, tend])
+subplot(2,1,2)
+x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+y2, = plot(ts[1:10:end], ys[1:10:end], "kx", markersize=5, markeredgewidth=1)
+k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
+ylabel("Temperature [K]")
+xlabel("Time [min]")
+legend([y2],["Nonlinear Model Measured"], loc="best")
+xlim([0, tend])
+rc("font",size=22)
