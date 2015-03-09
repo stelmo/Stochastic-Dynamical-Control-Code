@@ -11,6 +11,7 @@ cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
 using Confidence
+using LLDS_functions
 cd("..\\Nonlinear_Latent_Dynamical_Models")
 
 # Add a definition for convert to make our lives easier!
@@ -43,12 +44,19 @@ xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
 # Specify the linear model
-J = readcsv("J_ss.csv")
-ss = readcsv("ss.csv")'[:,1]
-A = eye(2)+h*J
-B = zeros(2,1)
-B[2] = 1./(cstr.rho*cstr.Cp*cstr.V)
-b = -h*J*ss
+lin_cstr = begin
+  A = eye(2)+h*J
+  B = zeros(2,1)
+  B[2] = 1./(cstr_model.rho*cstr_model.Cp*cstr_model.V)
+  b = -h*J*ss
+  C = zeros(1,2)
+  C[2] = 1.0 #measure temperature
+  Q = eye(2) # plant mismatch/noise
+  Q[1] = 1e-6
+  Q[4] = 4.
+  R = 2.0 # measurement noise
+  LLDS_functions.LLDS{Float64}(A, B, b, C, Q, R)
+end
 
 f(x, u, w) = A*x + B*u + b + w
 g(x) = [0.0 1.0]*x# state observation
