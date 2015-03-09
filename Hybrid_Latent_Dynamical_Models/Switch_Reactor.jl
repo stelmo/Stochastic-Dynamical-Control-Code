@@ -32,8 +32,8 @@ cstr_model = begin
 end
 
 init_state = [0.57; 395] # initial state
-h = 0.01 # time discretisation
-tend = 150.0 # end simulation time
+h = 0.001 # time discretisation
+tend = 10.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -96,16 +96,16 @@ end
 fun3(x, u, w) = lin3.A*x + lin3.B*u + lin3.b + w
 gun3(x) = lin3.C*x
 
-A = [0.9 0.3 0.01;
-     0.09 0.4 0.09;
-     0.01 0.3 0.9]
+A = [0.8 0.3 0.0;
+     0.2 0.4 0.5;
+     0.0 0.3 0.5]
 F = [fun1, fun2, fun3]
 G = [gun1, gun2, gun3]
 ydists = [MvNormal(eye(1)*lin1.R);MvNormal(eye(1)*lin2.R);MvNormal(eye(1)*lin3.R)]
 xdists = [MvNormal(lin1.Q); MvNormal(lin2.Q); MvNormal(lin3.Q)]
 cstr = SPF.Model(F, G, A, xdists, ydists)
 
-nP = 100
+nP = 200
 initial_states = [0.57, 395]
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
@@ -117,20 +117,20 @@ fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)
 
 us = zeros(N)
+measurements = MvNormal(eye(1)*R)
 xs[:,1] = initial_states
-ys[1] = [0.0 1.0]*xs[:, 1] + rand(meas_dist) # measured from actual plant
+ys[1] = [0.0 1.0]*xs[:, 1] + rand(measurements) # measured from actual plant
 SPF.init_filter!(particles, 0.0, ys[1], cstr)
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
-measurements = MvNormal(eye(1)*R)
 # Loop through the rest of time
 for t=2:N
   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
   ys[t] = [0.0 1.0]*xs[:, t] + rand(measurements) # measured from actual plant
   SPF.filter!(particles, us[t-1], ys[t], cstr)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
-  if ts[t] > 3
-    us[t] = 800
-  end
+  # if ts[t] > 0.20
+  #   us[t] = 100.
+  # end
 end
 
 skip = 50
