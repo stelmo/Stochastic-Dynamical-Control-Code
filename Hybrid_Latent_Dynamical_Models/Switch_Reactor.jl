@@ -39,11 +39,13 @@ xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
 # Specify the linear model
+J1 = readcsv("J_ss1.csv")
+ss1 = readcsv("ss1.csv")'[:,1]
 lin1 = begin
-  A = eye(2)+h*J
+  A = eye(2)+h*J1
   B = zeros(2,1)
-  B[2] = 1./(cstr_model.rho*cstr_model.Cp*cstr_model.V)
-  b = -h*J*ss
+  B[2] = h/(cstr_model.rho*cstr_model.Cp*cstr_model.V)
+  b = -h*J1*ss1
   C = zeros(1,2)
   C[2] = 1.0 #measure temperature
   Q = eye(2) # plant mismatch/noise
