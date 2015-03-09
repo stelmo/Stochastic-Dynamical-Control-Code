@@ -31,7 +31,7 @@ function init_PF(dist, nP::Int64, xN::Int64)
   return particles
 end
 
-function init_filter!(particles::Particles, u, y, plantdist, measuredist, model::Model)
+function init_filter!(particles::Particles, u, y, measuredist, model::Model)
   # Performs only the update step.
   nX, N = size(particles.x)
 

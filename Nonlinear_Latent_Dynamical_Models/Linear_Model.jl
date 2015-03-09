@@ -81,7 +81,7 @@ fcovars = zeros(2,2, N)
 # Time step 1
 xs[:,1] = init_state
 ys[1] = C*xs[:, 1] + rand(meas_dist) # measured from actual plant
-PF.init_filter!(particles, 0.0, ys[1], state_dist, meas_dist, cstr_pf)
+PF.init_filter!(particles, 0.0, ys[1], meas_dist, cstr_pf)
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
