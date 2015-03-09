@@ -44,6 +44,8 @@ xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
 # Specify the linear model
+J = readcsv("J_ss.csv")
+ss = readcsv("ss.csv")'[:,1]
 lin_cstr = begin
   A = eye(2)+h*J
   B = zeros(2,1)
