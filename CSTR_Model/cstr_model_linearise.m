@@ -39,8 +39,8 @@ e2 = eig(J2); %stability for critical point
 J3 = J(xss3);
 e3 = eig(J3); %stability for critical point
 
-dlmwrite('J_ss.csv', J2, 'precision','%.10f') % write the jacobian
-dlmwrite('ss.csv', xss2, 'precision','%.10f') % write the steady state 
+dlmwrite('J_ss3.csv', J3, 'precision','%.10f') % write the jacobian
+dlmwrite('ss3.csv', xss3, 'precision','%.10f') % write the steady state 
 
 lin1 = @(x, Q) J1*x - J1*xss1' + [0.0; 1./(rho*Cp*V)]*Q;
 lin2 = @(x, Q) J2*x - J2*xss2' + [0.0; 1./(rho*Cp*V)]*Q;
