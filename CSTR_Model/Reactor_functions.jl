@@ -38,8 +38,24 @@ function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::Reactor)
   return xnow
 end
 
-function reactor_jacobian()
+function reactor_jacobian(x::Array{Float64, 1}, model::Reactor)
+  # Returns the Jacobian evaluated at x
+  J11 = -model.F/model.V-model.k0*exp(-model.E/(model.R*x[2]))
+  J12 = -x[1]*model.k0*exp(-model.E/(model.R*x[2]))*(model.E/(model.R*x[2]^2))
+  J21 = -model.dH/(model.rho*model.Cp)*model.k0*exp(-model.E/(model.R*x[2]))
+  J22 = -(model.F/model.V + model.dH/(model.rho*model.Cp)*model.k0*exp(-model.E/(model.R*x[2]))*(model.E/(model.R*x[2]^2))*x[1])
+end
 
+function QG(T::Float64, model::Reactor)
+  # Return the evaluated heat generation term.
+  ca = model.CA0/(1 + model.k0*exp(-model.E/(model.R*T)))
+  qg = -model.dH/(model.rho*model.Cp)*model.k0*exp(-model.E/(model.R*T))*ca
+end
+
+function QR(T::Float64, Q::Float64, model::Reactor)
+  # Return the evaluated heat removal term.
+  qr = - model.TA0 + T - Q/(model.rho * model.V * model.Cp)
+  return qr
 end
 
 end # module
