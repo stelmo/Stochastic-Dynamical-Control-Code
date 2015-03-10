@@ -5,6 +5,8 @@
 *.gz
 *.txt
 *.asv
+dfield8.m # copyrighted
+pplane8.m # copyrighted
 
 # Windows image file caches
 Thumbs.db

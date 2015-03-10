@@ -11,6 +11,9 @@ function Base.convert(::Type{Float64}, x::Array{Float64, 1})
   return x[1]
 end
 
+CA0 - x - k0*exp(E/(R*y))*x
+TA0 - y + 200*k0*exp(E/(R*y))*x-Q/23.9
+
 # Specify the nonlinear model
 cstr1 = begin
   V = 0.1 #m3
