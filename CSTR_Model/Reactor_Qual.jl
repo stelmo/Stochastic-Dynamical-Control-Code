@@ -34,7 +34,7 @@ cstr2 = begin
 end
 
 N = 100
-Ts = linspace(250, 550, N) # temperature range
+Ts = linspace(200, 600, N) # temperature range
 qrs1 = zeros(N) # heat removals
 qrs2 = zeros(N) # heat removals
 qrs3 = zeros(N) # heat removals
@@ -58,4 +58,4 @@ plot(Ts, qgs1, "k", linewidth=3)
 legend([q1,q2,q3],["Q=-1250 kJ/min","Q=0 kJ/min","Q=950 kJ/min"], loc="best")
 ylim([0, maximum([qrs, qgs])])
 xlabel("Steady State Temperature [K]")
-ylabel("Heat Removal [K/min]")
+ylabel("Heat Removal Rate [K/min]")

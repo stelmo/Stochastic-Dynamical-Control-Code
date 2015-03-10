@@ -48,13 +48,13 @@ end
 
 function QG(T::Float64, model::Reactor)
   # Return the evaluated heat generation term.
-  ca = model.CA0/(1 + model.k0*exp(-model.E/(model.R*T)))
+  ca = model.F/model.V*model.CA0/(model.F/model.V + model.k0*exp(-model.E/(model.R*T)))
   qg = -model.dH/(model.rho*model.Cp)*model.k0*exp(-model.E/(model.R*T))*ca
 end
 
 function QR(T::Float64, Q::Float64, model::Reactor)
   # Return the evaluated heat removal term.
-  qr = - model.TA0 + T - Q/(model.rho * model.V * model.Cp)
+  qr = - model.F/model.V*(model.TA0 - T) - Q/(model.rho * model.V * model.Cp)
   return qr
 end
 
