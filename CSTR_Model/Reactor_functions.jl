@@ -38,4 +38,8 @@ function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::Reactor)
   return xnow
 end
 
+function reactor_jacobian()
+
+end
+
 end # module
