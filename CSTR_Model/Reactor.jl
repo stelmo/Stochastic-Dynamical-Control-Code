@@ -40,21 +40,21 @@ cstr2 = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.001 # time discretisation
+h = 0.0001 # time discretisation
 tend = 2. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs1 = zeros(2, N)
 xs2 = zeros(2, N)
 
-initial_states = [0.57, 410]
+initial_states = [0.50, 450]
 
 us = ones(N)*0.0
 xs1[:,1] = initial_states
 xs2[:,1] = initial_states
 # Loop through the rest of time
 for t=2:N
-  if ts[t] < 0.1
+  if ts[t] < 0.5
     xs1[:, t] = Reactor_functions.run_reactor(xs1[:, t-1], us[t-1], h, cstr1) # actual plant
     xs2[:, t] = Reactor_functions.run_reactor(xs2[:, t-1], us[t-1], h, cstr1) # actual plant
   else

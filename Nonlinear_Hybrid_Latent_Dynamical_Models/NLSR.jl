@@ -37,7 +37,7 @@ cstr2 = begin # slower reaction rate
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e9*0.7 #1/min # changed here!
+  k0 = 72.0e9*0.4 #1/min # changed here!
   E = 8.314e4 #kJ/kmol
   Cp = 0.239*1.2 #kJ/kgK # changed here!
   rho = 1000.0 #kg/m3
@@ -45,9 +45,9 @@ cstr2 = begin # slower reaction rate
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-initial_states = [0.57; 410] # initial state
+initial_states = [0.5; 400] # initial state
 h = 0.001 # time discretisation
-tend = 3.0 # end simulation time
+tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -61,7 +61,7 @@ Q = eye(2)
 Q[1] = 1e-6
 Q[4] = 2.0
 
-A = [0.9 0.1;0.1 0.9]
+A = [0.5 0.5;0.5 0.5]
 fun1(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr1)
 fun2(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr2)
 gs(x) = newC*x
@@ -72,7 +72,7 @@ ydists = [MvNormal(R);MvNormal(R)]
 xdists = [MvNormal(Q); MvNormal(Q)]
 cstr_filter = SPF.Model(F, G, A, xdists, ydists)
 
-nP = 1000
+nP = 1500
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
 initial_covar[4] = 1.0
@@ -100,18 +100,21 @@ for t=2:N
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
 end
 
+println("Type 1: ", count((x)->x==1, particles.s))
+println("Type 2: ", count((x)->x==2, particles.s))
+
 skip = 50
-figure(1) # Kalman Filter Demonstration
-x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-b1 = 0.0
-for k=1:skip:N
-  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
-  b1, = plot(p1, p2, "b")
-end
-ylabel("Temperature [K]")
-xlabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
+# figure(1) # Kalman Filter Demonstration
+# x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+# f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+# b1 = 0.0
+# for k=1:skip:N
+#   p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+#   b1, = plot(p1, p2, "b")
+# end
+# ylabel("Temperature [K]")
+# xlabel(L"Concentration [kmol.m$^{-3}$]")
+# legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
 
 
 figure(2) # Plot filtered results
