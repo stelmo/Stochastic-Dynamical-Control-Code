@@ -1,5 +1,5 @@
 # Run some simulations
-# Implement the augmented switching dynamical system
+
 using PyPlot
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")

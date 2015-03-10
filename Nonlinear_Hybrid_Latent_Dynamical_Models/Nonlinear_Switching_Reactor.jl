@@ -37,29 +37,32 @@ cstr2 = begin # slower reaction rate
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e9*0.4 #1/min # changed here!
+  k0 = 72.0e8 #1/min # changed here!
   E = 8.314e4 #kJ/kmol
-  Cp = 0.239*1.2 #kJ/kgK # changed here!
+  Cp = 0.239 #kJ/kgK # changed here!
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 initial_states = [0.5; 410] # initial state
-h = 0.01 # time discretisation
+h = 0.001 # time discretisation
 tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
-ys = zeros(2, N)
+xsnofix = zeros(2, N)
+# ys = zeros(2, N)
+ys = zeros(N)
 
-newC = eye(2)
-R = eye(2)
-R[1] = 1e-4
-R[4] = 2.0
+newC = [0.0 1.0] #eye(2)
+R = eye(1)*4.0
+# R = eye(2)
+# R[1] = 1e-3
+# R[4] = 4.0
 Q = eye(2)
-Q[1] = 1e-6
-Q[4] = 2.0
+Q[1] = 1e-4
+Q[4] = 5.0
 
 A = [0.5 0.5;0.5 0.5]
 fun1(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr1)
@@ -85,21 +88,31 @@ fcovars = zeros(2,2, N)
 us = zeros(N)
 measurements = MvNormal(R)
 xs[:,1] = initial_states
-ys[:, 1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
-SPF.init_filter!(particles, 0.0, ys[:, 1], cstr_filter)
+xsnofix[:,1] = initial_states
+
+ys[1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
+SPF.init_filter!(particles, 0.0, ys[1], cstr_filter)
+# ys[:, 1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
+# SPF.init_filter!(particles, 0.0, ys[:, 1], cstr_filter)
+
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
-  if ts[t] < 0.1
+  if ts[t] < 0.5
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
+    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   else
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
+    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   end
   if ts[t] > 0.5
-    us[t] = 800.
+    us[t] = 0.0
   end
-  ys[:, t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
-  SPF.filter!(particles, us[t-1], ys[:, t], cstr_filter)
+  # ys[:, t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
+  # SPF.filter!(particles, us[t-1], ys[:, t], cstr_filter)
+  ys[t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
+  SPF.filter!(particles, us[t-1], ys[t], cstr_filter)
+
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
 end
 
@@ -123,17 +136,20 @@ skip = 50
 figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+x1nf, = plot(ts, xsnofix[1,:]', "g--", linewidth=3)
 k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
-y2, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
+# y2, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
+x2nf, = plot(ts, xsnofix[2,:]', "g--", linewidth=3)
+# y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
+y2, = plot(ts[1:10:end], ys[1:10:end], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
 ylabel("Temperature [K]")
 xlabel("Time [min]")
-legend([y2],["Nonlinear Model Measured"], loc="best")
+legend([y2, x2nf],["Nonlinear Model Measured","Nonlinear Model No Switch"], loc="best")
 xlim([0, tend])
 rc("font",size=22)
