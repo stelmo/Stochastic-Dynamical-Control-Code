@@ -40,18 +40,17 @@ end
 function init_filter!(particles::Particles, u, y, model::Model)
 
   nX, N = size(particles.x)
+  nS, = size(model.A)
 
   for p=1:N
-    if particles.s[p] == 1
-      particles.w[p] = particles.w[p]*pdf(model.ydists[1], y - model.G[1](particles.x[:, p])) # weight of each particle
-    elseif particles.s[p] == 2
-      particles.w[p] = particles.w[p]*pdf(model.ydists[2], y - model.G[2](particles.x[:, p])) # weight of each particle
-    else
-      particles.w[p] = particles.w[p]*pdf(model.ydists[3], y - model.G[3](particles.x[:, p])) # weight of each particle
+    for s=1:nS
+      if particles.s[p] == s
+        particles.w[p] = particles.w[p]*pdf(model.ydists[s], y - model.G[s](particles.x[:, p])) # weight of each particle
+      end
     end
   end
 
-  particles.w = particles.w ./ sum(particles.w) # normalise weights
+  particles.w = particles.w ./ sum(particles.w)
 
   if numberEffectiveParticles(particles) < N/2
     resample!(particles)
@@ -61,43 +60,37 @@ end
 function filter!(particles::Particles, u, y, model::Model)
 
   nX, N = size(particles.x)
+  nS, = size(model.A)
 
   # This can be made more compact but at the cost of clarity
   # first draw switch sample
   for p=1:N
-    if particles.s[p] == 1
-      particles.s[p] = rand(Categorical(model.A[:,1]))
-    elseif particles.s[p] == 2
-      particles.s[p] = rand(Categorical(model.A[:,2]))
-    else
-      particles.s[p] = rand(Categorical(model.A[:,3]))
+    for s=1:nS
+      if particles.s[p] == s
+        particles.s[p] = rand(Categorical(model.A[:,s]))
+      end
     end
   end
 
   # Now draw (predict) state sample
   for p=1:N
-    if particles.s[p] == 1
-      noise = rand(model.xdists[1])
-      particles.x[:, p] = model.F[1](particles.x[:, p], u, noise) # predict
-      particles.w[p] = particles.w[p]*pdf(model.ydists[1], y - model.G[1](particles.x[:, p])) # weight of each particle
-    elseif particles.s[p] == 2
-      noise = rand(model.xdists[2])
-      particles.x[:, p] = model.F[2](particles.x[:, p], u, noise) # predict
-      particles.w[p] = particles.w[p]*pdf(model.ydists[2], y - model.G[2](particles.x[:, p])) # weight of each particle
-    else
-      noise = rand(model.xdists[3])
-      particles.x[:, p] = model.F[3](particles.x[:, p], u, noise) # predict
-      particles.w[p] = particles.w[p]*pdf(model.ydists[3], y - model.G[3](particles.x[:, p])) # weight of each particle
+    for s=1:nS
+      if particles.s[p] == s
+        noise = rand(model.xdists[s])
+        particles.x[:, p] = model.F[s](particles.x[:, p], u, noise) # predict
+        particles.w[p] = particles.w[p]*pdf(model.ydists[s], y - model.G[s](particles.x[:, p])) # weight of each particle
+      end
     end
   end
 
-  particles.w = particles.w ./ sum(particles.w) # normalise weights
+  particles.w = particles.w ./ sum(particles.w)
+  (true in isnan(particles.w)) && warn("Particles have become degenerate! All is lost!")
+
 
   if numberEffectiveParticles(particles) < N/2
     resample!(particles)
   end
 end
-
 
 function resample!(particles::Particles)
   N = length(particles.w)
@@ -130,7 +123,11 @@ function roughen!(particles::Particles)
   K= 0.2 # parameter...
 
   for k=1:xN
-    sig[k] = K*(maximum(particles.x[k,:]) - minimum(particles.x[k,:]))*N^(-1./xN)
+    D = maximum(particles.x[k,:]) - minimum(particles.x[k,:])
+    if D == 0.0
+      warn("Particle distance very small! Roughening could cause problems...")
+    end
+    sig[k] = K*D*N^(-1./xN)
   end
 
   sigma = diagm(sig.^2)

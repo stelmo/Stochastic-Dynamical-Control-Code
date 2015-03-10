@@ -33,8 +33,8 @@ end
 function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::Reactor)
   # Evaluate the ODE functions describing the reactor.
   xnow :: Array{Float64, 1} = zeros(2)
-  xnow[1] = model.F/model.V * (model.CA0 - xprev[1]) - model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1]
-  xnow[2] = model.F/model.V * (model.TA0 - xprev[2]) + (-model.dH/(model.rho*model.Cp))*model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1] + u/(model.rho*model.Cp*model.V)
+  xnow[1] = (model.F/model.V) * (model.CA0 - xprev[1]) - model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1]
+  xnow[2] = (model.F/model.V) * (model.TA0 - xprev[2]) - (model.dH/(model.rho*model.Cp))*model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1] + u/(model.rho*model.Cp*model.V)
   return xnow
 end
 
