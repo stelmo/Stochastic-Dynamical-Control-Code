@@ -44,6 +44,7 @@ function reactor_jacobian(x::Array{Float64, 1}, model::Reactor)
   J12 = -x[1]*model.k0*exp(-model.E/(model.R*x[2]))*(model.E/(model.R*x[2]^2))
   J21 = -model.dH/(model.rho*model.Cp)*model.k0*exp(-model.E/(model.R*x[2]))
   J22 = -(model.F/model.V + model.dH/(model.rho*model.Cp)*model.k0*exp(-model.E/(model.R*x[2]))*(model.E/(model.R*x[2]^2))*x[1])
+  return [J11 J12;J21 J22]
 end
 
 function QG(T::Float64, model::Reactor)
