@@ -8,7 +8,7 @@ using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
 using Confidence
 using LLDS_functions
-cd("..\\Hybrid_Latent_Dynamical_Models")
+cd("..\\Nonlinear_Hybrid_Latent_Dynamical_Models")
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
@@ -45,8 +45,8 @@ cstr2 = begin # slower reaction rate
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-initial_states = [0.5; 400] # initial state
-h = 0.001 # time discretisation
+initial_states = [0.5; 410] # initial state
+h = 0.01 # time discretisation
 tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
@@ -94,6 +94,9 @@ for t=2:N
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
   else
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
+  end
+  if ts[t] > 0.5
+    us[t] = 800.
   end
   ys[:, t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
   SPF.filter!(particles, us[t-1], ys[:, t], cstr_filter)
