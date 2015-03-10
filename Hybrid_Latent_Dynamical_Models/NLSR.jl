@@ -86,7 +86,7 @@ us = zeros(N)
 measurements = MvNormal(R)
 xs[:,1] = initial_states
 ys[:, 1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
-SPF.init_filter!(particles, 0.0, ys[:, 1], cstr)
+SPF.init_filter!(particles, 0.0, ys[:, 1], cstr_filter)
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
