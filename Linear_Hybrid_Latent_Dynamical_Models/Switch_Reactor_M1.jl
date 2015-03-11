@@ -18,12 +18,12 @@ end
 
 # Specify the nonlinear model
 cstr_model = begin
-  V = 0.1; #m3
+  V = 5.0; #m3
   R = 8.314; #kJ/kmol.K
   CA0 = 1.0; #kmol/m3
   TA0 = 310.0; #K
   dH = -4.78e4; #kJ/kmol
-  k0 = 72.0e9; #1/min
+  k0 = 72.0e7; #1/min
   E = 8.314e4; #kJ/kmol
   Cp = 0.239; #kJ/kgK
   rho = 1000.0; #kg/m3
@@ -31,14 +31,14 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.001 # time discretisation
-tend = 3.0 # end simulation time
+h = 0.01 # time discretisation
+tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
-init_state = [0.5; 395] # initial state
+init_state = [0.1; 450] # initial state
 C = [0.0 1.0]
 R = eye(1)*4.0
 Q = eye(2)

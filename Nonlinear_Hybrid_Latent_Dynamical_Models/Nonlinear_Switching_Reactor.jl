@@ -19,12 +19,12 @@ end
 
 # Specify the nonlinear model
 cstr1 = begin
-  V = 0.1 #m3
+  V = 5.0 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e9 #1/min
+  k0 = 72.0e7 #1/min
   E = 8.314e4 #kJ/kmol
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
@@ -33,7 +33,7 @@ cstr1 = begin
 end
 
 cstr2 = begin # slower reaction rate
-  V = 0.1 #m3
+  V = 5.0 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
@@ -46,7 +46,7 @@ cstr2 = begin # slower reaction rate
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-initial_states = [0.5; 410] # initial state
+initial_states = [0.5; 450] # initial state
 h = 0.001 # time discretisation
 tend = 5.0 # end simulation time
 ts = [0.0:h:tend]

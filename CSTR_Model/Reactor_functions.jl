@@ -45,6 +45,13 @@ function reactor_ode(xprev::Array{Float64, 1}, u::Float64, model::Reactor)
   return xnow
 end
 
+function reactor_func!(xprev::Array{Float64, 1}, u::Float64, model::Reactor, xnow::Array{Float64, 1})
+  # Evaluate the ODE functions describing the reactor. In the format required by NLsolve!
+  # xnow :: Array{Float64, 1} = zeros(2)
+  xnow[1] = (model.F/model.V) * (model.CA0 - xprev[1]) - model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1]
+  xnow[2] = (model.F/model.V) * (model.TA0 - xprev[2]) - (model.dH/(model.rho*model.Cp))*model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1] + u/(model.rho*model.Cp*model.V)
+end
+
 function jacobian(x::Array{Float64, 1}, model::Reactor)
   # Returns the Jacobian evaluated at x
   J11 = -model.F/model.V-model.k0*exp(-model.E/(model.R*x[2]))
@@ -58,6 +65,12 @@ function QG(T::Float64, model::Reactor)
   # Return the evaluated heat generation term.
   ca = model.F/model.V*model.CA0/(model.F/model.V + model.k0*exp(-model.E/(model.R*T)))
   qg = -model.dH/(model.rho*model.Cp)*model.k0*exp(-model.E/(model.R*T))*ca
+  return qg
+end
+
+function CA(T::Float64, model::Reactor)
+  ca = model.F/model.V*model.CA0/(model.F/model.V + model.k0*exp(-model.E/(model.R*T)))
+  return ca
 end
 
 function QR(T::Float64, Q::Float64, model::Reactor)
@@ -105,9 +118,28 @@ function discretise(nX, nY, xspace, yspace)
       k += 1
     end
   end
-  operatingpoints[:, k] = [0.0046980570, 509.0603886018]
-  operatingpoints[:, k+1] = [0.5733662365, 395.3267526968]
-  operatingpoints[:, k+2] = [0.9992855411, 310.1428917846]
+  operatingpoints[:, k] = [0.009718824131074055, 508.0562351737852]
+  operatingpoints[:, k+1] = [0.48934869384879404, 412.1302612302412]
+  operatingpoints[:, k+2] = [0.9996453064079288, 310.07093871841454]
+  return operatingpoints
+end
+
+function discretise_randomly(npoints, xspace, yspace)
+  # Perform the same action as discretise() except pick points to
+  # discretise around at random.
+  operatingpoints = zeros(2, npoints+3)
+  k = 1
+  for k=1:npoints
+    nx = rand()
+    ny = rand()
+    xnow = xspace[1] + nx*(xspace[2] - xspace[1])
+    ynow = yspace[1] + ny*(yspace[2] - yspace[1])
+    operatingpoints[:, k] = [xnow, ynow]
+  end
+
+  operatingpoints[:, k] = [0.009718824131074055, 508.0562351737852]
+  operatingpoints[:, k+1] = [0.48934869384879404, 412.1302612302412]
+  operatingpoints[:, k+2] = [0.9996453064079288, 310.07093871841454]
   return operatingpoints
 end
 
@@ -117,6 +149,21 @@ function getLinearSystems(nX, nY, xspace, yspace, h, model::Reactor)
   N = nX*nY + 3 # add the three nominal operating points
   linsystems = Array(LinearReactor, N)
   ops = discretise(nX, nY, xspace, yspace)
+  for k=1:N
+    op = ops[:, k]
+    A, B, b = linearise(op, h, model)
+    linsystems[k] = LinearReactor(op, A, B, b)
+  end
+
+  return linsystems
+end
+
+function getLinearSystems_randomly(npoints, xspace, yspace, h, model::Reactor)
+  # Returns an array of linearised systems
+
+  N = npoints + 3 # add the three nominal operating points
+  linsystems = Array(LinearReactor, N)
+  ops = discretise_randomly(npoints, xspace, yspace)
   for k=1:N
     op = ops[:, k]
     A, B, b = linearise(op, h, model)
