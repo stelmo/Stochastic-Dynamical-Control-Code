@@ -1,6 +1,7 @@
 # Implement the augmented switching dynamical system
 using PyPlot
 using Distributions
+cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
 import SPF
 reload("SPF.jl")
 cd("..\\CSTR_Model")

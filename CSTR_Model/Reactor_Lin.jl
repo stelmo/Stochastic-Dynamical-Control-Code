@@ -19,41 +19,47 @@ cstr = begin
 end
 
 h = 0.001 # time discretisation
-tend = 5. # end simulation time
+tend = 1.0 # end simulation time
 ts = [0.0:h:tend]
 
 # Divide state space into sectors: n by m
 nX = 2 # rows
 nY = 3 # cols
 xspace = [0.0, 1.0]
-yspace = [250, 650]
+yspace = [250, 550]
 
 linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr)
 
-# linpoint = [0.4, 450]
-# A, B, b = Reactor_functions.linearise(linpoint, h, cstr)
-# N = length(ts)
-# xs1 = zeros(2, N)
-# linxs = zeros(2, N)
-#
-# initial_states = linpoint + [0.05, 5.0]
-#
-# us = ones(N)*0.0
-# xs1[:,1] = initial_states
-# linxs[:,1] = initial_states
-# # Loop through the rest of time
-# for t=2:N
-#     xs1[:, t] = Reactor_functions.run_reactor(xs1[:, t-1], us[t-1], h, cstr) # actual plant
-#     linxs[:, t] = A*linxs[:, t-1] + B*us[t-1] + b
-# end
-#
-# skip = 50
-# figure(1) # Kalman Filter Demonstration
-# x1, = plot(xs1[1,:][:], xs1[2,:][:], "k", linewidth=3)
-# x2, = plot(linxs[1,:][:], linxs[2,:][:], "r--", linewidth=3)
-# plot(xs1[1,1], xs1[2,1], "ko", markersize=10, markeredgewidth = 4)
-# plot(xs1[1,end], xs1[2,end], "kx", markersize=10, markeredgewidth = 4)
-# xlim([minimum(xs1[1,:])-0.1, maximum(xs1[1,:])+0.1])
-# ylim([minimum(xs1[2,:])-10.0, maximum(xs1[2,:])+10.0])
-# ylabel("Temperature [K]")
-# xlabel(L"Concentration [kmol.m$^{-3}$]")
+# figure(1)
+for k=1:(nX*nY+3)
+  initial_states = linsystems[k].op + randn(2).*[0.01, 2.0]
+
+  N = length(ts)
+  xs = zeros(2, N)
+  linxs = zeros(2, N)
+  xs[:,1] = initial_states
+  linxs[:,1] = initial_states
+  # Loop through the rest of time
+  for t=2:N
+      xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
+      temp = linsystems[k].A*linxs[:, t-1] + B*0.0 + linsystems[k].b
+      if (200 < temp[2] < 800) || (-0.1 < temp[1] < 1.1)
+        linxs[:, t] = temp
+      else
+        linxs[:, t] = linxs[:,t-1]
+      end
+  end
+
+  # subplot(nX, nY, k)
+  figure(k)
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+  x2, = plot(linxs[1,:][:], linxs[2,:][:], "r--", linewidth=3)
+  plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+  plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
+  # xlim([minimum(xs[1,:])-0.1, maximum(xs[1,:])+0.1])
+  xlim([0.0, 1.0])
+  ylim([minimum(xs[2,:])-10.0, maximum(xs[2,:])+10.0])
+  (k == 1 || k== 2) && ylabel("Temperature [K]")
+  # xlabel(L"Concentration [kmol.m$^{-3}$]")
+
+end

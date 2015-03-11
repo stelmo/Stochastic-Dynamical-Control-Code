@@ -94,7 +94,8 @@ function discretise(nX, nY, xspace, yspace)
   dx = (xspace[2] - xspace[1])/nX
   dy = (yspace[2] - yspace[1])/nY
 
-  operatingpoints = zeros(2,nX*nY)
+  operatingpoints = zeros(2,nX*nY + 3) # add the three nominal points
+
   k = 1 #counter
   for x=1:nX
     xnow = dx*(x-1) + xspace[1] + dx*0.5
@@ -104,13 +105,16 @@ function discretise(nX, nY, xspace, yspace)
       k += 1
     end
   end
-
+  operatingpoints[:, k] = [0.0046980570, 509.0603886018]
+  operatingpoints[:, k+1] = [0.5733662365, 395.3267526968]
+  operatingpoints[:, k+2] = [0.9992855411, 310.1428917846]
   return operatingpoints
 end
 
 function getLinearSystems(nX, nY, xspace, yspace, h, model::Reactor)
   # Returns an array of linearised systems
-  N = nX*nY
+
+  N = nX*nY + 3 # add the three nominal operating points
   linsystems = Array(LinearReactor, N)
   ops = discretise(nX, nY, xspace, yspace)
   for k=1:N
