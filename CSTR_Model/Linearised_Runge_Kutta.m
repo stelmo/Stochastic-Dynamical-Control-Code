@@ -19,7 +19,7 @@ k2 = F([x1;x2] + 1/2*h*k1);
 k3 = F([x1;x2] + 1/2*h*k2);
 k4 = F([x1;x2] + h*k3);
 
-rk = simplify(h/6*(k1+2*k2+2*k3+k4));
+rk = simplify((h/6)*(k1+2*k2+2*k3+k4));
 rktop = rk(1,1);
 rkbot = rk(2,1);
 
