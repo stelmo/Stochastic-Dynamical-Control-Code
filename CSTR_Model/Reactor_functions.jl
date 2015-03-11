@@ -19,6 +19,13 @@ type Reactor
   F :: Float64
 end
 
+type LinearReactor
+  op:: Array{Float64, 1} # linearisation points
+  A :: Array{Float64, 2}
+  B :: Array{Float64, 1}
+  b :: Array{Float64, 1}
+end
+
 function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::Reactor)
   # Use Runga-Kutta method to solve for the next time step using the full
   # nonlinear model.
@@ -60,37 +67,59 @@ function QR(T::Float64, Q::Float64, model::Reactor)
 end
 
 function linearise(linpoint::Array{Float64, 1}, h::Float64, model::Reactor)
-  # Returns the linearised coefficients given a linearisation point.
+  # Returns the linearised coefficients of the Runge Kutta method
+  # given a linearisation point.
+  # To solve use x(k+1) =  Ax(k) + Bu(k) + b
 
   B11 = 0.0
   B21 = 1.0/(model.rho*model.V*model.Cp)
-  jac = jacobian(linpoint, model)
-  J11 = jac[1,1]
-  J12 = jac[1,2]
-  J21 = jac[2,1]
-  J22 = jac[2,2]
-  rfunc = reactor_ode(linpoint, 0.0, model) # u = 0 because Bs account for the control term
-  f0 = rfunc[1]
-  g0 = rfunc[2]
-  D = jac*linpoint
-  D11 = D[1]
-  D21 = D[2]
+  B = [B11;B21]
+  A = jacobian(linpoint, model)
+  F0 = reactor_ode(linpoint, 0.0, model) # u = 0 because Bs account for the control term
+  D = A*linpoint
+  # now we have x' = Ax + Bu + F0 - D = F(x)
 
-  A11 = ((J11^4*h^4)/24 + (J11^3*h^3)/6 + (J11^2*J12*J21*h^4)/8 + (J11^2*h^2)/2 + (J11*J12*J21*J22*h^4)/12 + (J11*J12*J21*h^3)/3 + J11*h + (J12^2*J21^2*h^4)/24 + (J12*J21*J22^2*h^4)/24 + (J12*J21*J22*h^3)/6 + (J12*J21*h^2)/2)*linpoint[1]
-  A12 = ((J11^3*J12*h^4)/24 + (J11^2*J12*J22*h^4)/24 + (J11^2*J12*h^3)/6 + (J21*J11*J12^2*h^4)/12 + (J11*J12*J22^2*h^4)/24 + (J11*J12*J22*h^3)/6 + (J11*J12*h^2)/2 + (J21*J12^2*J22*h^4)/12 + (J21*J12^2*h^3)/6 + (J12*J22^3*h^4)/24 + (J12*J22^2*h^3)/6 + (J12*J22*h^2)/2 + J12*h)*linpoint[2]
-  B1top = ((J11^3*h^4)/24 + (J11^2*h^3)/6 + (J12*J21*J11*h^4)/12 + (J11*h^2)/2 + (J12*J21*J22*h^4)/24 + (J12*J21*h^3)/6 + h)*B11
-  B2top = ((J11^2*J12*h^4)/24 + (J11*J12*J22*h^4)/24 + (J11*J12*h^3)/6 + (J21*J12^2*h^4)/24 + (J12*J22^2*h^4)/24 + (J12*J22*h^3)/6 + (J12*h^2)/2)*B21
-  B1 = B1top + B2top
-  b1 = f0*h - D11*h - (D11*J11^2*h^3)/6 - (D11*J11^3*h^4)/24 + (J11^2*f0*h^3)/6 + (J11^3*f0*h^4)/24 - (D11*J11*h^2)/2 - (D21*J12*h^2)/2 + (J11*f0*h^2)/2 + (J12*g0*h^2)/2 + (J12*J21*f0*h^3)/6 + (J11*J12*g0*h^3)/6 + (J12*J22*g0*h^3)/6 - (D21*J11^2*J12*h^4)/24 - (D21*J12^2*J21*h^4)/24 - (D21*J12*J22^2*h^4)/24 + (J11^2*J12*g0*h^4)/24 + (J12^2*J21*g0*h^4)/24 + (J12*J22^2*g0*h^4)/24 - (D11*J12*J21*h^3)/6 - (D21*J11*J12*h^3)/6 - (D21*J12*J22*h^3)/6 - (D11*J11*J12*J21*h^4)/12 - (D11*J12*J21*J22*h^4)/24 - (D21*J11*J12*J22*h^4)/24 + (J11*J12*J21*f0*h^4)/12 + (J12*J21*J22*f0*h^4)/24 + (J11*J12*J22*g0*h^4)/24
+  n, = size(A)
+  # Now use the Runge Kutta method (thank you matlab symbolics!)
+  newA = eye(n) + ((h*(A + 2*A*((A*h)/2 + eye(n)) + 2*A*((A*h*((A*h)/2 + eye(n)))/2 + eye(n)) + A*(A*h*((A*h*((A*h)/2 + eye(n)))/2 + eye(n)) + eye(n))))/6)
+  newB = ((h*(6*B + A*B*h + A*h*(B + (A*h*(B + (A*B*h)/2))/2) + A*h*(B + (A*B*h)/2)))/6)
+  newb = -(h*(6*D - 6*F0 + A*h*(D - F0) + A*h*(D - F0 + (A*h*(D - F0))/2) + A*h*(D - F0 + (A*h*(D - F0 + (A*h*(D - F0))/2))/2)))/6
 
-  A21 = ((J11^3*J21*h^4)/24 + (J11^2*J21*J22*h^4)/24 + (J11^2*J21*h^3)/6 + (J12*J11*J21^2*h^4)/12 + (J11*J21*J22^2*h^4)/24 + (J11*J21*J22*h^3)/6 + (J11*J21*h^2)/2 + (J12*J21^2*J22*h^4)/12 + (J12*J21^2*h^3)/6 + (J21*J22^3*h^4)/24 + (J21*J22^2*h^3)/6 + (J21*J22*h^2)/2 + J21*h)*linpoint[1]
-  A22 = ((J11^2*J12*J21*h^4)/24 + (J11*J12*J21*J22*h^4)/12 + (J11*J12*J21*h^3)/6 + (J12^2*J21^2*h^4)/24 + (J12*J21*J22^2*h^4)/8 + (J12*J21*J22*h^3)/3 + (J12*J21*h^2)/2 + (J22^4*h^4)/24 + (J22^3*h^3)/6 + (J22^2*h^2)/2 + J22*h)*linpoint[2]
-  B1bot = ((J11^2*J21*h^4)/24 + (J11*J21*J22*h^4)/24 + (J11*J21*h^3)/6 + (J12*J21^2*h^4)/24 + (J21*J22^2*h^4)/24 + (J21*J22*h^3)/6 + (J21*h^2)/2)*B11
-  B2bot = ((J22^3*h^4)/24 + (J22^2*h^3)/6 + (J12*J21*J22*h^4)/12 + (J22*h^2)/2 + (J11*J12*J21*h^4)/24 + (J12*J21*h^3)/6 + h)*B21
-  B2 = B1bot + B2bot
-  b2 = g0*h - D21*h - (D21*J22^2*h^3)/6 - (D21*J22^3*h^4)/24 + (J22^2*g0*h^3)/6 + (J22^3*g0*h^4)/24 - (D11*J21*h^2)/2 - (D21*J22*h^2)/2 + (J21*f0*h^2)/2 + (J22*g0*h^2)/2 + (J11*J21*f0*h^3)/6 + (J21*J22*f0*h^3)/6 + (J12*J21*g0*h^3)/6 - (D11*J11^2*J21*h^4)/24 - (D11*J12*J21^2*h^4)/24 - (D11*J21*J22^2*h^4)/24 + (J11^2*J21*f0*h^4)/24 + (J12*J21^2*f0*h^4)/24 + (J21*J22^2*f0*h^4)/24 - (D11*J11*J21*h^3)/6 - (D11*J21*J22*h^3)/6 - (D21*J12*J21*h^3)/6 - (D11*J11*J21*J22*h^4)/24 - (D21*J11*J12*J21*h^4)/24 - (D21*J12*J21*J22*h^4)/12 + (J11*J21*J22*f0*h^4)/24 + (J11*J12*J21*g0*h^4)/24 + (J12*J21*J22*g0*h^4)/12
+  return newA, newB, newb
+  # return A, B, F0, D
+end
 
-  return [A11 A12;A21 A22], [B1;B2], [b1;b2]
+function discretise(nX, nY, xspace, yspace)
+  # Discrete the state space into nX*nY regions.
+  dx = (xspace[2] - xspace[1])/nX
+  dy = (yspace[2] - yspace[1])/nY
+
+  operatingpoints = zeros(2,nX*nY)
+  k = 1 #counter
+  for x=1:nX
+    xnow = dx*(x-1) + xspace[1] + dx*0.5
+    for y=1:nY
+      ynow = dy*(y-1) + yspace[1] + dy*0.5
+      operatingpoints[:, k] = [xnow, ynow]
+      k += 1
+    end
+  end
+
+  return operatingpoints
+end
+
+function getLinearSystems(nX, nY, xspace, yspace, h, model::Reactor)
+  # Returns an array of linearised systems
+  N = nX*nY
+  linsystems = Array(LinearReactor, N)
+  ops = discretise(nX, nY, xspace, yspace)
+  for k=1:N
+    op = ops[:, k]
+    A, B, b = linearise(op, h, model)
+    linsystems[k] = LinearReactor(op, A, B, b)
+  end
+
+  return linsystems
 end
 
 end # module
