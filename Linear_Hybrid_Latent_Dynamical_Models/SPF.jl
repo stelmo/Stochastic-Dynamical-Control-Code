@@ -82,12 +82,17 @@ function filter!(particles::Particles, u, y, model::Model)
         noise = rand(model.xdists[s])
         particles.x[:, p] = model.F[s](particles.x[:, p], u, noise) # predict
         particles.w[p] = particles.w[p]*pdf(model.ydists[s], y - model.G[s](particles.x[:, p])) # weight of each particle
+
+        (isnan(particles.w[p])) && (warn("Particle weight issue..."); particles.w[p] = 0.0) # in case
       end
     end
   end
 
+
+  (abs(maximum(particles.w)) < 1e-7) && warn("The particles all have very small weight...")
+  (true in isnan(particles.w)) && warn("There is a NaN in the weights!")
   particles.w = particles.w ./ sum(particles.w)
-  (true in isnan(particles.w)) && warn("Particles have become degenerate! All is lost!")
+  (true in isnan(particles.w)) && error("Particles have become degenerate!")
 
 
   if numberEffectiveParticles(particles) < N/2
@@ -152,24 +157,14 @@ function calcA(linsystems::Array{Reactor_functions.LinearReactor,1})
   N = length(linsystems)
   A = zeros(N, N) #pre-allocate A
 
-  xs = zeros(N)
-  ys = zeros(N)
-  for k=1:N
-    xs[k] = linsystems[k].op[1]
-    ys[k] = linsystems[k].op[2]
-  end
-  minvec = [minimum(xs), minimum(ys)]
-  diffvec = [maximum(xs), maximum(ys)] - [minimum(xs), minimum(ys)]
-
   for j=1:N
     for i=1:N
-      v1 = (linsystems[i].op - minvec) ./ diffvec
-      v2 = (linsystems[j].op - minvec) ./ diffvec
-      A[i,j] = norm(v1-v2)
+      A[i,j] = norm(linsystems[i].op-linsystems[j].op)
     end
   end
 
-  A = 1.0 .- A./maximum(A,1)
+  A = A./maximum(A,1)
+  A = exp(-15.0 .* A)
   A = A./sum(A,1)
 
   return A
@@ -208,6 +203,21 @@ function getDists(linsystems::Array{Reactor_functions.LinearReactor,1}, dist)
   end
 
   return xdists
+end
+
+function getInitialSwitches(initial_states, linsystems::Array{Reactor_functions.LinearReactor,1})
+  N = length(linsystems)
+  initstates = zeros(N) #pre-allocate
+
+  for i=1:N
+    initstates[i] = norm(linsystems[i].op-initial_states)
+  end
+
+  initstates = initstates./maximum(initstates)
+  initstates = exp(-15.0 .* initstates)
+  initstates = initstates./sum(initstates)
+
+  return initstates
 end
 
 end #module

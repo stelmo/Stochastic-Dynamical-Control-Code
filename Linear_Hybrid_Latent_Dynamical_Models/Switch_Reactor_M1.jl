@@ -31,14 +31,14 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.01 # time discretisation
+h = 0.001 # time discretisation
 tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
-init_state = [0.1; 450] # initial state
+init_state = [0.5; 450] # initial state
 C = [0.0 1.0]
 R = eye(1)*4.0
 Q = eye(2)
@@ -48,10 +48,13 @@ Q[4] = 4.0
 # Divide state space into sectors: n by m
 nX = 3 # rows
 nY = 3 # cols
+npoints = 10
 xspace = [0.0, 1.0]
-yspace = [250, 550]
+yspace = [250, 650] #was 550
 
-linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+# linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr_model) # doesnt work weirdly...
+
 A = SPF.calcA(linsystems)
 F = SPF.getF(linsystems)
 G = SPF.getG(linsystems, C)
@@ -59,13 +62,13 @@ xdists = SPF.getDists(linsystems, MvNormal(Q))
 ydists = SPF.getDists(linsystems, MvNormal(R))
 cstr = SPF.Model(F, G, A, xdists, ydists)
 #
-nP = 1000
+nP = 2000
 initial_states = init_state
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
 initial_covar[4] = 1.0
 xdist = MvNormal(initial_states, initial_covar)
-sguess = ones(length(linsystems))./length(linsystems)
+sguess = SPF.getInitialSwitches(initial_states, linsystems)
 sdist = Categorical(sguess)
 particles = SPF.init_SPF(xdist, sdist, nP, 2)
 fmeans = zeros(2, N)

@@ -41,13 +41,13 @@ cstr2 = begin
 end
 
 h = 0.001 # time discretisation
-tend = 100. # end simulation time
+tend = 3. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs1 = zeros(2, N)
 xs2 = zeros(2, N)
 
-initial_states = [0.1, 450]
+initial_states = [0.5, 450]
 
 us = ones(N)*0.0
 xs1[:,1] = initial_states
@@ -73,12 +73,12 @@ skip = 50
 figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs1[1,:]', "k", linewidth=3)
-x2, = plot(ts, xs2[1,:]', "r--", linewidth=3)
+# x2, = plot(ts, xs2[1,:]', "r--", linewidth=3)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 xlim([0, tend])
 subplot(2,1,2)
 x1, = plot(ts, xs1[2,:]', "k", linewidth=3)
-x2, = plot(ts, xs2[2,:]', "r--", linewidth=3)
+# x2, = plot(ts, xs2[2,:]', "r--", linewidth=3)
 ylabel("Temperature [K]")
 xlabel("Time [min]")
 xlim([0, tend])

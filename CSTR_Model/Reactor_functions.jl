@@ -137,9 +137,9 @@ function discretise_randomly(npoints, xspace, yspace)
     operatingpoints[:, k] = [xnow, ynow]
   end
 
-  operatingpoints[:, k] = [0.009718824131074055, 508.0562351737852]
-  operatingpoints[:, k+1] = [0.48934869384879404, 412.1302612302412]
-  operatingpoints[:, k+2] = [0.9996453064079288, 310.07093871841454]
+  operatingpoints[:, k+1] = [0.009718824131074055, 508.0562351737852]
+  operatingpoints[:, k+2] = [0.48934869384879404, 412.1302612302412]
+  operatingpoints[:, k+3] = [0.9996453064079288, 310.07093871841454]
   return operatingpoints
 end
 

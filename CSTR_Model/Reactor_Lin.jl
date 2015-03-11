@@ -26,7 +26,7 @@ ts = [0.0:h:tend]
 nX = 4 # rows
 nY = 4 # cols
 total_ops = nX*nY + 3 # nX*nY +3
-npoints = 10
+npoints = 20
 total_ops = npoints + 3 # nX*nY +3
 
 xspace = [-0.5, 1.0]
