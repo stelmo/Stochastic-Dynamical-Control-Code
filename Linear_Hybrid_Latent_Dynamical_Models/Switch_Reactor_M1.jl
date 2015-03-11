@@ -84,6 +84,18 @@ for t=2:N
   SPF.filter!(particles, us[t-1], ys[t], cstr)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
 end
+# Particle Summary
+for k=1:length(linsystems)
+  println("Percentage Particle Type ", k, " is ",count((x)->x==k, particles.s)/nP)
+end
+# Particle Summary
+psum = zeros(length(linsystems))
+for k=1:length(linsystems)
+  psum[k] = count((x)->x==k, particles.s)/nP
+end
+figure(1)
+plot(psum)
+
 #
 figure(2) # Plot filtered results
 subplot(2,1,1)

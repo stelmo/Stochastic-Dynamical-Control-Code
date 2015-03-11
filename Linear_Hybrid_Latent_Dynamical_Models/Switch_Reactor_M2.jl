@@ -38,7 +38,7 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 395] # initial state
+init_state = [0.5; 410] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -86,7 +86,16 @@ for t=2:N
   SPF.filter!(particles, us[t-1], ys[:, t], cstr)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
 end
-#
+
+# Particle Summary
+psum = zeros(length(linsystems))
+for k=1:length(linsystems)
+  psum[k] = count((x)->x==k, particles.s)/nP
+end
+figure(1)
+plot(psum)
+
+
 figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
