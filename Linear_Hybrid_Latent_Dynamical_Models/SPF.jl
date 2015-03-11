@@ -2,6 +2,9 @@ module SPF
 # switching particle filter
 
 using Distributions
+cd("..\\CSTR_Model")
+using Reactor_functions
+cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
 
 type Particles
   x :: Array{Float64, 2} # states
@@ -141,6 +144,70 @@ function getStats(particles::Particles)
   # Return the Gaussian statistics of the particles.
   fitted = fit(MvNormal, particles.x, particles.w)
   return mean(fitted), cov(fitted)
+end
+
+function calcA(linsystems::Array{Reactor_functions.LinearReactor,1})
+  # Returns a stochastic HMM matrix based on the Euclidean
+  # distances between the operating points.
+  N = length(linsystems)
+  A = zeros(N, N) #pre-allocate A
+
+  xs = zeros(N)
+  ys = zeros(N)
+  for k=1:N
+    xs[k] = linsystems[k].op[1]
+    ys[k] = linsystems[k].op[2]
+  end
+  minvec = [minimum(xs), minimum(ys)]
+  diffvec = [maximum(xs), maximum(ys)] - [minimum(xs), minimum(ys)]
+
+  for j=1:N
+    for i=1:N
+      v1 = (linsystems[i].op - minvec) ./ diffvec
+      v2 = (linsystems[j].op - minvec) ./ diffvec
+      A[i,j] = norm(v1-v2)
+    end
+  end
+
+  A = 1.0 .- A./maximum(A,1)
+  A = A./sum(A,1)
+
+  return A
+end
+
+function getF(linsystems::Array{Reactor_functions.LinearReactor,1})
+  # Return transmission function matrices
+  N = length(linsystems)
+  F = Array(Function, N)
+  for k=1:N
+    f(x, u, w) = linsystems[k].A*x + linsystems[k].B*u + w
+    F[k] = f
+  end
+
+  return F
+end
+
+function getG(linsystems::Array{Reactor_functions.LinearReactor,1}, C)
+  # Return emission function matrices
+  N = length(linsystems)
+  G = Array(Function, N)
+  for k=1:N
+    g(x) = C*x
+    G[k] = g
+  end
+
+  return G
+end
+
+function getDists(linsystems::Array{Reactor_functions.LinearReactor,1}, dist)
+  # Return emission function matrices
+  N = length(linsystems)
+  xdists = Array(typeof(dist), N)
+  for k=1:N
+    xdists[k] = dist
+  end
+
+  return xdists
 end
 
 end #module

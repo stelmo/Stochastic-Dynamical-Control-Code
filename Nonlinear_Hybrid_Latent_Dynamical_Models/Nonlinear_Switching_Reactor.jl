@@ -53,18 +53,15 @@ ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 xsnofix = zeros(2, N)
-# ys = zeros(2, N)
 ys = zeros(N)
 
-newC = [0.0 1.0] #eye(2)
+newC = [0.0 1.0]
 R = eye(1)*4.0
-# R = eye(2)
-# R[1] = 1e-3
-# R[4] = 4.0
 Q = eye(2)
 Q[1] = 1e-4
 Q[4] = 5.0
 
+# A = [0.8 0.2;0.2 0.8]
 A = [0.5 0.5;0.5 0.5]
 fun1(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr1)
 fun2(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr2)
@@ -87,19 +84,20 @@ fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)
 
 us = zeros(N)
+switch_count = zeros(Int64, N)
+
 measurements = MvNormal(R)
 xs[:,1] = initial_states
 xsnofix[:,1] = initial_states
 
 ys[1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
 SPF.init_filter!(particles, 0.0, ys[1], cstr_filter)
-# ys[:, 1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
-# SPF.init_filter!(particles, 0.0, ys[:, 1], cstr_filter)
+switch_count[1] = count((x)->x==1, particles.s)
 
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
-  if ts[t] < 0.5
+  if ts[t] < 1.0
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   else
@@ -107,21 +105,24 @@ for t=2:N
     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   end
   if ts[t] > 0.5
-    us[t] = 0.0
+    us[t] = -300.0
   end
-  # ys[:, t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
-  # SPF.filter!(particles, us[t-1], ys[:, t], cstr_filter)
   ys[t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
   SPF.filter!(particles, us[t-1], ys[t], cstr_filter)
-
+  switch_count[t] = count((x)->x==1, particles.s)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
 end
 
-println("Type 1: ", count((x)->x==1, particles.s))
-println("Type 2: ", count((x)->x==2, particles.s))
+
+figure(1)
+plot(ts, switch_count, "k.")
+xlabel("Time [min]")
+ylabel("Model 1 Count")
+rc("font",size=22)
+
 
 skip = 50
-# figure(1) # Kalman Filter Demonstration
+# figure(2) # Kalman Filter Demonstration
 # x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 # f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 # b1 = 0.0
@@ -134,19 +135,17 @@ skip = 50
 # legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
 
 
-figure(2) # Plot filtered results
+figure(3) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 x1nf, = plot(ts, xsnofix[1,:]', "g--", linewidth=3)
 k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
-# y2, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 x2nf, = plot(ts, xsnofix[2,:]', "g--", linewidth=3)
-# y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
 y2, = plot(ts[1:10:end], ys[1:10:end], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
 ylabel("Temperature [K]")

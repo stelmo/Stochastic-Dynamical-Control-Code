@@ -1,16 +1,14 @@
 # Implement the augmented switching dynamical system
 using PyPlot
 using Distributions
+
 import SPF
 reload("SPF.jl")
 cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
 using Confidence
-using LLDS_functions
-cd("..\\Hybrid_Latent_Dynamical_Models")
-
-warn("Hardcoded for 2 state system!")
+cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
@@ -34,8 +32,20 @@ cstr_model = begin
 end
 
 h = 0.001 # time discretisation
-tend = 1.0 # end simulation time
+tend = 3.0 # end simulation time
 ts = [0.0:h:tend]
+N = length(ts)
+xs = zeros(2, N)
+ys = zeros(2, N) # only one measurement
+
+init_state = [0.5; 395] # initial state
+C = eye(2) # observe both states
+R = eye(2)
+R[1] = 1e-5
+R[4] = 4.0
+Q = eye(2)
+Q[1] = 1e-5
+Q[4] = 4.0
 
 # Divide state space into sectors: n by m
 nX = 3 # rows
@@ -44,41 +54,21 @@ xspace = [0.0, 1.0]
 yspace = [250, 550]
 
 linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
-
-
-init_state = [0.5; 410] # initial state
-h = 0.01 # time discretisation
-tend = 3.0 # end simulation time
-ts = [0.0:h:tend]
-N = length(ts)
-xs = zeros(2, N)
-ys = zeros(2, N) # only one measurement
-
-newC = [0.0 1.0]
-R = eye(1)*4.0
-
-# Specify the first linear models
-
-fun3(x, u, w) = lin3.A*x + lin3.B*u + lin3.b + w
-gun3(x) = lin3.C*x
-
-A = [0.5 0.3 0.1;
-     0.4 0.4 0.4;
-     0.1 0.3 0.5]
-
-F = [fun1, fun2, fun3]
-G = [gun1, gun2, gun3]
-ydists = [MvNormal(lin1.R);MvNormal(lin2.R);MvNormal(lin3.R)]
-xdists = [MvNormal(lin1.Q); MvNormal(lin2.Q); MvNormal(lin3.Q)]
+A = SPF.calcA(linsystems)
+F = SPF.getF(linsystems)
+G = SPF.getG(linsystems, C)
+xdists = SPF.getDists(linsystems, MvNormal(Q))
+ydists = SPF.getDists(linsystems, MvNormal(R))
 cstr = SPF.Model(F, G, A, xdists, ydists)
-
+#
 nP = 1000
 initial_states = init_state
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
 initial_covar[4] = 1.0
 xdist = MvNormal(initial_states, initial_covar)
-sdist = Categorical([0.1, 0.8, 0.1])
+sguess = ones(length(linsystems))./length(linsystems)
+sdist = Categorical(sguess)
 particles = SPF.init_SPF(xdist, sdist, nP, 2)
 fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)
@@ -86,20 +76,21 @@ fcovars = zeros(2,2, N)
 us = zeros(N)
 measurements = MvNormal(R)
 xs[:,1] = initial_states
-ys[1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
-SPF.init_filter!(particles, 0.0, ys[1], cstr)
+ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
+SPF.init_filter!(particles, 0.0, ys[:, 1], cstr)
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
-  ys[t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
-  SPF.filter!(particles, us[t-1], ys[t], cstr)
+  ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
+  SPF.filter!(particles, us[t-1], ys[:, t], cstr)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
 end
-
+#
 figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+y1, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
 k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
