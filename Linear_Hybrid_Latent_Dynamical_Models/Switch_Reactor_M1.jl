@@ -31,8 +31,8 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.001 # time discretisation
-tend = 5.0 # end simulation time
+h = 0.01 # time discretisation
+tend = 30.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -48,7 +48,7 @@ Q[4] = 4.0
 # Divide state space into sectors: n by m
 nX = 3 # rows
 nY = 3 # cols
-npoints = 10
+npoints = 30
 xspace = [0.0, 1.0]
 yspace = [250, 650] #was 550
 
