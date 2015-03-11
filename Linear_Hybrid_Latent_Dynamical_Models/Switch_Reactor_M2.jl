@@ -18,12 +18,12 @@ end
 
 # Specify the nonlinear model
 cstr_model = begin
-  V = 0.1; #m3
+  V = 5.0; #m3
   R = 8.314; #kJ/kmol.K
   CA0 = 1.0; #kmol/m3
   TA0 = 310.0; #K
   dH = -4.78e4; #kJ/kmol
-  k0 = 72.0e9; #1/min
+  k0 = 72.0e7; #1/min
   E = 8.314e4; #kJ/kmol
   Cp = 0.239; #kJ/kgK
   rho = 1000.0; #kg/m3
@@ -32,7 +32,7 @@ cstr_model = begin
 end
 
 h = 0.001 # time discretisation
-tend = 3.0 # end simulation time
+tend = 100.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -48,8 +48,8 @@ Q[1] = 1e-5
 Q[4] = 4.0
 
 # Divide state space into sectors: n by m
-nX = 3 # rows
-nY = 3 # cols
+nX = 4 # rows
+nY = 4 # cols
 xspace = [0.0, 1.0]
 yspace = [250, 550]
 

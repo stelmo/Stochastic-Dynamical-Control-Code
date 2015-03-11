@@ -13,12 +13,12 @@ end
 
 # Specify the nonlinear model
 cstr1 = begin
-  V = 0.10 #m3
+  V = 5.0 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e9 #1/min
+  k0 = 72.0e7 #1/min
   E = 8.314e4 #kJ/kmol
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
@@ -27,27 +27,27 @@ cstr1 = begin
 end
 
 cstr2 = begin
-  V = 0.1; #m3
+  V = 5.0; #m3
   R = 8.314; #kJ/kmol.K
   CA0 = 1.0; #kmol/m3
   TA0 = 310.0; #K
   dH = -4.78e4; #kJ/kmol
-  k0 = 72.0e9; #1/min
+  k0 = 72.0e7; #1/min
   E = 8.314e4; #kJ/kmol
-  Cp = 0.239*1.2; #kJ/kgK
+  Cp = 0.239; #kJ/kgK
   rho = 1000.0; #kg/m3
   F = 100e-3; #m3/min
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 h = 0.001 # time discretisation
-tend = 10. # end simulation time
+tend = 100. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs1 = zeros(2, N)
 xs2 = zeros(2, N)
 
-initial_states = [0.5, 410]
+initial_states = [0.1, 450]
 
 us = ones(N)*0.0
 xs1[:,1] = initial_states
@@ -59,7 +59,7 @@ for t=2:N
     xs2[:, t] = Reactor_functions.run_reactor(xs2[:, t-1], us[t-1], h, cstr1) # actual plant
   else
     xs1[:, t] = Reactor_functions.run_reactor(xs1[:, t-1], us[t-1], h, cstr1) # actual plant
-    xs2[:, t] = Reactor_functions.run_reactor(xs2[:, t-1], us[t-1], h, cstr1) # actual plant
+    xs2[:, t] = Reactor_functions.run_reactor(xs2[:, t-1], us[t-1], h, cstr2) # actual plant
   end
 end
 
