@@ -11,16 +11,16 @@ import Confidence
 
 # Specify the nonlinear model
 cstr = begin
-  V = 5.0; #m3
-  R = 8.314; #kJ/kmol.K
-  CA0 = 1.0; #kmol/m3
-  TA0 = 310.0; #K
-  dH = -4.78e4; #kJ/kmol
-  k0 = 72.0e7; #1/min
-  E = 8.314e4; #kJ/kmol
-  Cp = 0.239; #kJ/kgK
-  rho = 1000.0; #kg/m3
-  F = 100e-3; #m3/min
+  V = 5.0 #m3
+  R = 8.314 #kJ/kmol.K
+  CA0 = 1.0 #kmol/m3
+  TA0 = 310.0 #K
+  dH = -4.78e4 #kJ/kmol
+  k0 = 72.0e7 #1/min
+  E = 8.314e4 #kJ/kmol
+  Cp = 0.239 #kJ/kgK
+  rho = 1000.0 #kg/m3
+  F = 100e-3 #m3/min
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
