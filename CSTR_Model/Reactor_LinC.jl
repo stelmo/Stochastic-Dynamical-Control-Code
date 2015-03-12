@@ -23,31 +23,27 @@ tend = 50.0 # end simulation time
 ts = [0.0:h:tend]
 
 # Divide state space into sectors: n by m
-nX = 4 # rows
-nY = 4 # cols
-total_ops = nX*nY + 3 # nX*nY +3
-npoints = 10
+npoints = 1
 total_ops = npoints + 3 # nX*nY +3
 
-xspace = [0.0, 1.0]
-yspace = [250, 550]
+xspace = [-0.5, 1.0]
+yspace = [250, 650]
 
 # linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr)
 linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr)
 
 figure(1)
-x1 = 0.0
-x2 = 0.0
-for k=1:(total_ops)
-  if k == npoints + 1
-    initial_states = linsystems[k].op + abs(randn(2)).*[0.15, 20.0]
-  elseif k == npoints + 2
-    initial_states = linsystems[k].op + randn(2).*[0.1, 10.0]
-  elseif k == npoints + 3
-    initial_states = linsystems[k].op - abs(randn(2)).*[0.2, 20.0]
-  else
-    initial_states = linsystems[k].op + randn(2).*[0.03, 4.0]
-  end
+k=4 # set which operating point to use...
+nDD = 2
+vars = zeros(2,3)
+vars[:,1] = [0.05, 5.0]
+vars[:,2] = [0.3, 20.0]
+# vars[:,3] = [0.08, 16.0]
+x1 = 0
+x2 = 0
+x3 = 0
+for dd=1:nDD # only loop through
+  initial_states = linsystems[2].op + abs(randn(2)).*vars[:, dd]
 
   N = length(ts)
   xs = zeros(2, N)
@@ -66,23 +62,24 @@ for k=1:(total_ops)
       end
   end
 
+  subplot(nDD, 1, dd)
   x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
   x2, = plot(linxs[1,:][:], linxs[2,:][:], "r--", linewidth=3)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   plot(linxs[1,1], linxs[2,1], "ro", markersize=10, markeredgewidth = 4)
   plot(linxs[1,end], linxs[2,end], "rx", markersize=10, markeredgewidth = 4)
-end
-# Also plot the steady state points
-ss1 = readcsv("ss1.csv")
-ss2 = readcsv("ss2.csv")
-ss3 = readcsv("ss3.csv")
-x3, = plot(ss1[1], ss1[2], "gx", markersize=10, markeredgewidth = 4)
-plot(ss2[1], ss2[2], "gx", markersize=10, markeredgewidth = 4)
-plot(ss3[1], ss3[2], "gx", markersize=10, markeredgewidth = 4)
-legend([x1, x2, x3],["Nonlinear Model","Linear Model","Operating Point"], loc="best")
+  ylabel("Temperature [K]")
 
-xlim([-0.1, 1.2])
-ylim([250,850])
-ylabel("Temperature [K]")
+  ## Comment out as necessary!
+  # ss1 = readcsv("ss1.csv")
+  # ss2 = readcsv("ss2.csv")
+  ss3 = readcsv("ss3.csv")
+  # x3, = plot(ss1[1], ss1[2], "gx", markersize=10, markeredgewidth = 4)
+  # x3, = plot(ss2[1], ss2[2], "gx", markersize=10, markeredgewidth = 4)
+  x3, = plot(ss3[1], ss3[2], "gx", markersize=10, markeredgewidth = 4)
+
+end
+
+legend([x1, x2, x3],["Nonlinear Model","Linear Model","Operating Point"], loc="best")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
