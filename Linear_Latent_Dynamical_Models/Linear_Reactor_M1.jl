@@ -9,6 +9,10 @@ using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
 import Confidence
 
+# This is to add the noise to the measurements! cant add a float to a [float]...
+function Base.convert(::Type{Float64}, x::Array{Float64, 1})
+  return x[1]
+end
 
 # Specify the nonlinear model
 cstr = begin

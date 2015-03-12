@@ -13,6 +13,11 @@ cd("..\\Linear_Latent_Dynamical_Models")
 using Confidence
 cd("..\\Nonlinear_Latent_Dynamical_Models")
 
+# This is to add the noise to the measurements! cant add a float to a [float]...
+function Base.convert(::Type{Float64}, x::Array{Float64, 1})
+  return x[1]
+end
+
 # Specify the nonlinear model
 cstr_model = begin
   V = 5.0 #m3

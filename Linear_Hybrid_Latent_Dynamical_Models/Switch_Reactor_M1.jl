@@ -10,8 +10,7 @@ cd("..\\Linear_Latent_Dynamical_Models")
 using Confidence
 cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
 
-# Add a definition for convert to make our lives easier!
-# But be careful now!
+# This is to add the noise to the measurements! cant add a float to a [float]...
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
   return x[1]
 end
