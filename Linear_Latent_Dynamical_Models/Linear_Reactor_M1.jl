@@ -3,6 +3,7 @@
 using PyPlot
 using Distributions
 import LLDS_functions
+reload("LLDS_functions.jl")
 cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
@@ -19,12 +20,12 @@ end
 
 # Specify the nonlinear model
 cstr = begin
-  V = 0.1; #m3
+  V = 5.0; #m3
   R = 8.314; #kJ/kmol.K
   CA0 = 1.0; #kmol/m3
   TA0 = 310.0; #K
   dH = -4.78e4; #kJ/kmol
-  k0 = 72.0e9; #1/min
+  k0 = 72.0e7; #1/min
   E = 8.314e4; #kJ/kmol
   Cp = 0.239; #kJ/kgK
   rho = 1000.0; #kg/m3
@@ -32,35 +33,34 @@ cstr = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.57; 395]
+init_state = [0.50; 400]
 h = 0.001 # time discretisation
-tend = 2.0 # end simulation time
+tend = 20.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 xs[:,1] = init_state
 ys = zeros(N) # only one measurement
 
+xspace = [0.0, 1.0]
+yspace = [250, 550]
+
 # Specify the linear model
-J = readcsv("J_ss.csv")
-ss = readcsv("ss.csv")'[:,1]
-lin_cstr = begin
-  A = eye(2)+h*J
-  B = zeros(2,1)
-  B[2] = h/(cstr.rho*cstr.Cp*cstr.V)
-  b = -h*J*ss
-  C = zeros(1,2)
-  C[2] = 1.0 #measure temperature
-  Q = eye(2) # plant mismatch/noise
-  Q[1] = 1e-6
-  Q[4] = 4.
-  R = 2.0 # measurement noise
-  LLDS_functions.LLDS{Float64}(A, B, b, C, Q, R)
-end
+npoints = 1
+linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr) # doesnt work weirdly...
+A = linsystems[3].A
+B = linsystems[3].B
+b = linsystems[3].b
+C = [0.0 1.0]
+Q = eye(2) # plant mismatch/noise
+Q[1] = 1e-6
+Q[4] = 4.
+R = 10.0 # measurement noise
+lin_cstr = LLDS_functions.LLDS{Float64}(A, B, b, C, Q, R)
+
 
 # Plant initialisation
 linxs = zeros(2, N)
-linys = zeros(N)
 linxs[:, 1] = init_state
 us = zeros(N) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t=1)...
 
@@ -90,7 +90,7 @@ end
 # pred_us[:] = us[pstart-1:pend-1]
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
-skip = 150
+skip = 1500
 figure(1) # Kalman Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
 f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
@@ -103,12 +103,13 @@ ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
-
+skip = 300
+skipm = 100
 figure(2) # Filtering
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 linx1, = plot(ts, linxs[1,:]', "r--", linewidth=3)
-k1, = plot(ts[1:15:end], filtermeans[1, 1:15:end]', "mo")
+k1, = plot(ts[1:skip:end], filtermeans[1, 1:skip:end]', "mo")
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,linx1],["Nonlinear Model","Linear Model"], loc="best")
 xlim([0, tend])
@@ -116,11 +117,11 @@ ylim([0, 1])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 linx2, = plot(ts, linxs[2,:]', "r--", linewidth=3)
-y2, = plot(ts[1:3:end], ys[1:3:end], "rx", markersize=5, markeredgewidth=1)
-k2, = plot(ts[1:15:end], filtermeans[2, 1:15:end]', "mo")
+y2, = plot(ts[1:skipm:end], ys[1:skipm:end], "rx", markersize=5, markeredgewidth=1)
+k2, = plot(ts[1:skip:end], filtermeans[2, 1:skip:end]', "mo")
 ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
-ylim([350, 400])
+ylim([350, 450])
 rc("font",size=22)
