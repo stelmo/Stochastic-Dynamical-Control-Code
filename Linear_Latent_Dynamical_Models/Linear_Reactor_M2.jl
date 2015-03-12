@@ -24,7 +24,7 @@ cstr = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.50; 400]
+init_state = [0.50; 450]
 h = 0.001 # time discretisation
 tend = 20.0 # end simulation time
 ts = [0.0:h:tend]
@@ -117,5 +117,5 @@ ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
-ylim([350, 400])
+# ylim([350, 400])
 rc("font",size=22)

@@ -31,7 +31,7 @@ end
 
 init_state = [0.50; 400]
 h = 0.01 # time discretisation
-tend = 20.0 # end simulation time
+tend = 200.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -69,12 +69,12 @@ init_state_covar[4] = 2.0
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
 state_covar = eye(2) # state covariance
-state_covar[1] = 1e-4
-state_covar[2] = 4.
+state_covar[1] = 5e-4
+state_covar[2] = 10.
 state_dist = MvNormal(state_covar) # state distribution
 meas_covar = eye(2)
-meas_covar[1] = 1e-4
-meas_covar[4] = 10.
+meas_covar[1] = 1e-3
+meas_covar[4] = 15.
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 fmeans = zeros(2, N)
@@ -89,14 +89,14 @@ fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 filtermeans[:, 1], filtercovars[:, :, 1] = LLDS_functions.init_filter(init_state_mean, init_state_covar, ys[:, 1], lin_cstr)
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr_model) # actual plant
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
   ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
   PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
   filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], 0.0, ys[:, t], lin_cstr)
 end
 
-skip = 50
+skip = 700
 figure(1) #  Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
@@ -114,8 +114,8 @@ ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1,f2, b1, b2],["Nonlinear Model","Particle Filter Mean","Kalman Filter Mean", L"Particle Filter $1\sigma$-Ellipse", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
-skipm = 10
-skip = 50
+skipm = 400
+skip = 700
 figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
