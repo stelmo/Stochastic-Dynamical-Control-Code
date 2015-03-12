@@ -28,9 +28,9 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.50; 450] # initial state
+init_state = [0.5; 450] # initial state
 h = 0.01 # time discretisation
-tend = 5.0 # end simulation time
+tend = 30.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -70,7 +70,7 @@ for t=2:N
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
 end
 
-skip = 50
+skip = 20
 figure(1) # Kalman Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)

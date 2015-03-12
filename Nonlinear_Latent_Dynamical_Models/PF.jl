@@ -39,7 +39,9 @@ function init_filter!(particles::Particles, u, y, measuredist, model::Model)
     particles.w[p] = particles.w[p]*pdf(measuredist, y - model.g(particles.x[:, p])) # weight of each particle
   end
 
-  particles.w = particles.w ./ sum(particles.w) # normalise weights
+  (abs(maximum(particles.w)) < 1e-8) && warn("The particles all have very small weight...")
+  particles.w = particles.w ./ sum(particles.w)
+  (true in isnan(particles.w)) && error("Particles have become degenerate!")
 
   if numberEffectiveParticles(particles) < N/2
     resample!(particles)
@@ -79,7 +81,10 @@ function filter!(particles::Particles, u, y, plantdist, measuredist, model::Mode
     particles.x[:, p] = model.f(particles.x[:, p], u, noise) # predict
     particles.w[p] = particles.w[p]*pdf(measuredist, y - model.g(particles.x[:, p])) # weight of each particle
   end
-  particles.w = particles.w ./ sum(particles.w) # normalise weights
+
+  (abs(maximum(particles.w)) < 1e-8) && warn("The particles all have very small weight...")
+  particles.w = particles.w ./ sum(particles.w)
+  (true in isnan(particles.w)) && error("Particles have become degenerate!")
 
   if numberEffectiveParticles(particles) < N/2
     resample!(particles)
