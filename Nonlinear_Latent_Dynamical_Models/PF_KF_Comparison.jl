@@ -15,13 +15,13 @@ using LLDS_functions
 cd("..\\Nonlinear_Latent_Dynamical_Models")
 
 # Specify the nonlinear model
-cstr_model = begin
+cstr = begin
   V = 5.0 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e9 #1/min
+  k0 = 72.0e7 #1/min
   E = 8.314e4 #kJ/kmol
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
@@ -29,30 +29,32 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.5; 400] # initial state
+init_state = [0.50; 400]
 h = 0.001 # time discretisation
-tend = 3.0 # end simulation time
+tend = 20.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
-ys = zeros(N) # only one measurement
+xs[:,1] = init_state
+ys = zeros(2, N) # only one measurement
+
+xspace = [0.0, 1.0]
+yspace = [250, 550]
 
 # Specify the linear model
-J = readcsv("J_ss.csv")
-ss = readcsv("ss.csv")'[:,1]
-lin_cstr = begin
-  A = eye(2)+h*J
-  B = zeros(2,1)
-  B[2] = h/(cstr_model.rho*cstr_model.Cp*cstr_model.V)
-  b = -h*J*ss
-  C = zeros(1,2)
-  C[2] = 1.0 #measure temperature
-  Q = eye(2) # plant mismatch/noise
-  Q[1] = 1e-6
-  Q[4] = 4.
-  R = 2.0 # measurement noise
-  LLDS_functions.LLDS{Float64}(A, B, b, C, Q, R)
-end
+npoints = 1
+linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr) # doesnt work weirdly...
+A = linsystems[3].A
+B = linsystems[3].B
+b = linsystems[3].b
+C = eye(2)
+Q = eye(2) # plant mismatch/noise
+Q[1] = 1e-6
+Q[4] = 4.
+R = eye(2)
+R[1] = 1e-4
+R[4] = 10.0 # measurement noise
+lin_cstr = LLDS_functions.LLDS(A, B, b, C, Q, R)
 
 f(x, u, w) = A*x + B*u + b + w
 g(x) = C*x# state observation
@@ -60,33 +62,38 @@ g(x) = C*x# state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 100 #number of particles.
+nP = 500 #number of particles.
 init_state_mean = init_state # initial state mean
 init_state_covar = eye(2)*1e-6 # initial covariance
 init_state_covar[4] = 2.0
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
-state_dist = MvNormal(Q) # state distribution
-meas_covar = eye(1)*R # measurement covariance
+state_covar = eye(2) # state covariance
+state_covar[1] = 1e-4
+state_covar[2] = 4.
+state_dist = MvNormal(state_covar) # state distribution
+meas_covar = eye(2)
+meas_covar[1] = 1e-4
+meas_covar[4] = 10.
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)
+filtermeans = zeros(2, N)
+filtercovars = zeros(2, 2, N)
 # Time step 1
 xs[:,1] = init_state
-ys[1] = C*xs[:, 1] + rand(meas_dist) # measured from actual plant
-PF.init_filter!(particles, 0.0, ys[1], meas_dist, cstr_pf)
+ys[:, 1] = C*xs[:, 1] + rand(meas_dist) # measured from actual plant
+PF.init_filter!(particles, 0.0, ys[:, 1], meas_dist, cstr_pf)
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
-filtermeans = zeros(2, N)
-filtercovars = zeros(2,2, N)
-filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_state_mean, init_state_covar, ys[1], lin_cstr)
+filtermeans[:, 1], filtercovars[:, :, 1] = LLDS_functions.init_filter(init_state_mean, init_state_covar, ys[:, 1], lin_cstr)
 # Loop through the rest of time
 for t=2:N
   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr_model) # actual plant
-  ys[t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
-  PF.filter!(particles, 0.0, ys[t], state_dist, meas_dist, cstr_pf)
+  ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
+  PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
-  filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], 0.0, ys[t], lin_cstr)
+  filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], 0.0, ys[:, t], lin_cstr)
 end
 
 skip = 50
@@ -107,17 +114,20 @@ ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1,f2, b1, b2],["Nonlinear Model","Particle Filter Mean","Kalman Filter Mean", L"Particle Filter $1\sigma$-Ellipse", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
+skipm = 10
+skip = 50
 figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 k1, = plot(ts[1:skip:end], fmeans[1,1:skip:end]', "r--", linewidth=3)
+y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
 k12, = plot(ts[1:skip:end], filtermeans[1, 1:skip:end]', "mo")
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Particle Filter"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:10:end], ys[1:10:end], "kx", markersize=5, markeredgewidth=1)
+y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts[1:skip:end], fmeans[2,1:skip:end]', "r--", linewidth=3)
 k22, = plot(ts[1:skip:end], filtermeans[2, 1:skip:end]', "mo")
 ylabel("Temperature [K]")
