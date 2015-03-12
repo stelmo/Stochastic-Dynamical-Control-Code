@@ -89,8 +89,7 @@ function filter!(particles::Particles, u, y, model::Model)
   end
 
 
-  (abs(maximum(particles.w)) < 1e-7) && warn("The particles all have very small weight...")
-  (true in isnan(particles.w)) && warn("There is a NaN in the weights!")
+  (abs(maximum(particles.w)) < 1e-8) && warn("The particles all have very small weight...")
   particles.w = particles.w ./ sum(particles.w)
   (true in isnan(particles.w)) && error("Particles have become degenerate!")
 

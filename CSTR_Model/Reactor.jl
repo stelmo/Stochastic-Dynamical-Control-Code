@@ -41,7 +41,7 @@ cstr2 = begin
 end
 
 h = 0.001 # time discretisation
-tend = 3. # end simulation time
+tend = 300. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs1 = zeros(2, N)
@@ -64,7 +64,7 @@ for t=2:N
 end
 
 skip = 50
-# figure(1) # Kalman Filter Demonstration
+# figure(1) #
 # x1, = plot(xs1[1,:][:], xs1[2,:][:], "k", linewidth=3)
 # x2, = plot(xs2[1,:][:], xs2[2,:][:], "r--", linewidth=3)
 # ylabel("Temperature [K]")
