@@ -32,13 +32,13 @@ cstr_model = begin
 end
 
 h = 0.01 # time discretisation
-tend = 100. # end simulation time
+tend = 20. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 450] # initial state
+init_state = [0.5; 400] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -50,10 +50,15 @@ Q[4] = 4.0
 # Divide state space into sectors: n by m
 nX = 4 # rows
 nY = 4 # cols
+npoints = 10
 xspace = [0.0, 1.0]
 yspace = [250, 550]
 
-linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+# linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr_model)
+
+switchtrack = zeros(length(linsystems), N)
+
 A = SPF.calcA(linsystems)
 F = SPF.getF(linsystems)
 G = SPF.getG(linsystems, C)
@@ -79,22 +84,33 @@ xs[:,1] = initial_states
 ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
 SPF.init_filter!(particles, 0.0, ys[:, 1], cstr)
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
+# Particle Summary
+for k=1:length(linsystems)
+  switchtrack[k, 1] = count((x)->x==k, particles.s)/nP
+end
 # Loop through the rest of time
 for t=2:N
   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
   SPF.filter!(particles, us[t-1], ys[:, t], cstr)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
+
+  # Particle Summary
+  for k=1:length(linsystems)
+    switchtrack[k, t] = count((x)->x==k, particles.s)/nP
+  end
+
 end
 
-# Particle Summary
-psum = zeros(length(linsystems))
-for k=1:length(linsystems)
-  psum[k] = count((x)->x==k, particles.s)/nP
-end
 figure(1)
-plot(psum)
-
+for k=1:length(linsystems)
+  subplot(length(linsystems), 1, k)
+  imshow(repeat(switchtrack[k,:], outer=[int(0.05*N), 1]), cmap="cubehelix")
+  # plot(ts, switchtrack[k, :][:], label=string("Switch = ", k))
+  # ylim([0, 0.5])
+  tick_params(axis="y", labelleft = "off")
+  tick_params(axis="x", labelbottom = "off")
+end
 
 figure(2) # Plot filtered results
 subplot(2,1,1)
