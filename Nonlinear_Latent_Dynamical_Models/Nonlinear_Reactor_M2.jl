@@ -30,7 +30,7 @@ end
 
 init_state = [0.5; 450] # initial state
 h = 0.01 # time discretisation
-tend = 30.0 # end simulation time
+tend = 3.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -50,12 +50,12 @@ init_state_covar[4] = 2.0
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
 state_covar = eye(2) # state covariance
-state_covar[1] = 1e-4
-state_covar[2] = 4.
+state_covar[1] = 5e-4
+state_covar[2] = 10.
 state_dist = MvNormal(state_covar) # state distribution
 meas_covar = eye(2)
-meas_covar[1] = 1e-4
-meas_covar[4] = 10.
+meas_covar[1] = 1e-3
+meas_covar[4] = 15.
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 fmeans = zeros(2, N)

@@ -33,7 +33,7 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.5; 450] # initial state
+init_state = [0.5; 400] # initial state
 h = 0.01 # time discretisation
 tend = 30.0 # end simulation time
 ts = [0.0:h:tend]
@@ -47,7 +47,7 @@ g(x) = [0.0 1.0]*x# state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 50 #number of particles.
+nP = 100 #number of particles.
 init_state_mean = init_state # initial state mean
 init_state_covar = 4.0
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
@@ -56,7 +56,7 @@ state_covar = eye(2) # state covariance
 state_covar[1] = 1e-4
 state_covar[2] = 4.
 state_dist = MvNormal(state_covar) # state distribution
-meas_covar = eye(1)*4. # measurement covariance
+meas_covar = eye(1)*10. # measurement covariance
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 fmeans = zeros(2, N)
