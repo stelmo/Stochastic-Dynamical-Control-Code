@@ -37,7 +37,7 @@ model = begin
   Q = sigmaQ^2*eye(6) # process noise covariance
   R = sigmaR^2*eye(2) # measurement noise covariance
 
-  LLDS_functions.LLDS{Array{Float64, 2}}(A, B, b, C, Q, R)
+  LLDS_functions.LLDS(A, B, b, C, Q, R)
 end
 
 # Specify initial conditions
