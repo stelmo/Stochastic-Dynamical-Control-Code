@@ -83,3 +83,4 @@ end
 
 legend([x1, x2, x3],["Nonlinear Model","Linear Model","Operating Point"], loc="best")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
+rc("font",size=22)
