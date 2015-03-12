@@ -9,14 +9,6 @@ using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
 import Confidence
 
-# Add a definition for convert to make our lives easier!
-# But be careful now!
-function Base.convert(::Type{Float64}, x::Array{Float64, 1})
-  return x[1]
-end
-function Base.convert(::Type{Float64}, x::Array{Float64, 2})
-  return x[1]
-end
 
 # Specify the nonlinear model
 cstr = begin
@@ -56,7 +48,7 @@ Q = eye(2) # plant mismatch/noise
 Q[1] = 1e-6
 Q[4] = 4.
 R = 10.0 # measurement noise
-lin_cstr = LLDS_functions.LLDS{Float64}(A, B, b, C, Q, R)
+lin_cstr = LLDS_functions.LLDS(A, B, b, C, Q, R)
 
 
 # Plant initialisation

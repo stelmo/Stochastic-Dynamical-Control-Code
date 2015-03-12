@@ -2,7 +2,7 @@ module LLDS_functions
 
 using Distributions
 
-immutable LLDS{T}
+immutable LLDS
   # Assume zero mean transition and emission functions.
   # The linear latent dynamical system should have the
   # state space form:
@@ -15,9 +15,9 @@ immutable LLDS{T}
   A :: Array{Float64, 2}
   B # lets keep it general
   b :: Array{Float64, 1}
-  C
+  C # general
   Q :: Array{Float64, 2} # Process Noise
-  R :: T # Measurement Noise VARIANCE
+  R # Measurement Noise VARIANCE
 end
 
 function step(xprev, uprev, model)

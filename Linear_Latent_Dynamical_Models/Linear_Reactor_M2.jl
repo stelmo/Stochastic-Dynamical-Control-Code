@@ -8,14 +8,6 @@ using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
 import Confidence
 
-# Add a definition for convert to make our lives easier!
-# But be careful now!
-function Base.convert(::Type{Float64}, x::Array{Float64, 1})
-  return x[1]
-end
-function Base.convert(::Type{Float64}, x::Array{Float64, 2})
-  return x[1]
-end
 
 # Specify the nonlinear model
 cstr = begin
@@ -57,7 +49,7 @@ Q[4] = 4.
 R = eye(2)
 R[1] = 1e-4
 R[4] = 10.0 # measurement noise
-lin_cstr = LLDS_functions.LLDS{Array{Float64,2}}(A, B, b, C, Q, R)
+lin_cstr = LLDS_functions.LLDS(A, B, b, C, Q, R)
 
 
 # Plant initialisation
@@ -91,18 +83,18 @@ end
 # pred_us[:] = us[pstart-1:pend-1]
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
-# skip = 1500
-# figure(1) # Kalman Filter Demonstration
-# x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-# f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-# b1 = 0.0
-# for k=1:skip:N
-#   p1, p2 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
-#   b1, = plot(p1, p2, "b")
-# end
-# ylabel("Temperature [K]")
-# xlabel(L"Concentration [kmol.m$^{-3}$]")
-# legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
+skip = 1500
+figure(1) # Kalman Filter Demonstration
+x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+b1 = 0.0
+for k=1:skip:N
+  p1, p2 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
+  b1, = plot(p1, p2, "b")
+end
+ylabel("Temperature [K]")
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
 skip = 300
 skipm = 100
