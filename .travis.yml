@@ -10,4 +10,5 @@ script:
   - julia -e 'include(string(pwd(),"/Linear_Latent_Dynamical_Models/LLDS_functions.jl")); include(string(pwd(),"/Linear_Latent_Dynamical_Models/LLDS_tests.jl"))'
   - julia -e 'include(string(pwd(),"/CSTR_Model/Reactor_functions.jl")); include(string(pwd(),"/CSTR_Model/Reactor_test.jl"))'
   - julia -e 'println(pwd())'
-  - julia -e 'println(readdir())'
+  - julia -e 'cd("./Nonlinear_Latent_Dynamical_Models")'
+  - julia -e 'println(pwd())'
