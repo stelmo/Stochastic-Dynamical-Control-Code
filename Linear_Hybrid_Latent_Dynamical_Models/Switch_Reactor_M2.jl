@@ -32,13 +32,13 @@ cstr_model = begin
 end
 
 h = 0.01 # time discretisation
-tend = 20. # end simulation time
+tend = 1. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 400] # initial state
+init_state = [0.5; 500] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -48,14 +48,14 @@ Q[1] = 1e-5
 Q[4] = 4.0
 
 # Divide state space into sectors: n by m
-nX = 4 # rows
-nY = 4 # cols
+nX = 20 # rows
+nY = 20 # cols
 npoints = 10
 xspace = [0.0, 1.0]
-yspace = [250, 550]
+yspace = [250, 650]
 
-# linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
-linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr_model)
+linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+# linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr_model)
 
 switchtrack = zeros(length(linsystems), N)
 
@@ -66,7 +66,7 @@ xdists = SPF.getDists(linsystems, MvNormal(Q))
 ydists = SPF.getDists(linsystems, MvNormal(R))
 cstr = SPF.Model(F, G, A, xdists, ydists)
 #
-nP = 1000
+nP = 2000
 initial_states = init_state
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
@@ -105,7 +105,7 @@ end
 figure(1)
 for k=1:length(linsystems)
   subplot(length(linsystems), 1, k)
-  imshow(repeat(switchtrack[k,:], outer=[int(0.05*N), 1]), cmap="cubehelix")
+  imshow(repeat(switchtrack[k,:], outer=[int(0.05*N), 1]), cmap="cubehelix", interpolation="bicubic")
   # plot(ts, switchtrack[k, :][:], label=string("Switch = ", k))
   # ylim([0, 0.5])
   tick_params(axis="y", labelleft = "off")
