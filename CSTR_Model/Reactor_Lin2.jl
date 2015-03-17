@@ -23,8 +23,8 @@ tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 
 # Divide state space into sectors: n by m
-nX = 100 # rows
-nY = 100 # cols
+nX = 120 # rows
+nY = 120 # cols
 total_ops = nX*nY # ignore the nominal ss points
 
 xspace = [0.0, 1.0]
@@ -36,6 +36,8 @@ diff = zeros(nY, nX)
 xpoints = zeros(nX)
 ypoints = zeros(nY)
 k = 1 # counter
+temp  = zeros(2)
+initial_states = zeros(2)
 for x=1:nX
 
   for y=1:nY
@@ -50,6 +52,11 @@ for x=1:nX
     for t=2:N
         xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
         linxs[:, t] = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0 + linsystems[k].b
+        if (-10.0 < temp[1] < 10) && (0.0 < temp[2] < 10000) # some of the linearisations are unbounded
+          linxs[:, t] = temp
+        else
+          linxs[:, t] = linxs[:, t-1]
+        end
     end
 
     diff[y, x] = log(norm(xs[:, end] - linxs[:, end]))
@@ -58,9 +65,9 @@ for x=1:nX
   end
   xpoints[x] = initial_states[1]
 end
-
+diff = diff .+ abs(minimum(diff))
 figure(1)
 contourf(xpoints, ypoints, diff,  cmap = "cubehelix")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 ylabel("Temperature [K]")
-rc("font", serif="Computer Modern Roman")
+rc("font",size=22)

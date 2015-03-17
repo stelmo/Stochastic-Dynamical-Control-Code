@@ -4,14 +4,22 @@ using Distributions
 using Base.Test
 import PF
 
-cd("..\\CSTR_Model")
-import Reactor_functions
-cd("..\\Nonlinear_Latent_Dynamical_Models")
-
-A = readcsv("A.csv")
-B = readcsv("B.csv")
-b = readcsv("b.csv")
-kfmeans = readcsv("KFmeans.csv")
+dircontent = readdir()
+if "A.csv" in dircontent
+  cd("..\\CSTR_Model")
+  import Reactor_functions
+  cd("..\\Nonlinear_Latent_Dynamical_Models")
+  A = readcsv("A.csv")
+  B = readcsv("B.csv")
+  b = readcsv("b.csv")
+  kfmeans = readcsv("KFmeans.csv")
+else
+  import Reactor_functions
+  A = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/A.csv"))
+  B = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/B.csv"))
+  b = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/b.csv"))
+  kfmeans = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/KFmeans.csv"))
+end
 
 cstr_model = begin
   V = 5.0 #m3

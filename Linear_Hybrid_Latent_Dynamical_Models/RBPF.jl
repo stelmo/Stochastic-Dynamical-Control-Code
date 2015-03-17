@@ -1,10 +1,14 @@
+# Rao Blackwellised Particle Filter
 module SPF
 # switching particle filter
 
 using Distributions
 cd("..\\CSTR_Model")
 using Reactor_functions
+cd("..\\Linear_Latent_Dynamica_Models")
+using LLDS_functions
 cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
+
 
 type Particles
   x :: Array{Float64, 2} # states
