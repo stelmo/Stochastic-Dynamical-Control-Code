@@ -1,6 +1,6 @@
 # Rao Blackwellised Particle Filter
 module SPF
-# switching particle filter
+# WARNING: this is made specifically for the system I am investigating
 
 using Distributions
 cd("..\\CSTR_Model")
@@ -12,16 +12,19 @@ cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
 
 type Particles
   x :: Array{Float64, 2} # states
+  mu :: Array{Float64, 1} # mean
+  sigma :: Array{Float64, 2} # covariance
   s :: Array{Int64, 1} # switches
   w :: Array{Float64, 1} # weights
 end
 
 type Model
-  F :: Array{Function, 1} # transition
-  G :: Array{Function, 1} # emission
-  A :: Array{Float64, 2} # HMM model, columns sum to 1
-  xdists
-  ydists # no idea what this type is
+  A 
+  B
+  b
+  C
+  Q
+  R
 end
 
 function init_SPF(xdist, sdist, nP::Int64, xN::Int64)

@@ -33,7 +33,7 @@ cstr1 = begin
 end
 
 cstr2 = begin # slower reaction rate
-  V = 5.0 #m3
+  V = 0.5 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
@@ -61,8 +61,8 @@ Q = eye(2)
 Q[1] = 1e-4
 Q[4] = 5.0
 
-# A = [0.8 0.2;0.2 0.8]
-A = [0.5 0.5;0.5 0.5]
+A = [0.9 0.1;0.1 0.9]
+# A = [0.5 0.5;0.5 0.5]
 fun1(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr1)
 fun2(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr2)
 gs(x) = newC*x
@@ -130,8 +130,8 @@ end
 
 
 figure(1)
-plot(ts, switch_count[1,:][:], "g")
-plot(ts, switch_count[2,:][:], "k")
+plot(ts, switch_count[1,:][:], "g.")
+plot(ts, switch_count[2,:][:], "k.")
 xlabel("Time [min]")
 ylabel("Weight")
 rc("font",size=22)
