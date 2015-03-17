@@ -2,7 +2,7 @@ language: julia
 julia:
   - release
 notifications:
-  email: true
+  email: false
 before_script:
   - julia -e 'Pkg.add("Distributions")'
 script:

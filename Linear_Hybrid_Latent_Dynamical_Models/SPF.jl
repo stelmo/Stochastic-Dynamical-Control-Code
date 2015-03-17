@@ -48,12 +48,12 @@ function init_filter!(particles::Particles, u, y, model::Model)
   for p=1:N
     for s=1:nS
       if particles.s[p] == s
-        particles.w[p] = particles.w[p]*logpdf(model.ydists[s], y - model.G[s](particles.x[:, p])) # weight of each particle
+        particles.w[p] = particles.w[p]*pdf(model.ydists[s], y - model.G[s](particles.x[:, p])) # weight of each particle
       end
     end
   end
 
-  particles.w = particles.w .+ abs(minimum(particles.w)) #no negative number issue
+  # particles.w = particles.w .+ abs(minimum(particles.w)) #no negative number issue
   particles.w = particles.w ./ sum(particles.w)
 
   if numberEffectiveParticles(particles) < N/2
@@ -82,14 +82,14 @@ function filter!(particles::Particles, u, y, model::Model)
       if particles.s[p] == s
         noise = rand(model.xdists[s])
         particles.x[:, p] = model.F[s](particles.x[:, p], u, noise) # predict
-        particles.w[p] = particles.w[p]*logpdf(model.ydists[s], y - model.G[s](particles.x[:, p])) # weight of each particle
+        particles.w[p] = particles.w[p]*pdf(model.ydists[s], y - model.G[s](particles.x[:, p])) # weight of each particle
 
         (isnan(particles.w[p])) && (warn("Particle weight issue..."); particles.w[p] = 0.0) # in case
       end
     end
   end
 
-  particles.w = particles.w .+ abs(minimum(particles.w)) #no negative number issue
+  # particles.w = particles.w .+ abs(minimum(particles.w)) #no negative number issue
   (maximum(particles.w) < 1e-8) && warn("The particles all have very small weight...")
   particles.w = particles.w ./ sum(particles.w)
   (true in isnan(particles.w)) && error("Particles have become degenerate!")

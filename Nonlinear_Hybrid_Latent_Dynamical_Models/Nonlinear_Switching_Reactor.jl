@@ -84,7 +84,7 @@ fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)
 
 us = zeros(N)
-switch_count = zeros(Int64, N)
+switch_count = zeros(2, N)
 
 measurements = MvNormal(R)
 xs[:,1] = initial_states
@@ -92,7 +92,14 @@ xsnofix[:,1] = initial_states
 
 ys[1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
 SPF.init_filter!(particles, 0.0, ys[1], cstr_filter)
-switch_count[1] = count((x)->x==1, particles.s)
+
+for k=1:nP
+  if particles.s[k] == 1
+    switch_count[1, 1] += particles.w[k]
+  else
+    switch_count[2, 1] += particles.w[k]
+  end
+end
 
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
@@ -104,20 +111,29 @@ for t=2:N
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   end
-  if ts[t] > 0.5
-    us[t] = -300.0
-  end
+  # if ts[t] > 0.5
+  #   us[t] = -300.0
+  # end
   ys[t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
   SPF.filter!(particles, us[t-1], ys[t], cstr_filter)
-  switch_count[t] = count((x)->x==1, particles.s)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
+
+  for k=1:nP
+    if particles.s[k] == 1
+      switch_count[1, t] += particles.w[k]
+    else
+      switch_count[2, t] += particles.w[k]
+    end
+  end
+
 end
 
 
 figure(1)
-plot(ts, switch_count, "k.")
+plot(ts, switch_count[1,:][:], "g")
+plot(ts, switch_count[2,:][:], "k")
 xlabel("Time [min]")
-ylabel("Model 1 Count")
+ylabel("Weight")
 rc("font",size=22)
 
 
