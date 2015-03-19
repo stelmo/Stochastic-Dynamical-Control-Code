@@ -32,13 +32,13 @@ cstr_model = begin
 end
 
 h = 0.01 # time discretisation
-tend = 1. # end simulation time
+tend = 3. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 500] # initial state
+init_state = [0.5; 450] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -66,13 +66,13 @@ xdists = SPF.getDists(linsystems, MvNormal(Q))
 ydists = SPF.getDists(linsystems, MvNormal(R))
 cstr = SPF.Model(F, G, A, xdists, ydists)
 #
-nP = 2000
+nP = 500
 initial_states = init_state
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
 initial_covar[4] = 1.0
 xdist = MvNormal(initial_states, initial_covar)
-sguess = ones(length(linsystems))./length(linsystems)
+sguess =  SPF.getInitialSwitches(initial_states, linsystems)
 sdist = Categorical(sguess)
 particles = SPF.init_SPF(xdist, sdist, nP, 2)
 fmeans = zeros(2, N)
@@ -102,15 +102,15 @@ for t=2:N
 
 end
 
-figure(1)
-for k=1:length(linsystems)
-  subplot(length(linsystems), 1, k)
-  imshow(repeat(switchtrack[k,:], outer=[int(0.05*N), 1]), cmap="cubehelix", interpolation="bicubic")
-  # plot(ts, switchtrack[k, :][:], label=string("Switch = ", k))
-  # ylim([0, 0.5])
-  tick_params(axis="y", labelleft = "off")
-  tick_params(axis="x", labelbottom = "off")
-end
+# figure(1)
+# for k=1:length(linsystems)
+#   subplot(length(linsystems), 1, k)
+#   imshow(repeat(switchtrack[k,:], outer=[int(0.05*N), 1]), cmap="cubehelix", interpolation="bicubic")
+#   # plot(ts, switchtrack[k, :][:], label=string("Switch = ", k))
+#   # ylim([0, 0.5])
+#   tick_params(axis="y", labelleft = "off")
+#   tick_params(axis="x", labelbottom = "off")
+# end
 
 figure(2) # Plot filtered results
 subplot(2,1,1)
