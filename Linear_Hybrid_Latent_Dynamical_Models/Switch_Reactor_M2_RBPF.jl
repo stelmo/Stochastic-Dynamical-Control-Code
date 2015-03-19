@@ -58,60 +58,46 @@ yspace = [250, 650]
 linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 # linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr_model)
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
+sguess =  SPF.getInitialSwitches(initial_states, linsystems)
+nP = 500
+initial_states = init_state
+initial_covar = eye(2)
+initial_covar[1] = 1e-6
+initial_covar[4] = 1.0
+particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2, nP)
 
-# A = SPF.calcA(linsystems)
-# F = SPF.getF(linsystems)
-# G = SPF.getG(linsystems, C)
-# xdists = SPF.getDists(linsystems, MvNormal(Q))
-# ydists = SPF.getDists(linsystems, MvNormal(R))
-# cstr = SPF.Model(F, G, A, xdists, ydists)
-# #
-# nP = 2000
-# initial_states = init_state
-# initial_covar = eye(2)
-# initial_covar[1] = 1e-6
-# initial_covar[4] = 1.0
-# xdist = MvNormal(initial_states, initial_covar)
-# sguess = ones(length(linsystems))./length(linsystems)
-# sdist = Categorical(sguess)
-# particles = SPF.init_SPF(xdist, sdist, nP, 2)
-# fmeans = zeros(2, N)
-# fcovars = zeros(2,2, N)
+fmeans = zeros(2, N)
 #
-# us = zeros(N)
-# measurements = MvNormal(R)
-# xs[:,1] = initial_states
-# ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
-# SPF.init_filter!(particles, 0.0, ys[:, 1], cstr)
-# fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
-# # Particle Summary
-# for k=1:length(linsystems)
-#   switchtrack[k, 1] = count((x)->x==k, particles.s)/nP
-# end
-# # Loop through the rest of time
-# for t=2:N
-#   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
-#   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
-#   SPF.filter!(particles, us[t-1], ys[:, t], cstr)
-#   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
-#
-# end
-#
-#
-# figure(2) # Plot filtered results
-# subplot(2,1,1)
-# x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-# y1, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
-# k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
-# ylabel(L"Concentration [kmol.m$^{-3}$]")
-# legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
-# xlim([0, tend])
-# subplot(2,1,2)
-# x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-# y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
-# k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
-# ylabel("Temperature [K]")
-# xlabel("Time [min]")
-# legend([y2],["Nonlinear Model Measured"], loc="best")
-# xlim([0, tend])
-# rc("font",size=22)
+us = zeros(N)
+measurements = MvNormal(R)
+xs[:,1] = initial_states
+ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
+RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
+fmeans[:,1] = RBPF.getStats(particles)
+# Loop through the rest of time
+for t=2:N
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
+  ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
+  RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
+  fmeans[:, t] = RBPF.getStats(particles)
+
+end
+
+
+figure(2) # Plot filtered results
+subplot(2,1,1)
+x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+y1, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
+k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
+ylabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+xlim([0, tend])
+subplot(2,1,2)
+x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
+k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
+ylabel("Temperature [K]")
+xlabel("Time [min]")
+legend([y2],["Nonlinear Model Measured"], loc="best")
+xlim([0, tend])
+rc("font",size=22)
