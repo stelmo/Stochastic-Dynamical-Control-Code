@@ -33,14 +33,14 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.01 # time discretisation
-tend = 1. # end simulation time
+h = 0.001 # time discretisation
+tend = 3. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 450] # initial state
+init_state = [0.9; 500] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -50,20 +50,20 @@ Q[1] = 1e-5
 Q[4] = 4.0
 
 # Divide state space into sectors: n by m
-nX = 2 # rows
-nY = 2 # cols
+nX = 5 # rows
+nY = 5 # cols
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
 linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 # linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr_model)
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
-sguess =  SPF.getInitialSwitches(initial_states, linsystems)
 nP = 500
 initial_states = init_state
 initial_covar = eye(2)
 initial_covar[1] = 1e-6
 initial_covar[4] = 1.0
+sguess =  SPF.getInitialSwitches(initial_states, linsystems)
 particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2, nP)
 
 fmeans = zeros(2, N)

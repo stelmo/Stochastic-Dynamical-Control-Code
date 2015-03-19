@@ -31,14 +31,14 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.01 # time discretisation
+h = 0.001 # time discretisation
 tend = 3. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 450] # initial state
+init_state = [0.9; 500] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -48,9 +48,9 @@ Q[1] = 1e-5
 Q[4] = 4.0
 
 # Divide state space into sectors: n by m
-nX = 20 # rows
-nY = 20 # cols
-npoints = 10
+nX = 3 # rows
+nY = 3 # cols
+# npoints = 10
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
