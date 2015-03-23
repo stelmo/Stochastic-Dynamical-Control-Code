@@ -1,7 +1,6 @@
 # Linearisation Procedure
 using PyPlot
 import Reactor_functions
-reload("Reactor_functions.jl")
 
 # Introduce the reactor
 cstr = begin
