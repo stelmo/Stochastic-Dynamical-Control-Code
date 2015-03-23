@@ -7,7 +7,7 @@ reload("Reactor_functions.jl")
 
 # First, lets inspect the steady state values for different parameters
 cstr1 = begin
-  V = 5.0 #m3
+  V = 2.0 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K

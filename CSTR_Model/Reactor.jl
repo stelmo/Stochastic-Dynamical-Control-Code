@@ -13,7 +13,7 @@ end
 
 # Specify the nonlinear model
 cstr1 = begin
-  V = 1.0 #m3
+  V = 5.0 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
@@ -27,7 +27,7 @@ cstr1 = begin
 end
 
 cstr2 = begin
-  V = 5.0; #m3
+  V = 2.0; #m3
   R = 8.314; #kJ/kmol.K
   CA0 = 1.0; #kmol/m3
   TA0 = 310.0; #K
@@ -41,13 +41,13 @@ cstr2 = begin
 end
 
 h = 0.001 # time discretisation
-tend = 10. # end simulation time
+tend = 20. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs1 = zeros(2, N)
 xs2 = zeros(2, N)
 
-initial_states = [0.5, 400]
+initial_states = [0.5, 450]
 
 us = ones(N)*0.0
 xs1[:,1] = initial_states
@@ -83,3 +83,4 @@ ylabel("Temperature [K]")
 xlabel("Time [min]")
 xlim([0, tend])
 rc("font",size=22)
+legend([x1, x2], [string("CSTR: ", cstr1.V), string("CSTR: ", cstr2.V)])

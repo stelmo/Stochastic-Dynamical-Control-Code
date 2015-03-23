@@ -19,12 +19,12 @@ cstr = begin
 end
 
 h = 0.001 # time discretisation
-tend = 5.0 # end simulation time
+tend = 50.0 # end simulation time
 ts = [0.0:h:tend]
 
 # Divide state space into sectors: n by m
-nX = 120 # rows
-nY = 120 # cols
+nX = 20 # rows
+nY = 20 # cols
 total_ops = nX*nY # ignore the nominal ss points
 
 xspace = [0.0, 1.0]
@@ -36,7 +36,8 @@ diff = zeros(nY, nX)
 xpoints = zeros(nX)
 ypoints = zeros(nY)
 k = 1 # counter
-temp  = zeros(2)
+temp1  = zeros(2)
+temp2 = zeros(2)
 initial_states = zeros(2)
 for x=1:nX
 
@@ -49,25 +50,45 @@ for x=1:nX
     xs[:,1] = initial_states
     linxs[:,1] = initial_states
     # Loop through the rest of time
+    flag = false
     for t=2:N
-        xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
-        linxs[:, t] = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0 + linsystems[k].b
-        if (-10.0 < temp[1] < 10) && (0.0 < temp[2] < 10000) # some of the linearisations are unbounded
-          linxs[:, t] = temp
+        temp1 = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
+        temp2 = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0 + linsystems[k].b
+        if isnan(temp1[1]) || isnan(temp1[2])
+          flag = true
+          break
         else
-          linxs[:, t] = linxs[:, t-1]
+          xs[:, t] = temp1
+        end
+        if isnan(temp2[1]) || isnan(temp2[2])
+          flag = true
+          break
+        else
+          linxs[:, t] = temp2
         end
     end
-
-    diff[y, x] = log(norm(xs[:, end] - linxs[:, end]))
+    if flag
+      diff[y,x] = -1.0
+    else
+      diff[y, x] = norm((xs[:, end] - linxs[:, end])./[xs[:, end]], 1)
+    end
     ypoints[y] = initial_states[2]
     k += 1
   end
   xpoints[x] = initial_states[1]
 end
-diff = diff .+ abs(minimum(diff))
+
+setmax = 1.0
+for k=1:length(diff)
+  if diff[k] == -1.0 || diff[k] > setmax
+      diff[k] = setmax
+  end
+end
+
+
 figure(1)
-contourf(xpoints, ypoints, diff,  cmap = "cubehelix")
+contourf(xpoints, ypoints, diff, 50, cmap = "cubehelix")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 ylabel("Temperature [K]")
+colorbar()
 rc("font",size=22)
