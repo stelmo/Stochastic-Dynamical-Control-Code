@@ -38,7 +38,7 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.9; 500] # initial state
+init_state = [0.6; 450] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -48,8 +48,8 @@ Q[1] = 1e-5
 Q[4] = 4.0
 
 # Divide state space into sectors: n by m
-nX = 3 # rows
-nY = 3 # cols
+nX = 5 # rows
+nY = 5 # cols
 # npoints = 10
 xspace = [0.0, 1.0]
 yspace = [250, 650]
