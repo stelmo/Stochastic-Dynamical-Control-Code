@@ -63,7 +63,7 @@ function init_filter!(particles::Particles, u, y, models::Array{Model, 1})
         mu = models[s].C * (models[s].A*particles.mus[:, p] + models[s].B*u + models[s].b)
         sigma = models[s].C * (models[s].A*particles.sigmas[:,:,p]*models[s].A' + models[s].Q) * models[s].C' + models[s].R
         d = MvNormal(mu, sigma)
-        particles.ws[p] = particles.ws[p]*pdf(d, y) # weight of each particle
+        particles.ws[p] = particles.ws[p]*pdf(d, [y]) # weight of each particle
       end
     end
   end
@@ -98,7 +98,7 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
         mu = models[s].C * (models[s].A*particles.mus[:, p] + models[s].B*u + models[s].b)
         sigma = models[s].C * (models[s].A*particles.sigmas[:,:,p]*models[s].A' + models[s].Q) * models[s].C' + models[s].R
         d = MvNormal(mu, sigma)
-        particles.ws[p] = particles.ws[p]*pdf(d, y) # weight of each particle
+        particles.ws[p] = particles.ws[p]*pdf(d, [y]) # weight of each particle
 
         (isnan(particles.ws[p])) && (warn("Particle weight issue..."); particles.ws[p] = 0.0) # in case
 
