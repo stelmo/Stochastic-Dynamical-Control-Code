@@ -159,15 +159,22 @@ function calcA(linsystems::Array{Reactor_functions.LinearReactor,1})
 
   for j=1:N
     for i=1:N
-      A[i,j] = norm(linsystems[i].op-linsystems[j].op)
+      A[i,j] = norm((linsystems[i].op-linsystems[j].op)./linsystems[j].op)
     end
   end
 
-  A = A./maximum(A,1)
-  A = exp(-15.0 .* A)
-  A = A./sum(A,1)
+  posA = zeros(N,N)
 
-  return A
+  for j=1:N
+    a = sort(A[:, j], rev=true)
+    for i=1:N
+      posA[i,j] = find((x)->x==A[i,j], a)[1]
+    end
+  end
+
+  posA = posA./sum(posA,1)
+
+  return posA
 end
 
 function getF(linsystems::Array{Reactor_functions.LinearReactor,1})
