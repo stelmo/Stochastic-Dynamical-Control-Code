@@ -40,7 +40,7 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.6; 450] # initial state
+init_state = [0.6; 400] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-5
@@ -55,92 +55,92 @@ nY = 3 # cols
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
-linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
-# linsystems = Reactor_functions.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+# linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+linsystems = Reactor_functions.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
 
-# nP = 500
-# initial_states = init_state
-# initial_covar = eye(2)
-# initial_covar[1] = 1e-6
-# initial_covar[4] = 1.0
-# sguess =  SPF.getInitialSwitches(initial_states, linsystems)
-# particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2, nP)
-#
-# fmeans = zeros(2, N)
-# switchtrack = zeros(length(linsystems), N)
-#
-# us = zeros(N)
-# measurements = MvNormal(R)
-# xs[:,1] = initial_states
-# ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
-# RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
-# fmeans[:,1] = RBPF.getStats(particles)
-# for k=1:length(linsystems)
-#   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
-# end
-# # Loop through the rest of time
-# for t=2:N
-#   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
-#   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
-#   RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
-#   fmeans[:, t] = RBPF.getStats(particles)
-#   for k=1:length(linsystems)
-#     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
-#   end
-# end
-#
-# font1 = ["family"=>"serif"]
-#
-# figure(1)
-# for k=1:length(linsystems)
-#   plot(linsystems[k].op[1],linsystems[k].op[2],"wx",markersize=5, markeredgewidth=1)
-# annotate(string("Switch: ", k),
-#       xy=[linsystems[k].op[1],linsystems[k].op[2]],
-#       xytext=[linsystems[k].op[1],linsystems[k].op[2]],
-#       fontsize=22.0,
-#       ha="center",
-#       va="bottom")
-# end
-# plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-# plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
-# plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-# xlim([-0.1, 1.1])
-# xlabel(L"Concentration [kmol.m$^{-3}$]")
-# ylabel("Temperature [K]")
-#
-# figure(2)
-# maxswitch = maximum(switchtrack)
-# axes = Array(Any, length(linsystems))
-# im = 0
-# for k=1:length(linsystems)
-#   ax = subplot(length(linsystems), 1, k)
-#   axes[k] = ax
-#   im = imshow(repeat(switchtrack[k,:], outer=[int(0.1*N), 1]), cmap="cubehelix",vmin=0.0, vmax=maxswitch, interpolation="bicubic")
-#   tick_params(axis="y", which="both",left="off", labelleft = "off")
-#   tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-#   ylabel(string(k))
-# end
-# tick_params(axis="x", labelbottom = "on")
-# xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-# colorbar(im, ax=axes)
-# xlabel("Time [min]")
-#
-# figure(3) # Plot filtered results
-# subplot(2,1,1)
-# x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-# y1, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
-# k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
-# ylabel(L"Concentration [kmol.m$^{-3}$]", fontdict=font1)
-# legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
-# xlim([0, tend])
-# subplot(2,1,2)
-# x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-# y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
-# k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
-# ylabel("Temperature [K]", fontdict=font1)
-# xlabel("Time [min]", fontdict=font1)
-# legend([y2],["Nonlinear Model Measured"], loc="best")
-# xlim([0, tend])
-# # rc("font",font1)
+nP = 500
+initial_states = init_state
+initial_covar = eye(2)
+initial_covar[1] = 1e-6
+initial_covar[4] = 1.0
+sguess =  SPF.getInitialSwitches(initial_states, linsystems)
+particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2, nP)
+
+fmeans = zeros(2, N)
+switchtrack = zeros(length(linsystems), N)
+
+us = zeros(N)
+measurements = MvNormal(R)
+xs[:,1] = initial_states
+ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
+RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
+fmeans[:,1] = RBPF.getStats(particles)
+for k=1:length(linsystems)
+  switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
+end
+# Loop through the rest of time
+for t=2:N
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
+  ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
+  RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
+  fmeans[:, t] = RBPF.getStats(particles)
+  for k=1:length(linsystems)
+    switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
+  end
+end
+
+rc("font", family="serif", size=22)
+
+figure(1)
+for k=1:length(linsystems)
+  plot(linsystems[k].op[1],linsystems[k].op[2],"kx",markersize=5, markeredgewidth=1)
+annotate(string("Switch: ", k),
+      xy=[linsystems[k].op[1],linsystems[k].op[2]],
+      xytext=[linsystems[k].op[1],linsystems[k].op[2]],
+      fontsize=22.0,
+      ha="center",
+      va="bottom")
+end
+plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
+xlim([-0.1, 1.1])
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+ylabel("Temperature [K]")
+
+figure(2)
+maxswitch = maximum(switchtrack)
+axes = Array(Any, length(linsystems))
+im = 0
+width = 500
+for k=1:length(linsystems)
+  ax = subplot(length(linsystems), 1, k)
+  axes[k] = ax
+  im = imshow(repeat(switchtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=maxswitch, interpolation="nearest", aspect="auto")
+  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
+  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
+  ylabel(string(k))
+end
+tick_params(axis="x", labelbottom = "on")
+xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
+colorbar(im, ax=axes)
+xlabel("Time [min]")
+
+figure(3) # Plot filtered results
+subplot(2,1,1)
+x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+y1, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
+k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
+ylabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+xlim([0, tend])
+subplot(2,1,2)
+x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
+k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
+ylabel("Temperature [K]")
+xlabel("Time [min]")
+legend([y2],["Nonlinear Model Measured"], loc="best")
+xlim([0, tend])
