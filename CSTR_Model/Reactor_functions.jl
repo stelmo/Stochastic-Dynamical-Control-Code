@@ -128,7 +128,11 @@ function discretise_randomly(npoints, xspace, yspace)
   # Perform the same action as discretise() except pick points to
   # discretise around at random.
   operatingpoints = zeros(2, npoints+3)
-  k = 1
+  if npoints==0
+    k = 0
+  else
+    k=1
+  end
   for k=1:npoints
     nx = rand()
     ny = rand()
