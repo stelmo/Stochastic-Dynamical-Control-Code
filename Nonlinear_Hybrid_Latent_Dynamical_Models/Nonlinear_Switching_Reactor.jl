@@ -33,12 +33,12 @@ cstr1 = begin
 end
 
 cstr2 = begin # slower reaction rate
-  V = 0.5 #m3
+  V = 5.0 #m3
   R = 8.314 #kJ/kmol.K
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e8 #1/min # changed here!
+  k0 = 72.0e6 #1/min # changed here!
   E = 8.314e4 #kJ/kmol
   Cp = 0.239 #kJ/kgK # changed here!
   rho = 1000.0 #kg/m3
@@ -46,9 +46,9 @@ cstr2 = begin # slower reaction rate
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-initial_states = [0.5; 450] # initial state
-h = 0.001 # time discretisation
-tend = 5.0 # end simulation time
+initial_states = [0.3; 450] # initial state
+h = 0.1 # time discretisation
+tend = 250.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -56,10 +56,10 @@ xsnofix = zeros(2, N)
 ys = zeros(N)
 
 newC = [0.0 1.0]
-R = eye(1)*4.0
+R = eye(1)*10.0
 Q = eye(2)
-Q[1] = 1e-4
-Q[4] = 5.0
+Q[1] = 1e-5
+Q[4] = 4.0
 
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
@@ -75,8 +75,8 @@ cstr_filter = SPF.Model(F, G, A, xdists, ydists)
 
 nP = 500
 initial_covar = eye(2)
-initial_covar[1] = 1e-6
-initial_covar[4] = 1.0
+initial_covar[1] = 1e-3
+initial_covar[4] = 4.0
 xdist = MvNormal(initial_states, initial_covar)
 sdist = Categorical([0.5, 0.5])
 particles = SPF.init_SPF(xdist, sdist, nP, 2)
@@ -84,7 +84,8 @@ fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)
 
 us = zeros(N)
-switch_count = zeros(2, N)
+switchtrack = zeros(2, N)
+
 
 measurements = MvNormal(R)
 xs[:,1] = initial_states
@@ -93,52 +94,54 @@ xsnofix[:,1] = initial_states
 ys[1] = newC*xs[:, 1] + rand(measurements) # measured from actual plant
 SPF.init_filter!(particles, 0.0, ys[1], cstr_filter)
 
-for k=1:nP
-  if particles.s[k] == 1
-    switch_count[1, 1] += particles.w[k]
-  else
-    switch_count[2, 1] += particles.w[k]
-  end
+for k=1:2
+  switchtrack[k, 1] = sum(particles.w[find((x)->x==k, particles.s)])
 end
 
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
-  if ts[t] < 1.0
+  if ts[t] < 10.0
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   else
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   end
-  # if ts[t] > 0.5
-  #   us[t] = -300.0
-  # end
+
   ys[t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
   SPF.filter!(particles, us[t-1], ys[t], cstr_filter)
   fmeans[:,t], fcovars[:,:,t] = SPF.getStats(particles)
 
-  for k=1:nP
-    if particles.s[k] == 1
-      switch_count[1, t] += particles.w[k]
-    else
-      switch_count[2, t] += particles.w[k]
-    end
+  for k=1:2
+    switchtrack[k, t] = sum(particles.w[find((x)->x==k, particles.s)])
   end
 
 end
 
+rc("font", family="serif", size=24)
 
 figure(1)
-plot(ts, switch_count[1,:][:], "g.")
-plot(ts, switch_count[2,:][:], "k.")
+maxswitch = maximum(switchtrack)
+axes = Array(Any, 2)
+im = 0
+width = 500
+for k=1:2
+  ax = subplot(2, 1, k)
+  axes[k] = ax
+  im = imshow(repeat(switchtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=maxswitch, interpolation="nearest", aspect="auto")
+  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
+  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
+  ylabel(string("S::",k))
+end
+tick_params(axis="x", labelbottom = "on")
+xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
+colorbar(im, ax=axes)
 xlabel("Time [min]")
-ylabel("Weight")
-rc("font",size=22)
 
 
 skip = 50
-# figure(2) # Kalman Filter Demonstration
+# figure(2)
 # x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 # f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 # b1 = 0.0
