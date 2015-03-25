@@ -3,9 +3,7 @@ using PyPlot
 using Distributions
 
 import RBPF
-reload("RBPF.jl")
 import SPF
-reload("SPF.jl")
 cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
@@ -40,7 +38,7 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
-init_state = [0.4; 400] # initial state
+init_state = [0.5; 400] # initial state
 C =  [0.0 1.0]
 R = eye(1)
 R[1] = 10.0
@@ -117,6 +115,7 @@ plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
 plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 xlim([-0.1, 1.1])
+ylim([250, 650])
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 ylabel("Temperature [K]")
 
@@ -131,7 +130,7 @@ for k=1:length(linsystems)
   im = imshow(repeat(switchtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=maxswitch, interpolation="nearest", aspect="auto")
   tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
   tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string(k))
+  ylabel(string("S::",k))
 end
 tick_params(axis="x", labelbottom = "on")
 xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
@@ -170,8 +169,10 @@ for k=1:skip:N
 
   p3, p4 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
   b2, = plot(p3, p4, "g")
-
 end
+plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1,f2, b1, b2],["Nonlinear Model","Switching Kalman Filter Mean","Kalman Filter Mean", L"Switching Kalman Filter $1\sigma$-Ellipse",L"Kalman Filter $1\sigma$-Ellipse"], loc="best")

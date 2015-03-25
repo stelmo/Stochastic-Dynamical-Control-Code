@@ -29,9 +29,9 @@ cstr = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.50; 450]
+init_state = [0.50; 400]
 h = 0.1 # time discretisation
-tend = 15.0 # end simulation time
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -88,16 +88,18 @@ end
 
 rc("font", family="serif", size=24)
 
-skip = 150
-figure(1) # Kalman Filter Demonstration
+skip = 120
+figure(1)
 x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
 f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 for k=1:skip:N
   p1, p2 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
   b1, = plot(p1, p2, "b")
 end
+plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")

@@ -4,8 +4,6 @@ using Distributions
 
 import RBPF
 import SPF
-reload("SPF.jl")
-reload("RBPF.jl")
 cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
@@ -35,13 +33,13 @@ cstr_model = begin
 end
 
 h = 0.1 # time discretisation
-tend = 15. # end simulation time
+tend = 150. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.7; 450] # initial state
+init_state = [0.5; 400] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-3
@@ -180,6 +178,9 @@ for k=1:skip:N
   b2, = plot(p3, p4, "g")
 
 end
+plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1,f2, b1, b2],["Nonlinear Model","Switching Kalman Filter Mean","Kalman Filter Mean", L"Switching Kalman Filter $1\sigma$-Ellipse",L"Kalman Filter $1\sigma$-Ellipse"], loc="best")

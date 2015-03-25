@@ -34,8 +34,8 @@ cstr_model = begin
 end
 
 init_state = [0.5; 400] # initial state
-h = 0.01 # time discretisation
-tend = 30.0 # end simulation time
+h = 0.1 # time discretisation
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -49,11 +49,13 @@ cstr_pf = PF.Model(f,g)
 # Initialise the PF
 nP = 100 #number of particles.
 init_state_mean = init_state # initial state mean
-init_state_covar = 4.0
+init_state_covar = eye(2) # vague
+init_state_covar[1] = 1e-3
+init_state_covar[4] = 4.
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
 state_covar = eye(2) # state covariance
-state_covar[1] = 1e-4
+state_covar[1] = 1e-5
 state_covar[2] = 4.
 state_dist = MvNormal(state_covar) # state distribution
 meas_covar = eye(1)*10. # measurement covariance
@@ -74,8 +76,10 @@ for t=2:N
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
 end
 
-skip = 20
-figure(1) # Kalman Filter Demonstration
+rc("font", family="serif", size=24)
+
+skip = 150
+figure(1)
 x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
@@ -83,11 +87,15 @@ for k=1:skip:N
   p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
   b1, = plot(p1, p2, "b")
 end
+plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
 
 figure(2) # Plot filtered results
+skipm = 20
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
@@ -96,10 +104,9 @@ legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:10:end], ys[1:10:end], "kx", markersize=5, markeredgewidth=1)
+y2, = plot(ts[1:skipm:end], ys[1:skipm:end], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
 ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2],["Nonlinear Model Measured"], loc="best")
 xlim([0, tend])
-rc("font",size=22)
