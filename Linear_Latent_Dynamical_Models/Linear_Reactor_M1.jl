@@ -30,7 +30,7 @@ cstr = begin
 end
 
 init_state = [0.50; 400]
-h = 0.001 # time discretisation
+h = 0.01 # time discretisation
 tend = 20.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
@@ -86,7 +86,9 @@ end
 # pred_us[:] = us[pstart-1:pend-1]
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
-skip = 1500
+rc("font", family="serif", size=24)
+
+skip = 250
 figure(1) # Kalman Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
 f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
@@ -99,8 +101,8 @@ ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
-skip = 300
-skipm = 100
+skip = 100
+skipm = 50
 figure(2) # Filtering
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -120,4 +122,3 @@ xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
 ylim([350, 450])
-rc("font",size=22)
