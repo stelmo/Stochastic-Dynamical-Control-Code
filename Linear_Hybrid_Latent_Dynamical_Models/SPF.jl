@@ -160,6 +160,7 @@ function calcA(linsystems::Array{Reactor_functions.LinearReactor,1})
   for j=1:N
     for i=1:N
       A[i,j] = norm((linsystems[i].op-linsystems[j].op)./linsystems[j].op)
+      # A[i,j] = norm(linsystems[i].op-linsystems[j].op)
     end
   end
 

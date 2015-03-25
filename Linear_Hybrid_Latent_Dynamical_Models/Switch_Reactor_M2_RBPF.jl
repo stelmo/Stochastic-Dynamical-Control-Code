@@ -10,6 +10,7 @@ cd("..\\CSTR_Model")
 using Reactor_functions
 cd("..\\Linear_Latent_Dynamical_Models")
 using Confidence
+using LLDS_functions
 cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
 
 # Add a definition for convert to make our lives easier!
@@ -33,42 +34,52 @@ cstr_model = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.01 # time discretisation
-tend = 5. # end simulation time
+h = 0.1 # time discretisation
+tend = 15. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.6; 400] # initial state
+init_state = [0.7; 450] # initial state
 C = eye(2) # observe both states
 R = eye(2)
-R[1] = 1e-5
-R[4] = 4.0
+R[1] = 1e-3
+R[4] = 10.0
 Q = eye(2)
 Q[1] = 1e-5
 Q[4] = 4.0
 
 # Divide state space into sectors: n by m
-nX = 3 # rows
-nY = 3 # cols
+nX = 2 # rows
+nY = 2 # cols
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
-# linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 linsystems = Reactor_functions.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+A = linsystems[2].A
+B = linsystems[2].B
+b = linsystems[2].b
+lin_cstr = LLDS_functions.LLDS(A, B, b, C, Q, R)
+
+
+linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+# linsystems = Reactor_functions.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
 
 nP = 500
 initial_states = init_state
 initial_covar = eye(2)
-initial_covar[1] = 1e-6
-initial_covar[4] = 1.0
+initial_covar[1] = 1e-3
+initial_covar[4] = 4.0
 sguess =  SPF.getInitialSwitches(initial_states, linsystems)
 particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2, nP)
 
 fmeans = zeros(2, N)
+fcovars = zeros(2,2,N)
+filtermeans = zeros(2, N)
+filtercovars = zeros(2,2, N)
 switchtrack = zeros(length(linsystems), N)
 
 us = zeros(N)
@@ -76,7 +87,10 @@ measurements = MvNormal(R)
 xs[:,1] = initial_states
 ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
 RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
-fmeans[:,1] = RBPF.getStats(particles)
+fmeans[:,1], fcovars[:,:, 1] = RBPF.getStats(particles)
+
+filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(initial_states, initial_covar, ys[:, 1], lin_cstr)
+
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
 end
@@ -85,13 +99,14 @@ for t=2:N
   xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
-  fmeans[:, t] = RBPF.getStats(particles)
+  fmeans[:, t], fcovars[:,:, t] = RBPF.getStats(particles)
   for k=1:length(linsystems)
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
+  filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t], ys[:, t], lin_cstr)
 end
 
-rc("font", family="serif", size=22)
+rc("font", family="serif", size=24)
 
 figure(1)
 for k=1:length(linsystems)
@@ -129,18 +144,42 @@ colorbar(im, ax=axes)
 xlabel("Time [min]")
 
 figure(3) # Plot filtered results
+skip = int(length(ts)/75)
+skipm = skip
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-y1, = plot(ts[1:10:end], ys[1, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
-k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
+y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "rx", markersize=5, markeredgewidth=1)
+k1, = plot(ts[1:skip:end], fmeans[1, 1:skip:end]', "mo")
 ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+legend([x1],["Nonlinear Model"], loc="best")
 xlim([0, tend])
+ylim([0, 1])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:10:end], ys[2, 1:10:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
+y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "rx", markersize=5, markeredgewidth=1)
+k2, = plot(ts[1:skip:end], fmeans[2, 1:skip:end]', "mo")
 ylabel("Temperature [K]")
 xlabel("Time [min]")
-legend([y2],["Nonlinear Model Measured"], loc="best")
+legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
+
+
+skip = int(length(ts)/20)
+figure(4) # Kalman Filter Demonstration
+x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+f2, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "gx", markersize=5, markeredgewidth = 2)
+b1 = 0.0
+b2 = 0.0
+for k=1:skip:N
+  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+  b1, = plot(p1, p2, "b")
+
+  p3, p4 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
+  b2, = plot(p3, p4, "g")
+
+end
+ylabel("Temperature [K]")
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1,f1,f2, b1, b2],["Nonlinear Model","Switching Kalman Filter Mean","Kalman Filter Mean", L"Switching Kalman Filter $1\sigma$-Ellipse",L"Kalman Filter $1\sigma$-Ellipse"], loc="best")

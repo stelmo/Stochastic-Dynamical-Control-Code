@@ -29,9 +29,9 @@ cstr = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.50; 400]
-h = 0.01 # time discretisation
-tend = 20.0 # end simulation time
+init_state = [0.50; 450]
+h = 0.1 # time discretisation
+tend = 15.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -49,7 +49,7 @@ B = linsystems[3].B
 b = linsystems[3].b
 C = [0.0 1.0]
 Q = eye(2) # plant mismatch/noise
-Q[1] = 1e-6
+Q[1] = 1e-5
 Q[4] = 4.
 R = 10.0 # measurement noise
 lin_cstr = LLDS_functions.LLDS(A, B, b, C, Q, R)
@@ -67,8 +67,8 @@ ys[1] = lin_cstr.C*xs[:, 1] + rand(norm_dist) # measure from actual plant
 # Filter
 init_mean = init_state
 init_covar = eye(2) # vague
-init_covar[1] = 1e-6
-init_covar[4] = 2.
+init_covar[1] = 1e-3
+init_covar[4] = 10.
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, ys[1], lin_cstr)
@@ -88,9 +88,10 @@ end
 
 rc("font", family="serif", size=24)
 
-skip = 250
+skip = 150
 figure(1) # Kalman Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
 f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 for k=1:skip:N
@@ -101,8 +102,8 @@ ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
-skip = 100
-skipm = 50
+
+skipm = skip
 figure(2) # Filtering
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -111,7 +112,7 @@ k1, = plot(ts[1:skip:end], filtermeans[1, 1:skip:end]', "mo")
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,linx1],["Nonlinear Model","Linear Model"], loc="best")
 xlim([0, tend])
-ylim([0, 1])
+ylim([0, 1.5])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 linx2, = plot(ts, linxs[2,:]', "r--", linewidth=3)
@@ -121,4 +122,4 @@ ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
-ylim([350, 450])
+ylim([minimum(xs[2,:]), maximum(xs[2,:])])

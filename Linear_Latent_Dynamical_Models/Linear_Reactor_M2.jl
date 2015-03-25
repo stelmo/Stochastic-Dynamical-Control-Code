@@ -24,9 +24,9 @@ cstr = begin
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.50; 400]
-h = 0.01 # time discretisation
-tend = 20.0 # end simulation time
+init_state = [0.50; 450]
+h = 0.1 # time discretisation
+tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -44,7 +44,7 @@ B = linsystems[3].B
 b = linsystems[3].b
 C = eye(2)
 Q = eye(2) # plant mismatch/noise
-Q[1] = 1e-6
+Q[1] = 1e-5
 Q[4] = 4.
 R = eye(2)
 R[1] = 1e-3
@@ -64,8 +64,8 @@ ys[:, 1] = lin_cstr.C*xs[:, 1] + rand(norm_dist) # measure from actual plant
 # Filter
 init_mean = init_state
 init_covar = eye(2) # vague
-init_covar[1] = 1e-6
-init_covar[4] = 2.
+init_covar[1] = 1e-3
+init_covar[4] = 4.
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, ys[:, 1], lin_cstr)
@@ -83,11 +83,18 @@ end
 # pred_us[:] = us[pstart-1:pend-1]
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
 
+cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
+writecsv("kfmeans_M2_high.csv", filtermeans)
+scovars = size(filtercovars)
+writecsv("kfcovars_M2_high.csv", reshape(filtercovars, scovars[1], scovars[2]*scovars[3]))
+cd("..\\Linear_Latent_Dynamical_Models")
+
 rc("font", family="serif", size=24)
 
-skip = 250
+skip = 25
 figure(1) # Kalman Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
 f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 for k=1:skip:N
@@ -98,8 +105,8 @@ ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
 
-skip = 100
-skipm = 50
+skip = 10
+skipm = 5
 figure(2) # Filtering
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -119,4 +126,4 @@ ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
-# ylim([350, 400])
+ylim([minimum(xs[2,:]), maximum(xs[2,:])])

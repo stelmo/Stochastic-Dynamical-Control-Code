@@ -177,10 +177,13 @@ end
 function getStats(particles::Particles)
   nX, nP = size(particles.mus)
   ave = zeros(nX)
+  avesigma = zeros(nX, nX)
   for p=1:nP
     ave = ave + particles.ws[p]*particles.mus[:, p]
+    avesigma = avesigma + particles.ws[p].*particles.sigmas[:,:, p]
   end
-  return ave
+
+  return ave, avesigma
 end
 
 end #module
