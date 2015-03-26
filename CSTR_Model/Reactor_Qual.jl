@@ -34,6 +34,7 @@ for k=1:N
   qgs1[k] = Reactor_functions.QG(Ts[k], cstr1)
 end
 
+rc("font", family="serif", size=24)
 figure(1)
 q1, = plot(Ts, qrs1, "b", linewidth=3)
 q2, = plot(Ts, qrs2, "g", linewidth=3)
@@ -42,8 +43,7 @@ opline1, = plot(Ts, qgs1, "k", linewidth=3)
 legend([q1,q2,q3, opline1],["Q=-906 kJ/min","Q=0 kJ/min","Q=1145 kJ/min","Operating Curve"], loc="best")
 xlabel("Steady State Temperature [K]")
 ylabel("Heat Removal Rate [K/min]")
-ylim([0.0, 8.])
-rc("font",size=22)
+ylim([0.0, 5.])
 
 #Get the steady state points
 xguess1 = [0.073, 493.0]

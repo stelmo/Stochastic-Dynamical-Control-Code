@@ -19,7 +19,7 @@ cstr = begin
 end
 
 h = 0.001 # time discretisation
-tend = 50.0 # end simulation time
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 
 # Divide state space into sectors: n by m
@@ -31,9 +31,10 @@ yspace = [250, 650]
 
 # linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr)
 linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr)
-
+rc("font", family="serif", size=24)
 figure(1)
-k=4 # set which operating point to use...
+k=4 # set which operating point to use... 2 = 1, 3 = 2, 4 = 3
+# also remember to change +- on line 47 and the SS points on lines 75-81
 nDD = 2
 vars = zeros(2,3)
 vars[:,1] = [0.05, 5.0]
@@ -43,7 +44,7 @@ x1 = 0
 x2 = 0
 x3 = 0
 for dd=1:nDD # only loop through
-  initial_states = linsystems[2].op + abs(randn(2)).*vars[:, dd]
+  initial_states = linsystems[k].op - abs(randn(2)).*vars[:, dd]
 
   N = length(ts)
   xs = zeros(2, N)
@@ -83,4 +84,3 @@ end
 
 legend([x1, x2, x3],["Nonlinear Model","Linear Model","Operating Point"], loc="best")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
-rc("font",size=22)

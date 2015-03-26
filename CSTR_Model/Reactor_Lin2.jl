@@ -19,7 +19,7 @@ cstr = begin
 end
 
 h = 0.001 # time discretisation
-tend = 50.0 # end simulation time
+tend = 5.0 # end simulation time
 ts = [0.0:h:tend]
 
 # Divide state space into sectors: n by m
@@ -85,10 +85,9 @@ for k=1:length(diff)
   end
 end
 
-
+rc("font", family="serif", size=24)
 figure(1)
 contourf(xpoints, ypoints, diff, 50, cmap = "cubehelix")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 ylabel("Temperature [K]")
 colorbar()
-rc("font",size=22)

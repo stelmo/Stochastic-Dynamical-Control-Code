@@ -33,7 +33,7 @@ yspace = [250, 550]
 
 # linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr)
 linsystems = Reactor_functions.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr)
-
+rc("font", family="serif", size=24)
 figure(1)
 x1 = 0.0
 x2 = 0.0
@@ -85,4 +85,3 @@ xlim([-0.1, 1.2])
 ylim([250,850])
 ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
-rc("font",size=22)
