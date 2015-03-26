@@ -46,9 +46,9 @@ cstr2 = begin # slower reaction rate
   Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-initial_states = [0.3; 450] # initial state
+initial_states = [0.5; 450] # initial state
 h = 0.1 # time discretisation
-tend = 250.0 # end simulation time
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -141,19 +141,19 @@ xlabel("Time [min]")
 
 
 skip = 50
-# figure(2)
-# x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-# f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-# b1 = 0.0
-# for k=1:skip:N
-#   p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
-#   b1, = plot(p1, p2, "b")
-# end
-# ylabel("Temperature [K]")
-# xlabel(L"Concentration [kmol.m$^{-3}$]")
-# legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
+figure(2)
+x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+b1 = 0.0
+for k=1:skip:N
+  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+  b1, = plot(p1, p2, "b")
+end
+ylabel("Temperature [K]")
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
 
-
+skipm = skip
 figure(3) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -165,7 +165,7 @@ xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 x2nf, = plot(ts, xsnofix[2,:]', "g--", linewidth=3)
-y2, = plot(ts[1:10:end], ys[1:10:end], "kx", markersize=5, markeredgewidth=1)
+y2, = plot(ts[1:skipm:end], ys[1:skipm:end], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
 ylabel("Temperature [K]")
 xlabel("Time [min]")
