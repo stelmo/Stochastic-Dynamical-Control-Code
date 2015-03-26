@@ -48,7 +48,7 @@ end
 
 initial_states = [0.5; 450] # initial state
 h = 0.1 # time discretisation
-tend = 100.0 # end simulation time
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -63,8 +63,8 @@ Q = eye(2)
 Q[1] = 1e-5
 Q[4] = 4.0
 
-# A = [0.9 0.1;0.1 0.9]
-A = [0.5 0.5;0.5 0.5]
+A = [0.9 0.1;0.1 0.9]
+# A = [0.5 0.5;0.5 0.5]
 fun1(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr1)
 fun2(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr2)
 gs(x) = newC*x
@@ -103,7 +103,7 @@ end
 fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
-  if ts[t] < 10.0
+  if ts[t] < 40.0
     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
   else
@@ -145,12 +145,16 @@ xlabel("Time [min]")
 skip = 50
 figure(2)
 x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 for k=1:skip:N
   p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
   b1, = plot(p1, p2, "b")
 end
+plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 ylabel("Temperature [K]")
 xlabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")

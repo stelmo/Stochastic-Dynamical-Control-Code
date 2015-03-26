@@ -42,8 +42,8 @@ ys = zeros(2, N) # only one measurement
 init_state = [0.5; 400] # initial state
 C = eye(2) # observe both states
 R = eye(2)
-R[1] = 1e-1
-R[4] = 100.0
+R[1] = 1e-3
+R[4] = 10.0
 Q = eye(2)
 Q[1] = 1e-5
 Q[4] = 4.0
@@ -134,7 +134,7 @@ for k=1:length(linsystems)
   im = imshow(repeat(switchtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=maxswitch, interpolation="nearest", aspect="auto")
   tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
   tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string(k))
+  ylabel(string("S::",k))
 end
 tick_params(axis="x", labelbottom = "on")
 xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
