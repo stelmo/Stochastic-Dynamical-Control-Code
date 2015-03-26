@@ -48,7 +48,7 @@ end
 
 initial_states = [0.5; 450] # initial state
 h = 0.1 # time discretisation
-tend = 15.0 # end simulation time
+tend = 100.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -116,41 +116,50 @@ ys1[1] = C1*xs[:, 1] + rand(measurements1) # measured from actual plant
 SPF.init_filter!(particles1, 0.0, ys1[1], cstr_filter1)
 fmeans1[:,1], fcovars1[:,:,1] = SPF.getStats(particles1)
 
-ys[:, 1] = C2*xs[:, 1] + rand(measurements2) # measured from actual plant
-SPF.init_filter!(particles2, 0.0, ys[:, 1], cstr_filter2)
+ys2[:, 1] = C2*xs[:, 1] + rand(measurements2) # measured from actual plant
+SPF.init_filter!(particles2, 0.0, ys2[:, 1], cstr_filter2)
 fmeans2[:,1], fcovars2[:,:,1] = SPF.getStats(particles2)
 
-# # Loop through the rest of time
-# for t=2:N
-#   if ts[t] < 10.0
-#     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
-#     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
-#   else
-#     xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
-#     xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
-#   end
-#
-#   ys1[t] = C1*xs[:, t] + rand(measurements1) # measured from actual plant
-#   SPF.filter!(particles1, us[t-1], ys[t], cstr_filter1)
-#   fmeans1[:,t], fcovars1[:,:,t] = SPF.getStats(particles1)
-#
-#   ys2[:, t] = C2*xs[:, t] + rand(measurements2) # measured from actual plant
-#   SPF.filter!(particles2, us[t-1], ys[t], cstr_filter2)
-#   fmeans2[:,t], fcovars2[:,:,t] = SPF.getStats(particles2)
-#
-# end
+# Loop through the rest of time
+for t=2:N
+  if ts[t] < 40.0
+    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
+    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
+  else
+    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
+    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
+  end
+
+  ys1[t] = C1*xs[:, t] + rand(measurements1) # measured from actual plant
+  SPF.filter!(particles1, us[t-1], ys1[t], cstr_filter1)
+  fmeans1[:,t], fcovars1[:,:,t] = SPF.getStats(particles1)
+
+  ys2[:, t] = C2*xs[:, t] + rand(measurements2) # measured from actual plant
+  SPF.filter!(particles2, us[t-1], ys2[:, t], cstr_filter2)
+  fmeans2[:,t], fcovars2[:,:,t] = SPF.getStats(particles2)
+
+end
 
 rc("font", family="serif", size=24)
-#
-# skip = 50
-# figure(2)
-# x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-# f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-# b1 = 0.0
-# for k=1:skip:N
-#   p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
-#   b1, = plot(p1, p2, "b")
-# end
-# ylabel("Temperature [K]")
-# xlabel(L"Concentration [kmol.m$^{-3}$]")
-# legend([x1,f1, b1],["Nonlinear Model","Particle Filter Mean", L"Particle Filter $1\sigma$-Ellipse"], loc="best")
+
+skip = 50
+figure(2)
+x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+f1, = plot(fmeans1[1, 1:skip:end][:], fmeans1[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+f2, = plot(fmeans2[1, 1:skip:end][:], fmeans2[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
+b1 = 0.0
+b2 = 0.0
+for k=1:skip:N
+  p1, p2 = Confidence.plot95(fmeans1[:,k], fcovars1[:,:, k])
+  b1, = plot(p1, p2, "r")
+
+  p1, p2 = Confidence.plot95(fmeans2[:,k], fcovars2[:,:, k])
+  b2, = plot(p1, p2, "b")
+end
+plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
+ylabel("Temperature [K]")
+xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1,f1, f2, b1, b2],["Nonlinear Model","Filter Mean: M1","Filter Mean: M2", L"Particle Filter M1: $1\sigma$-Ellipse",L"Particle Filter M2: $1\sigma$-Ellipse"], loc="best")
