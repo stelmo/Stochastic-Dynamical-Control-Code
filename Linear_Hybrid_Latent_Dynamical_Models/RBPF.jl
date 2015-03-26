@@ -158,19 +158,23 @@ function roughen!(particles::Particles)
   sig = zeros(xN)
 
   K= 0.2 # parameter...
-
+  flag = true
   for k=1:xN
     D = maximum(particles.mus[k,:]) - minimum(particles.mus[k,:])
     if D == 0.0
       warn("Particle distance very small! Roughening could cause problems...")
+      flag = false
+      break
     end
     sig[k] = K*D*N^(-1./xN)
   end
 
-  sigma = diagm(sig.^2)
-  jitter = MvNormal(sigma)
-  for p=1:N
-    particles.mus[:, p] = particles.mus[:, p] + rand(jitter)
+  if flag
+    sigma = diagm(sig.^2)
+    jitter = MvNormal(sigma)
+    for p=1:N
+      particles.mus[:, p] = particles.mus[:, p] + rand(jitter)
+    end
   end
 end
 
