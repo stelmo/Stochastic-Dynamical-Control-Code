@@ -38,7 +38,7 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
-init_state = [0.5; 450] # initial state
+init_state = [0.3; 400] # initial state
 C =  [0.0 1.0]
 R = eye(1)
 R[1] = 10.0
