@@ -80,6 +80,7 @@ filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 switchtrack = zeros(length(linsystems), N)
 
+state_dist = MvNormal(Q)
 us = zeros(N)
 measurements = MvNormal(R)
 xs[:,1] = initial_states
@@ -94,7 +95,7 @@ for k=1:length(linsystems)
 end
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) # actual plant
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
   fmeans[:, t], fcovars[:,:, t] = RBPF.getStats(particles)

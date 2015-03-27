@@ -59,6 +59,7 @@ us = zeros(N) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t
 
 
 # Simulate plant
+state_dist = MvNormal(Q)
 norm_dist = MvNormal(lin_cstr.R)
 ys[:, 1] = lin_cstr.C*xs[:, 1] + rand(norm_dist) # measure from actual plant
 # Filter
@@ -70,7 +71,7 @@ filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(init_mean, init_covar, ys[:, 1], lin_cstr)
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t], h, cstr) # actual plant
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t], h, cstr) + rand(state_dist) # actual plant
   ys[:, t] = lin_cstr.C*xs[:, t] + rand(norm_dist) # measured from actual plant
   linxs[:, t], temp = LLDS_functions.step(linxs[:, t-1], us[t], lin_cstr)
   filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t], ys[:, t], lin_cstr)
@@ -82,12 +83,6 @@ end
 # pred_us = zeros(pend-pstart+1)
 # pred_us[:] = us[pstart-1:pend-1]
 # pmeans, pcovars = LLDS_functions.predict_hidden(filtermeans[:, pstart-1], filtercovars[:,:, pstart-1], pred_us, lin_cstr)
-
-cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
-writecsv("kfmeans_M2_high.csv", filtermeans)
-scovars = size(filtercovars)
-writecsv("kfcovars_M2_high.csv", reshape(filtercovars, scovars[1], scovars[2]*scovars[3]))
-cd("..\\Linear_Latent_Dynamical_Models")
 
 rc("font", family="serif", size=24)
 

@@ -67,7 +67,7 @@ PF.init_filter!(particles, 0.0, ys[:, 1], meas_dist, cstr_pf)
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr_model) # actual plant
+  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr_model) + rand(state_dist) # actual plant
   ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
   PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)

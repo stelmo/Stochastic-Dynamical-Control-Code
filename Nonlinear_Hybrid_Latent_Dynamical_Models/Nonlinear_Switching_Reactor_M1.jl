@@ -86,7 +86,7 @@ fcovars = zeros(2,2, N)
 us = zeros(N)
 switchtrack = zeros(2, N)
 
-
+state_dist = MvNormal(Q)
 measurements = MvNormal(R)
 xs[:,1] = initial_states
 xsnofix[:,1] = initial_states
@@ -102,11 +102,11 @@ fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
   if ts[t] < 40.0
-    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
-    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
+    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) + rand(state_dist) # actual plant
+    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + rand(state_dist) # actual plant
   else
-    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
-    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
+    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2) + rand(state_dist)
+    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + rand(state_dist) # actual plant
   end
 
   ys[t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
