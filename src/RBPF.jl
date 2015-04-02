@@ -2,12 +2,8 @@
 module RBPF
 # WARNING: this is made specifically for the system I am investigating
 
-using Distributions
-cd("..\\CSTR_Model")
-using Reactor_functions
-cd("..\\Linear_Latent_Dynamical_Models")
-using LLDS_functions
-cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
+using Reactor
+using LLDS
 using SPF
 
 type Particles

@@ -8,16 +8,14 @@
 # Website: http://www0.cs.ucl.ac.uk/staff/d.barber/brml/
 # Chapter 23, Example 23.3: Localisation Problem
 
-using Distributions
-using PyPlot
-using HMM_functions
-using Burglar_functions
+using HMM
+using Burglar
 
 T = 10
 n = 5
 
-house = House(n)
-hmm = createHMM(house) # create the hidden markov model
+house = Burglar.house(n)
+hmm = Burglar.createhmm(house) # create the hidden markov model
 
 movements = zeros(Int64,n,n,T)
 locs = zeros(Int64, T)
@@ -32,10 +30,10 @@ initial[1:n] = 1.0/(n) # one column initial guess
 
 # Measurement and actual movements
 for t=1:T
-  locs[t] = getLocation(house)
+  locs[t] = Burglar.getLocation(house)
   movements[:,:,t] = house.floor
   observations[t] = rand(Categorical(hmm.ep[:,locs[t]]))
-  move!(house)
+  Burglar.move!(house)
   if observations[t] == 1
     noises[:,:,t] = [1 1;1 1]
   elseif observations[t] == 2
@@ -49,16 +47,16 @@ end
 
 ## Inference
 # Forward Filter
-filter = forward(hmm, initial, observations)
+filter = HMM.forward(hmm, initial, observations)
 
 # Smoothing
 fbs = zeros(length(initial), length(observations))
 for k=1:length(observations)
-  fbs[:, k] = smooth(hmm, initial, observations, k)
+  fbs[:, k] = HMM.smooth(hmm, initial, observations, k)
 end
 
 # Viterbi
-vtb = viterbi(hmm, initial, observations)
+vtb = HMM.viterbi(hmm, initial, observations)
 mlmove = zeros(Int64,n,n,T) # construct floor matrices showing the viterbi path
 for k=1:length(observations)
   temp = zeros(Int64, n,n)
@@ -70,7 +68,7 @@ end
 predmove = zeros(n, n, T)
 predmove[:,:,1] = reshape(initial, n, n) # first time step is just the prior
 for k=2:T
-  pstate, = prediction(hmm, initial, observations[1:k-1])
+  pstate, = HMM.prediction(hmm, initial, observations[1:k-1])
   predmove[:,:, k] = round(reshape(pstate, n, n), 2) # round to make predictions stand out more
 end
 

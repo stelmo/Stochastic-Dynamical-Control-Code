@@ -1,8 +1,6 @@
-module LLDS_functions
+module LLDS
 
-using Distributions
-
-immutable LLDS
+immutable llds
   # Assume zero mean transition and emission functions.
   # The linear latent dynamical system should have the
   # state space form:
@@ -29,13 +27,11 @@ function step(xprev, uprev, model)
   return xnow,  ynow
 end
 
-
 function init_filter(initmean, initvar, ynow, model)
   # Initialise the filter. No prediction step, only a measurement update step.
   updatedMean ::Array{Float64, 1}, updatedVar :: Array{Float64, 2} = step_update(initmean, initvar, ynow, model)
   return updatedMean, updatedVar
 end
-
 
 function step_filter(prevmean, prevvar, uprev, ynow, model)
   # Return the posterior over the current state given the observation and previous

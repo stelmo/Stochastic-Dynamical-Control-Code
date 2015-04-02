@@ -72,10 +72,11 @@ for t=2:N
   PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
 end
+
 rc("font", family="serif", size=24)
 skip = 150
 figure(1)
-x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+x1, = plot(xs[1,:][:], xs[2,:][:], "k",alpha=0.3, linewidth=3)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 for k=1:skip:N

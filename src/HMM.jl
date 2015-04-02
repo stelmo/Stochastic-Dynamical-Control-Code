@@ -1,19 +1,16 @@
 # Functions which implement inference algorithms for HMMs.
 # Discrete, time invariant transition and emission probabilities are assumed.
-module HMM_functions
+module HMM
 
-# Add export functions
-export  HMM, forward, normalise, smooth, viterbi, prediction
-
-immutable HMM #time invariant
+immutable hmm #time invariant
   tp :: Array{Float64, 2} #transmission probability table
   ep :: Array{Float64, 2} #emission probability table
 
-  HMM(tp, ep) = new(tp, ep)
+  hmm(tp, ep) = new(tp, ep)
 end
 
-function forward(model::HMM, initial::Array{Float64, 1}, evidence::Array{Int64,1})
-  # Forwards algorithm for HMM
+function forward(model::hmm, initial::Array{Float64, 1}, evidence::Array{Int64,1})
+  # Forwards algorithm for hmm
   ns, = size(model.tp) #number of states
   ne, = size(evidence) #number of observations
   alpha = zeros(ns, ne) #matrix of forward probabilities
@@ -46,8 +43,8 @@ function normalise(vec::Array{Float64,1})
   return vec./sum(vec)
 end
 
-function backward(model::HMM, evidence::Array{Int64,1})
-  # Backwards algorithm for HMM.
+function backward(model::hmm, evidence::Array{Int64,1})
+  # Backwards algorithm for hmm.
   ns, = size(model.tp) #number of states
   ne, = size(evidence) #number of observations
   beta = zeros(ns, ne) #matrix of forward probabilities
@@ -71,7 +68,7 @@ function backward(model::HMM, evidence::Array{Int64,1})
   return beta
 end
 
-function smooth(model::HMM, initial::Array{Float64,1}, evidence::Array{Int64,1}, timeLocation::Int64)
+function smooth(model::hmm, initial::Array{Float64,1}, evidence::Array{Int64,1}, timeLocation::Int64)
   # Forwards-Backwards algorithm. Note that it is required to split the evidence
   # accordingly.
   forwardEvidence = evidence[1:timeLocation]
@@ -85,7 +82,7 @@ function smooth(model::HMM, initial::Array{Float64,1}, evidence::Array{Int64,1},
   return smoothed
 end
 
-function viterbi(model::HMM, initial::Array{Float64, 1}, evidence::Array{Int64, 1})
+function viterbi(model::hmm, initial::Array{Float64, 1}, evidence::Array{Int64, 1})
   # The Viterbi algorithm for the most likely joint sequence of states given observations.
   ns, = size(model.tp) #number of states
   ne, = size(evidence) #number of observations
@@ -115,7 +112,7 @@ function viterbi(model::HMM, initial::Array{Float64, 1}, evidence::Array{Int64, 
   return mlss
 end
 
-function max_viterbi(model::HMM, state::Int64, evidence::Int64, mu_before::Array{Float64,1})
+function max_viterbi(model::hmm, state::Int64, evidence::Int64, mu_before::Array{Float64,1})
   # Finds the maximum mu factor given the evidence and previous state
   ns, = size(model.tp) #number of states
   vmax = 0.0
@@ -128,7 +125,7 @@ function max_viterbi(model::HMM, state::Int64, evidence::Int64, mu_before::Array
   return vmax
 end
 
-function arg_viterbi(model::HMM, initial::Array{Float64,1}, evidence::Int64, mu_vec::Array{Float64,1})
+function arg_viterbi(model::hmm, initial::Array{Float64,1}, evidence::Int64, mu_vec::Array{Float64,1})
   # Finds the most likely state given the first observation
 
   ns, = size(model.tp) #number of states
@@ -147,7 +144,7 @@ function arg_viterbi(model::HMM, initial::Array{Float64,1}, evidence::Int64, mu_
   return mls
 end
 
-function arg_viterbi(model::HMM, evidence::Int64, mu_vec::Array{Float64,1}, prev_mls::Int64)
+function arg_viterbi(model::hmm, evidence::Int64, mu_vec::Array{Float64,1}, prev_mls::Int64)
   # Finds the most likely sequence of states using mu
   ns, = size(model.tp) #number of states
   mls = 0 #most likely state
@@ -165,7 +162,7 @@ function arg_viterbi(model::HMM, evidence::Int64, mu_vec::Array{Float64,1}, prev
   return mls
 end
 
-function prediction(model::HMM, initial::Array{Float64, 1}, evidence::Array{Int64, 1})
+function prediction(model::hmm, initial::Array{Float64, 1}, evidence::Array{Int64, 1})
   # One step ahead hidden state and observation estimator
   ns, = size(model.tp)
   ne, = size(model.ep)

@@ -1,10 +1,7 @@
 module SPF
 # switching particle filter
 
-using Distributions
-cd("..\\CSTR_Model")
-using Reactor_functions
-cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
+using Reactor
 
 type Particles
   x :: Array{Float64, 2} # states
@@ -151,7 +148,7 @@ function getStats(particles::Particles)
   return mean(fitted), cov(fitted)
 end
 
-function calcA(linsystems::Array{Reactor_functions.LinearReactor,1})
+function calcA(linsystems::Array{Reactor.LinearReactor,1})
   # Returns a stochastic HMM matrix based on the Euclidean
   # distances between the operating points.
   N = length(linsystems)
@@ -178,7 +175,7 @@ function calcA(linsystems::Array{Reactor_functions.LinearReactor,1})
   return posA
 end
 
-function getF(linsystems::Array{Reactor_functions.LinearReactor,1})
+function getF(linsystems::Array{Reactor.LinearReactor,1})
   # Return transmission function matrices
   N = length(linsystems)
   F = Array(Function, N)
@@ -190,7 +187,7 @@ function getF(linsystems::Array{Reactor_functions.LinearReactor,1})
   return F
 end
 
-function getG(linsystems::Array{Reactor_functions.LinearReactor,1}, C)
+function getG(linsystems::Array{Reactor.LinearReactor,1}, C)
   # Return emission function matrices
   N = length(linsystems)
   G = Array(Function, N)
@@ -202,7 +199,7 @@ function getG(linsystems::Array{Reactor_functions.LinearReactor,1}, C)
   return G
 end
 
-function getDists(linsystems::Array{Reactor_functions.LinearReactor,1}, dist)
+function getDists(linsystems::Array{Reactor.LinearReactor,1}, dist)
   # Return emission function matrices
   N = length(linsystems)
   xdists = Array(typeof(dist), N)
@@ -213,7 +210,7 @@ function getDists(linsystems::Array{Reactor_functions.LinearReactor,1}, dist)
   return xdists
 end
 
-function getInitialSwitches(initial_states, linsystems::Array{Reactor_functions.LinearReactor,1})
+function getInitialSwitches(initial_states, linsystems::Array{Reactor.LinearReactor,1})
   N = length(linsystems)
   initstates = zeros(N) #pre-allocate
 

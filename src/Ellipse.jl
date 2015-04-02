@@ -1,8 +1,8 @@
 # Plot 1-Sigma Ellipses
-module Confidence
+module Ellipse
 
-function plot95(mean, covariance)
-  # Plots a 95% confidence ellipse around 2D Gaussians.
+function ellipse(mean, covariance)
+  # Plots a confidence ellipse around 2D Gaussians.
   # Converted to Julia from the Matlab function:
   # http://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
 

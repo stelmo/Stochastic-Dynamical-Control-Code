@@ -5,18 +5,16 @@
 # Website: http://www0.cs.ucl.ac.uk/staff/d.barber/brml/
 # Chapter 23, Example 23.3: Localisation Problem
 
-module Burglar_functions
+module Burglar
 
-using HMM_functions: HMM
+using HMM
 
-export House, createHMM, move!, getLegalMoves, getLocation
-
-type House
+type house
   floor :: Array{Int64, 2}
   creaks :: Array{Int64, 2}
   bumps :: Array{Int64, 2}
   n :: Int64
-  function House(n::Int64)
+  function house(n::Int64)
     f = zeros(Int64,n,n)
     c = rand(0:1, n,n)
     b = rand(0:1, n,n)
@@ -26,7 +24,7 @@ type House
   end
 end
 
-function createHMM(model::House)
+function createhmm(model::house)
   tp = zeros(model.n^2, model.n^2)
   ep = zeros(4, model.n^2)
 
@@ -62,10 +60,10 @@ function createHMM(model::House)
         ep[:, col] = [cd*bd, cd*nbd, ncd*bd, ncd*nbd]
       end
   end
-  return HMM(tp, ep)
+  return HMM.hmm(tp, ep)
 end
 
-function move!(model::House)
+function move!(model::house)
   # Move the burglar
   moves = getLegalMoves(model)
   n = length(moves)
@@ -77,7 +75,7 @@ function move!(model::House)
   return nothing
 end
 
-function getLegalMoves(model::House)
+function getLegalMoves(model::house)
   # Returns an array of legal moves
   moves = Int64[]
   loc = getLocation(model)
@@ -113,7 +111,7 @@ function getLegalMoves(n::Int64, k::Int64)
   return moves
 end
 
-function getLocation(model::House)
+function getLocation(model::house)
   # Returns the location of the burglar
   return findfirst(model.floor, 1)
 end
