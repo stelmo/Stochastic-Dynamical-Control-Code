@@ -1,15 +1,9 @@
 # Implement the augmented switching dynamical system
-using PyPlot
-using Distributions
-cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
+
 import SPF
-reload("SPF.jl")
-cd("..\\CSTR_Model")
-using Reactor_functions
-cd("..\\Linear_Latent_Dynamical_Models")
-using Confidence
-using LLDS_functions
-cd("..\\Nonlinear_Hybrid_Latent_Dynamical_Models")
+using Reactor
+using Ellipse
+using LLDS
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
@@ -29,7 +23,7 @@ cstr1 = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 cstr2 = begin # slower reaction rate
@@ -43,7 +37,7 @@ cstr2 = begin # slower reaction rate
   Cp = 0.239 #kJ/kgK # changed here!
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 initial_states = [0.5; 450] # initial state
@@ -63,8 +57,8 @@ Q[4] = 0.01
 
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
-fun1(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr1)
-fun2(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr2)
+fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr1)
+fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr2)
 gs(x) = newC*x
 F = [fun1, fun2]
 G = [gs, gs]
@@ -103,11 +97,11 @@ fmeans[:,1], fcovars[:,:,1] = SPF.getStats(particles)
 for t=2:N
   random_element = rand(state_dist)
   if ts[t] < 50.0
-    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
-    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
   else
-    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2) + random_element
-    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr2) + random_element
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
   end
 
   ys[t] = newC*xs[:, t] + rand(measurements) # measured from actual plant
@@ -148,7 +142,7 @@ x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, mark
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 for k=1:skip:N
-  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+  p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
   b1, = plot(p1, p2, "b")
 end
 plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)

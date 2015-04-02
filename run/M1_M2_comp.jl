@@ -1,15 +1,9 @@
 # Implement the augmented switching dynamical system
-using PyPlot
-using Distributions
-cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
-import SPF
-reload("SPF.jl")
-cd("..\\CSTR_Model")
-using Reactor_functions
-cd("..\\Linear_Latent_Dynamical_Models")
-using Confidence
-using LLDS_functions
-cd("..\\Nonlinear_Hybrid_Latent_Dynamical_Models")
+
+using SPF
+using Reactor
+using Ellipse
+using LLDS
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
@@ -29,7 +23,7 @@ cstr1 = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 cstr2 = begin # slower reaction rate
@@ -43,7 +37,7 @@ cstr2 = begin # slower reaction rate
   Cp = 0.239 #kJ/kgK # changed here!
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 initial_states = [0.5; 450] # initial state
@@ -71,8 +65,8 @@ Q[4] = 4.0
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
 
-fun1(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr1)
-fun2(x,u,w) = Reactor_functions.run_reactor(x, u, h, cstr2)
+fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr1)
+fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr2)
 F = [fun1, fun2]
 
 gs1(x) = C1*x

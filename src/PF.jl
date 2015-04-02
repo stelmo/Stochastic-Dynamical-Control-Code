@@ -2,6 +2,8 @@ module PF
 # Particle Filter module as explained in the paper "Novel approach to nonlinear/
 # non-Gaussian Bayesian state estimation" by Gorden et al (1993).
 
+using Distributions
+
 type Model
   f::Function # state transition model
   g::Function # state observation model

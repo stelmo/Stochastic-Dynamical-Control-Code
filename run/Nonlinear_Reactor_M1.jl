@@ -4,14 +4,9 @@
 # solution as calculated by the functions in the
 # Linear_Latent_Dynamical_Models folder.
 
-using PyPlot
-using Distributions
-import PF
-cd("..\\CSTR_Model")
-using Reactor_functions
-cd("..\\Linear_Latent_Dynamical_Models")
-using Confidence
-cd("..\\Nonlinear_Latent_Dynamical_Models")
+using PF
+using Reactor
+using Ellipse
 
 # This is to add the noise to the measurements! cant add a float to a [float]...
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
@@ -30,7 +25,7 @@ cstr_model = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 init_state = [0.5; 400] # initial state
@@ -41,7 +36,7 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(N) # only one measurement
 
-f(x, u, w) = Reactor_functions.run_reactor(x, u, h, cstr_model) + w
+f(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 g(x) = [0.0 1.0]*x# state observation
 
 cstr_pf = PF.Model(f,g)
@@ -70,7 +65,7 @@ PF.init_filter!(particles, 0.0, ys[1], meas_dist, cstr_pf)
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr_model) + rand(state_dist) # actual plant
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr_model) + rand(state_dist) # actual plant
   ys[t] = [0.0 1.0]*xs[:, t] + rand(meas_dist) # measured from actual plant
   PF.filter!(particles, 0.0, ys[t], state_dist, meas_dist, cstr_pf)
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
@@ -84,7 +79,7 @@ x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 for k=1:skip:N
-  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+  p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
   b1, = plot(p1, p2, "b")
 end
 plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)

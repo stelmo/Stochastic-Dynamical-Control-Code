@@ -1,6 +1,7 @@
 module SPF
 # switching particle filter
 
+using Distributions
 using Reactor
 
 type Particles
