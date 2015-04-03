@@ -12,41 +12,41 @@
 # I used: HMMforward, HMMsmooth and HMMviterbi
 
 using Base.Test
-using HMM_functions
+using HMM
 
 # First get current working directory - to make Travis happy
 dircontent = readdir()
-if "smooth.csv" in dircontent
-  fbs_barber = readcsv("smooth.csv") #read in the ideal answers
+if "smooth_hmm.csv" in dircontent
+  fbs_barber = readcsv("smooth_hmm.csv") #read in the ideal answers
 else
-  fbs_barber = readcsv(string(pwd(),"/Hidden_Markov_Models/smooth.csv"))
+  fbs_barber = readcsv(joinpath("test","smooth_hmm.csv"))
 end
-if "smooth.csv" in dircontent
-  filter_barber = readcsv("filter.csv") # read in the ideal answers
+if "smooth_hmm.csv" in dircontent
+  filter_barber = readcsv("filter_hmm.csv") # read in the ideal answers
 else
-  filter_barber = readcsv(string(pwd(),"/Hidden_Markov_Models/filter.csv"))
+  filter_barber = readcsv(joinpath("test","filter_hmm.csv"))
 end
 
 # Discrete model
 A = [0.5 0.0 0.0;0.3 0.6 0.0;0.2 0.4 1.0] #transition probabilities
 B = [0.7 0.4 0.8;0.3 0.6 0.2] # emission probabilities
 
-mod1 = HMM(A, B) # create the HMM object
+mod1 = HMM.hmm(A, B) # create the HMM object
 initial = [0.9, 0.1, 0.0] # initial state distribution
 evidence = [1,1,2,1,2,1,2] # evidence/observations
 
-filter_me = forward(mod1, initial, evidence)
+filter_me = HMM.forward(mod1, initial, evidence)
 
 
 fbs_me = zeros(length(initial), length(evidence))
 for k=1:length(evidence)
-  fbs_me[:, k] = smooth(mod1, initial, evidence, k) # works!
+  fbs_me[:, k] = HMM.smooth(mod1, initial, evidence, k) # works!
 end
 
-vtb_me = viterbi(mod1, initial, evidence) # works!
+vtb_me = HMM.viterbi(mod1, initial, evidence) # works!
 vtb_barber = [1, 3, 3, 3, 3, 3, 3] # Barber's answer
 
-pstates, pevidence = prediction(mod1, initial, evidence) # No test for this - not implemented by barber
+pstates, pevidence = HMM.prediction(mod1, initial, evidence) # No test for this - not implemented by barber
 
 # Run the tests
 # Viterbi Inference

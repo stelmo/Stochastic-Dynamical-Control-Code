@@ -14,9 +14,8 @@
 # demoLDSTracking.m
 
 using Base.Test
-using Distributions
 
-import LLDS_functions
+using LLDS
 
 # Specify System
 model = begin
@@ -37,7 +36,7 @@ model = begin
   Q = sigmaQ^2*eye(6) # process noise covariance
   R = sigmaR^2*eye(2) # measurement noise covariance
 
-  LLDS_functions.LLDS(A, B, b, C, Q, R)
+  LLDS.llds(A, B, b, C, Q, R)
 end
 
 # Specify initial conditions
@@ -49,36 +48,36 @@ dircontent = readdir()
 if "visiblestates.csv" in dircontent
   visiblestates = readcsv("visiblestates.csv") #read in the ideal answers
 else
-  visiblestates = readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/visiblestates.csv"))
+  visiblestates = readcsv(joinpath("test","visiblestates.csv"))
 end
 if "filtercovar.csv" in dircontent
   filtercovar = reshape(readcsv("filtercovar.csv"), 6,6,T) #read in the ideal answers
 else
-  filtercovar = reshape(readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/filtercovar.csv")), 6, 6, T)
+  filtercovar = reshape(readcsv(joinpath("test","filtercovar.csv")), 6, 6, T)
 end
 if "filtermeans.csv" in dircontent
   filtermeans = readcsv("filtermeans.csv") #read in the ideal answers
 else
-  filtermeans = readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/filtermeans.csv"))
+  filtermeans = readcsv(joinpath("test","filtermeans.csv"))
 end
 if "smoothcovar.csv" in dircontent
   smoothedcovar = reshape(readcsv("smoothcovar.csv"), 6,6, T) #read in the ideal answers
 else
-  smoothedcovar = reshape(readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/smoothcovar.csv")),6,6,T)
+  smoothedcovar = reshape(readcsv(joinpath("test","smoothcovar.csv")),6,6,T)
 end
 if "smoothmeans.csv" in dircontent
   smoothedmeans = readcsv("smoothmeans.csv") #read in the ideal answers
 else
-  smoothedmeans = readcsv(string(pwd(),"/Linear_Latent_Dynamical_Models/smoothmeans.csv"))
+  smoothedmeans = readcsv(joinpath("test","smoothmeans.csv"))
 end
 
 # Filter
 ucontrol = zeros(1) # no control so this is really only a dummy variable.
 filtermeans_own = zeros(6, T)
 filtercovar_own = zeros(6, 6, T)
-filtermeans_own[:, 1], filtercovar_own[:, :, 1] = LLDS_functions.init_filter(init_mean, init_covar, visiblestates[:,1], model)
+filtermeans_own[:, 1], filtercovar_own[:, :, 1] = LLDS.init_filter(init_mean, init_covar, visiblestates[:,1], model)
 for t=2:T
-  filtermeans_own[:, t], filtercovar_own[:, :, t] = LLDS_functions.step_filter(filtermeans_own[:, t-1], filtercovar_own[:,:, t-1], ucontrol, visiblestates[:,t], model)
+  filtermeans_own[:, t], filtercovar_own[:, :, t] = LLDS.step_filter(filtermeans_own[:, t-1], filtercovar_own[:,:, t-1], ucontrol, visiblestates[:,t], model)
 end
 
 # Smoothed
@@ -86,7 +85,7 @@ ucontrols = zeros(1, T) # no control so this is really only a dummy variable.
 smoothedmeans_own = zeros(6, T)
 smoothedcovar_own = zeros(6, 6, T)
 
-smoothedmeans_own, smoothedcovar_own = LLDS_functions.smooth(filtermeans_own, filtercovar_own, ucontrols, model)
+smoothedmeans_own, smoothedcovar_own = LLDS.smooth(filtermeans_own, filtercovar_own, ucontrols, model)
 
 # Run the tests
 tol = 0.01

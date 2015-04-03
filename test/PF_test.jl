@@ -1,24 +1,20 @@
 # Test the Particle Filter.
 
-using Distributions
 using Base.Test
-import PF
+using PF
+using Reactor
 
 dircontent = readdir()
 if "A.csv" in dircontent
-  cd("..\\CSTR_Model")
-  import Reactor_functions
-  cd("..\\Nonlinear_Latent_Dynamical_Models")
   A = readcsv("A.csv")
   B = readcsv("B.csv")
   b = readcsv("b1.csv")
   kfmeans = readcsv("KFmeans.csv")
 else
-  import Reactor_functions
-  A = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/A.csv"))
-  B = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/B.csv"))
-  b = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/b1.csv"))
-  kfmeans = readcsv(string(pwd(),"/Nonlinear_Latent_Dynamical_Models/KFmeans.csv"))
+  A = readcsv(joinpath("test","A.csv"))
+  B = readcsv(joinpath("test","B.csv"))
+  b = readcsv(joinpath("test","b1.csv"))
+  kfmeans = readcsv(joinpath("test","KFmeans.csv"))
 end
 
 cstr_model = begin
@@ -32,7 +28,7 @@ cstr_model = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 init_state = [0.50; 400]
@@ -83,7 +79,7 @@ PF.init_filter!(particles, 0.0, ys[:, 1], meas_dist, cstr_pf)
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr_model) # actual plant
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr_model) # actual plant
   ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
   PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)

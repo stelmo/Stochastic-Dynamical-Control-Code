@@ -1,14 +1,14 @@
 # Reactor tests: run my implementation of RK on the nonlinear model and compare
 # the solution to Matlab's solution.
 
-import Reactor_functions
+import Reactor
 using Base.Test
 
 dircontent = readdir()
 if "state_solutions.csv" in dircontent
   state_solutions = readcsv("state_solutions.csv") #read in the ideal answers
 else
-  state_solutions = readcsv(string(pwd(),"/CSTR_Model/state_solutions.csv"))
+  state_solutions = readcsv(joinpath("test","state_solutions.csv"))
 end
 
 cstr = begin
@@ -22,7 +22,7 @@ cstr = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 h = 0.001 # time discretisation
@@ -35,7 +35,7 @@ initial_states = [0.57, 395]
 xs[:,1] = initial_states
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
 end
 
 # Run the tests
