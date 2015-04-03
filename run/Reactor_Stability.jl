@@ -1,7 +1,6 @@
 # Linearisation Procedure
-using PyPlot
-import Reactor_functions
-reload("Reactor_functions.jl")
+
+using Reactor
 
 # Introduce the reactor
 cstr = begin
@@ -15,7 +14,7 @@ cstr = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 h = 0.001 # time discretisation
@@ -30,7 +29,7 @@ total_ops = nX*nY # ignore the nominal ss points
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
-linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr)
+linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr)
 
 diff = zeros(nY, nX)
 xpoints = zeros(nX)
@@ -52,7 +51,7 @@ for x=1:nX
     # Loop through the rest of time
     flag = false
     for t=2:N
-        temp1 = Reactor_functions.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
+        temp1 = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
         temp2 = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0 + linsystems[k].b
         if isnan(temp1[1]) || isnan(temp1[2])
           flag = true

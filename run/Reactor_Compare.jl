@@ -1,10 +1,7 @@
 # Run some simulations
 
-using PyPlot
-using Reactor_functions
-cd("..\\Linear_Latent_Dynamical_Models")
-using LLDS_functions
-cd("..\\CSTR_Model")
+using Reactor
+
 # Add a definition for convert to make our lives easier!
 # But be careful now!
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
@@ -23,7 +20,7 @@ cstr1 = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 cstr2 = begin
@@ -37,7 +34,7 @@ cstr2 = begin
   Cp = 0.239; #kJ/kgK
   rho = 1000.0; #kg/m3
   F = 100e-3; #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 h = 0.001 # time discretisation
@@ -55,11 +52,11 @@ xs2[:,1] = initial_states
 # Loop through the rest of time
 for t=2:N
   if ts[t] < 0.5
-    xs1[:, t] = Reactor_functions.run_reactor(xs1[:, t-1], us[t-1], h, cstr1) # actual plant
-    xs2[:, t] = Reactor_functions.run_reactor(xs2[:, t-1], us[t-1], h, cstr1) # actual plant
+    xs1[:, t] = Reactor.run_reactor(xs1[:, t-1], us[t-1], h, cstr1) # actual plant
+    xs2[:, t] = Reactor.run_reactor(xs2[:, t-1], us[t-1], h, cstr1) # actual plant
   else
-    xs1[:, t] = Reactor_functions.run_reactor(xs1[:, t-1], us[t-1], h, cstr1) # actual plant
-    xs2[:, t] = Reactor_functions.run_reactor(xs2[:, t-1], us[t-1], h, cstr2) # actual plant
+    xs1[:, t] = Reactor.run_reactor(xs1[:, t-1], us[t-1], h, cstr1) # actual plant
+    xs2[:, t] = Reactor.run_reactor(xs2[:, t-1], us[t-1], h, cstr2) # actual plant
   end
 end
 

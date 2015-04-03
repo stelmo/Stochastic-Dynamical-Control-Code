@@ -1,15 +1,10 @@
 # Implement the augmented switching dynamical system
-using PyPlot
-using Distributions
 
-import RBPF
-import SPF
-cd("..\\CSTR_Model")
-using Reactor_functions
-cd("..\\Linear_Latent_Dynamical_Models")
-using Confidence
-using LLDS_functions
-cd("..\\Linear_Hybrid_Latent_Dynamical_Models")
+using RBPF
+using SPF
+using Reactor
+using Ellipse
+using LLDS
 
 # Add a definition for convert to make our lives easier!
 # But be careful now!
@@ -29,7 +24,7 @@ cstr_model = begin
   Cp = 0.239; #kJ/kgK
   rho = 1000.0; #kg/m3
   F = 100e-3; #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 h = 0.1 # time discretisation
@@ -54,15 +49,15 @@ nY = 2 # cols
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
-linsystems = Reactor_functions.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 A = linsystems[2].A
 B = linsystems[2].B
 b = linsystems[2].b
-lin_cstr = LLDS_functions.LLDS(A, B, b, C, Q, R)
+lin_cstr = LLDS.llds(A, B, b, C, Q, R)
 
 
-linsystems = Reactor_functions.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
-# linsystems = Reactor_functions.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+# linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
 
@@ -88,21 +83,21 @@ ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
 RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
 fmeans[:,1], fcovars[:,:, 1] = RBPF.getStats(particles)
 
-filtermeans[:, 1], filtercovars[:,:, 1] = LLDS_functions.init_filter(initial_states, initial_covar, ys[:, 1], lin_cstr)
+filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(initial_states, initial_covar, ys[:, 1], lin_cstr)
 
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
 end
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
   fmeans[:, t], fcovars[:,:, t] = RBPF.getStats(particles)
   for k=1:length(linsystems)
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
-  filtermeans[:, t], filtercovars[:,:, t] = LLDS_functions.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t], ys[:, t], lin_cstr)
+  filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[:, t], lin_cstr)
 end
 
 rc("font", family="serif", size=24)
@@ -172,10 +167,10 @@ f2, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "gx", m
 b1 = 0.0
 b2 = 0.0
 for k=1:skip:N
-  p1, p2 = Confidence.plot95(fmeans[:,k], fcovars[:,:, k])
+  p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
   b1, = plot(p1, p2, "b")
 
-  p3, p4 = Confidence.plot95(filtermeans[:,k], filtercovars[:,:, k])
+  p3, p4 = Ellipse.ellipse(filtermeans[:,k], filtercovars[:,:, k])
   b2, = plot(p3, p4, "g")
 
 end

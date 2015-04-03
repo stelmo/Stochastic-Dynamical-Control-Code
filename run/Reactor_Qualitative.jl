@@ -1,9 +1,7 @@
 # Qualitative Analysis of the CSTR
 
-using PyPlot
 using NLsolve
-import Reactor_functions
-reload("Reactor_functions.jl")
+using Reactor
 
 # First, lets inspect the steady state values for different parameters
 cstr1 = begin
@@ -17,7 +15,7 @@ cstr1 = begin
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
   F = 100e-3 #m3/min
-  Reactor_functions.Reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
 N = 100
@@ -28,10 +26,10 @@ qrs3 = zeros(N) # heat removals
 qgs1 = zeros(N) # heat generations
 
 for k=1:N
-  qrs1[k] = Reactor_functions.QR(Ts[k], -906.0, cstr1)
-  qrs2[k] = Reactor_functions.QR(Ts[k], 0.0, cstr1)
-  qrs3[k] = Reactor_functions.QR(Ts[k], 1145.0, cstr1)
-  qgs1[k] = Reactor_functions.QG(Ts[k], cstr1)
+  qrs1[k] = Reactor.QR(Ts[k], -906.0, cstr1)
+  qrs2[k] = Reactor.QR(Ts[k], 0.0, cstr1)
+  qrs3[k] = Reactor.QR(Ts[k], 1145.0, cstr1)
+  qgs1[k] = Reactor.QG(Ts[k], cstr1)
 end
 
 rc("font", family="serif", size=24)
@@ -49,7 +47,7 @@ ylim([0.0, 5.])
 xguess1 = [0.073, 493.0]
 xguess2 = [0.21, 467.0]
 xguess3 = [0.999, 310.0]
-f!(x, xvec) = Reactor_functions.reactor_func!(x, 0.0, cstr1, xvec)
+f!(x, xvec) = Reactor.reactor_func!(x, 0.0, cstr1, xvec)
 
 xx1res = nlsolve(f!, xguess1)
 writecsv("ss1.csv", xx1res.zero)
@@ -60,11 +58,11 @@ writecsv("ss3.csv", xx3res.zero)
 
 println("Nominal Operating Points")
 println("High Heat: ", xx1res.zero)
-println("Eigenvalues: ", eig(Reactor_functions.jacobian(xx1res.zero, cstr1))[1])
+println("Eigenvalues: ", eig(Reactor.jacobian(xx1res.zero, cstr1))[1])
 println("Medium Heat: ", xx2res.zero)
-println("Eigenvalues: ", eig(Reactor_functions.jacobian(xx2res.zero, cstr1))[1])
+println("Eigenvalues: ", eig(Reactor.jacobian(xx2res.zero, cstr1))[1])
 println("Low Heat: ", xx3res.zero)
-println("Eigenvalues: ", eig(Reactor_functions.jacobian(xx3res.zero, cstr1))[1])
+println("Eigenvalues: ", eig(Reactor.jacobian(xx3res.zero, cstr1))[1])
 
 
 ## Get the bifurcation points
@@ -76,7 +74,7 @@ Q = -800.0
 prevss1 = zeros(2)
 prevss2 = zeros(2)
 while flag
-  f!(x, xvec) = Reactor_functions.reactor_func!(x, Q, cstr1, xvec)
+  f!(x, xvec) = Reactor.reactor_func!(x, Q, cstr1, xvec)
   xx1res = nlsolve(f!, xguess1)
   xx2res = nlsolve(f!, xguess2)
   flag = converged(xx2res)
@@ -87,10 +85,10 @@ while flag
   Q = Q - 1.0
 end
 println("Low heat: ", prevss1)
-println("Eigenvalues: ", eig(Reactor_functions.jacobian(prevss1, cstr1))[1])
+println("Eigenvalues: ", eig(Reactor.jacobian(prevss1, cstr1))[1])
 println("*****")
 println("Low heat: ", prevss2)
-println("Eigenvalues: ", eig(Reactor_functions.jacobian(prevss2, cstr1))[1])
+println("Eigenvalues: ", eig(Reactor.jacobian(prevss2, cstr1))[1])
 println("*****")
 # High heat input
 xguess1 = [0.93, 370.0]
@@ -98,7 +96,7 @@ xguess2 = [0.0011, 570.0]
 flag = true
 Q = 1100.0
 while flag
-  f!(x, xvec) = Reactor_functions.reactor_func!(x, Q, cstr1, xvec)
+  f!(x, xvec) = Reactor.reactor_func!(x, Q, cstr1, xvec)
   xx1res = nlsolve(f!, xguess1)
   xx2res = nlsolve(f!, xguess2)
   flag = converged(xx1res)
@@ -112,8 +110,8 @@ while flag
   end
 end
 println("High heat: ", prevss1)
-println("Eigenvalues: ", eig(Reactor_functions.jacobian(prevss1, cstr1))[1])
+println("Eigenvalues: ", eig(Reactor.jacobian(prevss1, cstr1))[1])
 println("*****")
 println("High heat: ", prevss2)
-println("Eigenvalues: ", eig(Reactor_functions.jacobian(prevss2, cstr1))[1])
+println("Eigenvalues: ", eig(Reactor.jacobian(prevss2, cstr1))[1])
 println("*****")
