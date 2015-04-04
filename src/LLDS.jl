@@ -112,15 +112,15 @@ function predict_hidden(kmean, kcovar, us, model)
   # Note: us[t] predicts xs[t+1]
 
   rows, = size(kmean)
-  rus, n = size(us)
+  n,  = size(us)
   predicted_means = zeros(rows, n)
   predicted_covars = zeros(rows, rows, n)
 
-  predicted_means[:, 1] = model.A*kmean + model.B*us[:,1] + model.b
+  predicted_means[:, 1] = model.A*kmean + model.B*us[1] + model.b
   predicted_covars[:, :, 1] = model.Q + model.A*kcovar*transpose(model.A)
 
   for k=2:n #cast the state forward
-    predicted_means[:, k], predicted_covars[:, :, k] = step_predict(predicted_means[:,k-1], predicted_covars[:, :, k-1],us[:,k], model)
+    predicted_means[:, k], predicted_covars[:, :, k] = step_predict(predicted_means[:,k-1], predicted_covars[:, :, k-1],us[k], model)
   end
 
   return predicted_means, predicted_covars
