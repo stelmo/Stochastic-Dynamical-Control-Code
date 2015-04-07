@@ -12,8 +12,8 @@ Code for M. Eng. in Control Engineering
 
 ## Running the Code:
 
-Please see the folder `run`.
+Please see the folder `openloop` or `closedloop`.
 
 ## Testing:
 
-Please see the folder `test`.
+Please execute the script `test_all.jl` to perform the tests. This is done automatically with Travis-CI.
