@@ -2,7 +2,7 @@
 
 using Distributions
 
-# Bring into scope all the required packages and functions.
+# Bring into scope all the required modules.
 for func in ["Ellipse.jl",
             "HMM.jl",
             "Burglar.jl",

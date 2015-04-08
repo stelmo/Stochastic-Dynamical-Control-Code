@@ -1,4 +1,8 @@
-# Bring into scope all the required packages and functions.
+# Bring into scope all the required packages and modules.
+info("Loading all the required external modules.")
+using Distributions
+using PyPlot
+
 info("Loading all the required internal modules.")
 for func in ["Ellipse.jl",
             "HMM.jl",
@@ -10,7 +14,3 @@ for func in ["Ellipse.jl",
             "RBPF.jl"]
   include(joinpath("src",func))
 end
-
-info("Loading all the required external modules.")
-using Distributions
-using PyPlot
