@@ -4,7 +4,7 @@ immutable llds
   # Assume zero mean transition and emission functions.
   # The linear latent dynamical system should have the
   # state space form:
-  # x(t+1) = A*x(t) + Bu(t) + b + Q
+  # x(t+1) = A*x(t) + Bu(t) + Q
   # y(t+1) = C*x(t+1) + R (there could be Du(t) term here but we assume the inputs don't affect
   # the measurements directly.)
   # I assume the simplest model I will deal with has matrix A, B and float C therefore
@@ -12,7 +12,6 @@ immutable llds
   # this is to avoid ugly notation later.
   A :: Array{Float64, 2}
   B # lets keep it general
-  b :: Array{Float64, 1}
   C # general
   Q :: Array{Float64, 2} # Process Noise
   R # Measurement Noise VARIANCE
@@ -21,7 +20,7 @@ end
 function step(xprev, uprev, model)
   # Controlled, move multivariate model one time step forward.
 
-  xnow = model.A*xprev + model.B*uprev + model.b
+  xnow = model.A*xprev + model.B*uprev
   ynow = model.C*xnow
 
   return xnow,  ynow
@@ -43,7 +42,7 @@ end
 
 function step_predict(xprev, varprev, uprev, model)
   # Return the one step ahead predicted mean and covariance.
-  pmean = model.A*xprev + model.B*uprev + model.b
+  pmean = model.A*xprev + model.B*uprev
   pvar =  model.Q + model.A*varprev*transpose(model.A)
   return pmean, pvar
 end
@@ -116,7 +115,7 @@ function predict_hidden(kmean, kcovar, us, model)
   predicted_means = zeros(rows, n)
   predicted_covars = zeros(rows, rows, n)
 
-  predicted_means[:, 1] = model.A*kmean + model.B*us[1] + model.b
+  predicted_means[:, 1] = model.A*kmean + model.B*us[1]
   predicted_covars[:, :, 1] = model.Q + model.A*kcovar*transpose(model.A)
 
   for k=2:n #cast the state forward

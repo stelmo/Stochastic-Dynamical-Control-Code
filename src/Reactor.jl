@@ -92,13 +92,13 @@ function linearise(linpoint::Array{Float64, 1}, h::Float64, model::reactor)
   D = A*linpoint
   # now we have x' = Ax + Bu + F0 - D = F(x)
   # now write ito deviation variables!
-  newb = F0-D
-  # now we have x' = Ax + Bu where x' = x' + newB
+  newb = A\(D-F0)
+  # now we have xp' = Axp + Bu where x = xp + newb
 
   n, = size(A)
-  # Now use the Runge Kutta method (thank you matlab symbolics!)
-  newA = ((h*(A + 2*A*((A*h)/2 + 1) + 2*A*((A*h*((A*h)/2 + 1))/2 + 1) + A*(A*h*((A*h*((A*h)/2 + 1))/2 + 1) + 1)))/6)
-  newB = ((h*(6*B + A*B*h + A*h*(B + (A*h*(B + (A*B*h)/2))/2) + A*h*(B + (A*B*h)/2)))/6)
+  # Uses the bilinear transform aka the Tustin transform... google it...
+  newA = (eye(n) + 0.5*A*h)*inv(eye(n) - 0.5*A*h)
+  newB = inv(A)*(newA-eye(n))*B
 
   return newA, newB, newb
 end

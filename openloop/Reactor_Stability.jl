@@ -47,12 +47,12 @@ for x=1:nX
     xs = zeros(2, N)
     linxs = zeros(2, N)
     xs[:,1] = initial_states
-    linxs[:,1] = initial_states
+    linxs[:,1] = initial_states - linsystems[k].b
     # Loop through the rest of time
     flag = false
     for t=2:N
         temp1 = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
-        temp2 = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0 + linsystems[k].b
+        temp2 = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0
         if isnan(temp1[1]) || isnan(temp1[2])
           flag = true
           break
@@ -66,6 +66,7 @@ for x=1:nX
           linxs[:, t] = temp2
         end
     end
+    linxs = linxs .+ linsystems[k].b
     if flag
       diff[y,x] = -1.0
     else
