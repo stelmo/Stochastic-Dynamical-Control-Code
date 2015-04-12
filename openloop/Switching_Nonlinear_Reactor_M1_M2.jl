@@ -59,8 +59,8 @@ R2[1] = 1e-3
 R2[4] = 10.
 
 Q = eye(2)
-Q[1] = 1e-5
-Q[4] = 4.0
+Q[1] = 1e-6
+Q[4] = 0.01
 
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
@@ -83,7 +83,7 @@ ydists2 = [MvNormal(R2);MvNormal(R2)]
 cstr_filter2 = SPF.Model(F, G2, A, xdists, ydists2)
 
 
-nP = 500
+nP = 1500
 initial_covar = eye(2)
 initial_covar[1] = 1e-3
 initial_covar[4] = 4.0
@@ -116,12 +116,13 @@ fmeans2[:,1], fcovars2[:,:,1] = SPF.getStats(particles2)
 
 # Loop through the rest of time
 for t=2:N
-  if ts[t] < 40.0
-    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr1) # actual plant
-    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
+  temp = rand(xdists[1])
+  if ts[t] < 50.0
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr1) + temp # actual plant
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + temp # actual plant
   else
-    xs[:, t] = Reactor_functions.run_reactor(xs[:, t-1], us[t-1], h, cstr2)
-    xsnofix[:, t] = Reactor_functions.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) # actual plant
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr2) + temp
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) +temp # actual plant
   end
 
   ys1[t] = C1*xs[:, t] + rand(measurements1) # measured from actual plant
@@ -145,10 +146,10 @@ f2, = plot(fmeans2[1, 1:skip:end][:], fmeans2[2, 1:skip:end][:], "bx", markersiz
 b1 = 0.0
 b2 = 0.0
 for k=1:skip:N
-  p1, p2 = Confidence.plot95(fmeans1[:,k], fcovars1[:,:, k])
+  p1, p2 = Ellipse.ellipse(fmeans1[:,k], fcovars1[:,:, k])
   b1, = plot(p1, p2, "r")
 
-  p1, p2 = Confidence.plot95(fmeans2[:,k], fcovars2[:,:, k])
+  p1, p2 = Ellipse.ellipse(fmeans2[:,k], fcovars2[:,:, k])
   b2, = plot(p1, p2, "b")
 end
 plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)

@@ -67,7 +67,7 @@ ydists = [MvNormal(R);MvNormal(R)]
 xdists = [MvNormal(Q); MvNormal(Q)]
 cstr_filter = SPF.Model(F, G, A, xdists, ydists)
 
-nP = 1000
+nP = 1500
 initial_covar = eye(2)
 initial_covar[1] = 1e-3
 initial_covar[4] = 4.0
