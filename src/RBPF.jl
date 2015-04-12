@@ -1,7 +1,7 @@
 # Rao Blackwellised Particle Filter
 module RBPF
 # WARNING: this is made specifically for the system I am investigating
-
+warn("RBPF is hardcoded for this system!")
 using Distributions
 using Reactor
 using LLDS
@@ -57,19 +57,24 @@ function init_filter!(particles::Particles, u, y, models::Array{Model, 1})
   for p=1:N
     for s=1:nS
       if particles.ss[p] == s
-        mu = models[s].C * (models[s].A*particles.mus[:, p] + models[s].B*u + models[s].b)
+        particles.mus[:,p] = particles.mus[:, p] - models[particles.ss[p]].b
+        mu = models[s].C * (models[s].A*particles.mus[:, p] + models[s].B*u)
         sigma = models[s].C * (models[s].A*particles.sigmas[:,:,p]*models[s].A' + models[s].Q) * models[s].C' + models[s].R
         d = MvNormal(mu, sigma)
-        particles.ws[p] = particles.ws[p]*pdf(d, [y]) # weight of each particle
+        if length(y) == 1
+          particles.ws[p] = particles.ws[p]*pdf(d, [y-models[s].b[2]]) # HARDCODED for this system!!! ****************************NB
+        else
+          particles.ws[p] = particles.ws[p]*pdf(d, y-models[s].b) # weight of each particle
+        end
       end
     end
   end
 
-  # particles.ws = particles.ws .+ abs(minimum(particles.ws)) #no negative number issue
+
   particles.ws = particles.ws ./ sum(particles.ws)
 
   if numberEffectiveParticles(particles) < N/2
-    resample!(particles)
+    resample!(particles, models)
   end
 end
 
@@ -77,6 +82,11 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
 
   nX, N = size(particles.mus)
   nS = length(models)
+
+  #fix mus using previous switch
+  for p=1:N
+    particles.mus[:,p] = particles.mus[:, p] + models[particles.ss[p]].b
+  end
 
   # This can be made more compact but at the cost of clarity
   # first draw switch sample
@@ -92,14 +102,17 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
   for p=1:N
     for s=1:nS
       if particles.ss[p] == s
-        mu = models[s].C * (models[s].A*particles.mus[:, p] + models[s].B*u + models[s].b)
+        mu = models[s].C * (models[s].A*(particles.mus[:, p] - models[s].b) + models[s].B*u)
         sigma = models[s].C * (models[s].A*particles.sigmas[:,:,p]*models[s].A' + models[s].Q) * models[s].C' + models[s].R
         d = MvNormal(mu, sigma)
-        particles.ws[p] = particles.ws[p]*pdf(d, [y]) # weight of each particle
-
+        if length(y) == 1
+          particles.ws[p] = particles.ws[p]*pdf(d, [y-models[s].b[2]]) # HARDCODED for this system!!! ****************************NB
+        else
+          particles.ws[p] = particles.ws[p]*pdf(d, y-models[s].b) # weight of each particle
+        end
         (isnan(particles.ws[p])) && (warn("Particle weight issue..."); particles.ws[p] = 0.0) # in case
 
-        pmean = models[s].A*particles.mus[:,p] + models[s].B*u + models[s].b
+        pmean = models[s].A*(particles.mus[:,p] - models[s].b) + models[s].B*u
         pvar =  models[s].Q + models[s].A*particles.sigmas[:,:, p]*transpose(models[s].A)
         kalmanGain = pvar*transpose(models[s].C)*inv(models[s].C*pvar*transpose(models[s].C) + models[s].R)
         ypred = models[s].C*pmean #predicted measurement
@@ -120,13 +133,17 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
 
 
   if numberEffectiveParticles(particles) < N/2
-    resample!(particles)
+    resample!(particles,models)
   end
 end
 
-function resample!(particles::Particles)
+function resample!(particles::Particles, models::Array{Model, 1})
   N = length(particles.ws)
   resample = rand(Categorical(particles.ws), N) # draw N samples from weighted Categorical
+  # fix mus
+  for p=1:N
+    particles.mus[:,p] = particles.mus[:, p] + models[particles.ss[p]].b
+  end
   copyparticles_mus = copy(particles.mus)
   copyparticles_sigmas = copy(particles.sigmas)
   copyparticles_ss = copy(particles.ss)
@@ -137,6 +154,11 @@ function resample!(particles::Particles)
     particles.ws[p] = 1./N
   end
   roughen!(particles)
+  #adjust mus
+  for p=1:N
+    particles.mus[:,p] = particles.mus[:, p] - models[particles.ss[p]].b
+  end
+
 end
 
 function numberEffectiveParticles(particles::Particles)
@@ -175,16 +197,35 @@ function roughen!(particles::Particles)
   end
 end
 
-function getStats(particles::Particles)
+function getStats(particles::Particles, models::Array{Model, 1})
   nX, nP = size(particles.mus)
   ave = zeros(nX)
   avesigma = zeros(nX, nX)
   for p=1:nP
-    ave = ave + particles.ws[p]*particles.mus[:, p]
+    ave = ave + particles.ws[p]*(particles.mus[:, p] + models[particles.ss[p]].b)
     avesigma = avesigma + particles.ws[p].*particles.sigmas[:,:, p]
   end
 
   return ave, avesigma
+end
+
+function getInitialSwitches(initial_states, linsystems::Array{Reactor.LinearReactor,1})
+  N = length(linsystems)
+  initstates = zeros(N) #pre-allocate
+
+  for i=1:N
+    initstates[i] = norm(linsystems[i].op-initial_states)
+  end
+
+  a = sort(initstates, rev=true)
+  posA = zeros(N)
+  for i=1:N
+    posA[i] = find((x)->x==initstates[i], a)[1]
+  end
+
+  posA = posA./sum(posA,1)
+
+  return posA
 end
 
 end #module

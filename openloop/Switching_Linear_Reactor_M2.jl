@@ -66,7 +66,7 @@ initial_states = init_state
 initial_covar = eye(2)
 initial_covar[1] = 1e-3
 initial_covar[4] = 4.0
-sguess =  SPF.getInitialSwitches(initial_states, linsystems)
+sguess =  RBPF.getInitialSwitches(initial_states, linsystems)
 particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2, nP)
 
 fmeans = zeros(2, N)

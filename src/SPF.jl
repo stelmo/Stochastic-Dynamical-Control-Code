@@ -211,19 +211,4 @@ function getDists(linsystems::Array{Reactor.LinearReactor,1}, dist)
   return xdists
 end
 
-function getInitialSwitches(initial_states, linsystems::Array{Reactor.LinearReactor,1})
-  N = length(linsystems)
-  initstates = zeros(N) #pre-allocate
-
-  for i=1:N
-    initstates[i] = norm(linsystems[i].op-initial_states)
-  end
-
-  initstates = initstates./maximum(initstates)
-  initstates = exp(-15.0 .* initstates)
-  initstates = initstates./sum(initstates)
-
-  return initstates
-end
-
 end #module
