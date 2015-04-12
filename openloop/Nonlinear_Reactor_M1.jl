@@ -80,7 +80,7 @@ f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=
 b1 = 0.0
 for k=1:skip:N
   p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
-  b1, = plot(p1, p2, "b")
+  b1, = plot(p1, p2, "r")
 end
 plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
 plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
@@ -93,14 +93,14 @@ figure(2) # Plot filtered results
 skipm = 20
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
+k1, = plot(ts, fmeans[1,:]', "rx", markersize=5, markeredgewidth=2)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys[1:skipm:end], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
+k2, = plot(ts, fmeans[2,:]', "rx", markersize=5, markeredgewidth=2)
 ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2],["Nonlinear Model Measured"], loc="best")

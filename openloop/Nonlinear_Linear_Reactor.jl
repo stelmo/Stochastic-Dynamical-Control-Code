@@ -37,11 +37,10 @@ xspace = [0.0, 1.0]
 yspace = [250, 550]
 
 # Specify the linear model
-npoints = 1
-linsystems = Reactor.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr) # doesnt work weirdly...
-A = linsystems[3].A
-B = linsystems[3].B
-b = linsystems[3].b
+linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr) # doesnt work weirdly...
+A = linsystems[2].A
+B = linsystems[2].B
+b = linsystems[2].b
 C = eye(2)
 Q = eye(2) # plant mismatch/noise
 Q[1] = 1e-5
@@ -49,16 +48,16 @@ Q[4] = 4.
 R = eye(2)
 R[1] = 1e-3
 R[4] = 10.0 # measurement noise
-lin_cstr = LLDS.llds(A, B, b, C, Q, R)
+lin_cstr = LLDS.llds(A, B, C, Q, R)
 
-f(x, u, w) = A*x + B*u + b + w
+f(x, u, w) = A*x + B*u + w
 g(x) = C*x# state observation
 
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
 nP = 500 #number of particles.
-init_state_mean = init_state # initial state mean
+init_state_mean = init_state - b # initial state mean
 init_state_covar = eye(2)*1e-3 # initial covariance
 init_state_covar[4] = 4.0
 init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
@@ -79,17 +78,20 @@ filtercovars = zeros(2, 2, N)
 # Time step 1
 xs[:,1] = init_state
 ys[:, 1] = C*xs[:, 1] + rand(meas_dist) # measured from actual plant
-PF.init_filter!(particles, 0.0, ys[:, 1], meas_dist, cstr_pf)
+PF.init_filter!(particles, 0.0, ys[:, 1]-b, meas_dist, cstr_pf)
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
-filtermeans[:, 1], filtercovars[:, :, 1] = LLDS.init_filter(init_state_mean, init_state_covar, ys[:, 1], lin_cstr)
+filtermeans[:, 1], filtercovars[:, :, 1] = LLDS.init_filter(init_state_mean, init_state_covar, ys[:, 1]-b, lin_cstr)
 # Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) + rand(state_dist)# actual plant
   ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
-  PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
+  PF.filter!(particles, 0.0, ys[:, t]-b, state_dist, meas_dist, cstr_pf)
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
-  filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], 0.0, ys[:, t], lin_cstr)
+  filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], 0.0, ys[:, t]-b, lin_cstr)
 end
+
+fmeans = fmeans .+ b
+filtermeans = filtermeans .+ b
 
 rc("font", family="serif", size=24)
 
@@ -97,15 +99,15 @@ skip = 150
 figure(1) #  Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-f2, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "gx", markersize=5, markeredgewidth = 2)
+f2, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 b2 = 0.0
 for k=1:skip:N
   p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
-  b1, = plot(p1, p2, "b")
+  b1, = plot(p1, p2, "r")
 
   p3, p4 = Ellipse.ellipse(filtermeans[:,k], filtercovars[:,:, k])
-  b2, = plot(p3, p4, "g")
+  b2, = plot(p3, p4, "b")
 end
 plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
 plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
@@ -118,17 +120,17 @@ skipm = 20
 figure(2) # Plot filtered results
 subplot(2,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-k1, = plot(ts[1:skip:end], fmeans[1,1:skip:end]', "r--", linewidth=3)
+k1, = plot(ts[1:skip:end], fmeans[1,1:skip:end]', "rx", markersize=5, markeredgewidth=2)
 y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k12, = plot(ts[1:skip:end], filtermeans[1, 1:skip:end]', "mo")
+k12, = plot(ts[1:skip:end], filtermeans[1, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Particle Filter"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts[1:skip:end], fmeans[2,1:skip:end]', "r--", linewidth=3)
-k22, = plot(ts[1:skip:end], filtermeans[2, 1:skip:end]', "mo")
+k2, = plot(ts[1:skip:end], fmeans[2,1:skip:end]', "rx", markersize=5, markeredgewidth=2)
+k22, = plot(ts[1:skip:end], filtermeans[2, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
 ylabel("Temperature [K]")
 xlabel("Time [min]")
 legend([y2, k22],["Nonlinear Model Measured", "Kalman Filter"], loc="best")
