@@ -23,7 +23,7 @@ type LinearReactor
   op:: Array{Float64, 1} # linearisation points
   A :: Array{Float64, 2}
   B :: Array{Float64, 1}
-  b :: Array{Float64, 1}
+  b :: Array{Float64, 1} # deviation variables
 end
 
 function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::reactor)
@@ -82,7 +82,7 @@ end
 function linearise(linpoint::Array{Float64, 1}, h::Float64, model::reactor)
   # Returns the linearised coefficients of the Runge Kutta method
   # given a linearisation point.
-  # To solve use x(k+1) =  Ax(k) + Bu(k) + b
+  # To solve use x(k+1) =  Ax(k) + Bu(k)
 
   B11 = 0.0
   B21 = 1.0/(model.rho*model.V*model.Cp)
@@ -91,15 +91,16 @@ function linearise(linpoint::Array{Float64, 1}, h::Float64, model::reactor)
   F0 = reactor_ode(linpoint, 0.0, model) # u = 0 because Bs account for the control term
   D = A*linpoint
   # now we have x' = Ax + Bu + F0 - D = F(x)
+  # now write ito deviation variables!
+  newb = F0-D
+  # now we have x' = Ax + Bu where x' = x' + newB
 
   n, = size(A)
   # Now use the Runge Kutta method (thank you matlab symbolics!)
-  newA = eye(n) + ((h*(A + 2*A*((A*h)/2 + eye(n)) + 2*A*((A*h*((A*h)/2 + eye(n)))/2 + eye(n)) + A*(A*h*((A*h*((A*h)/2 + eye(n)))/2 + eye(n)) + eye(n))))/6)
+  newA = ((h*(A + 2*A*((A*h)/2 + 1) + 2*A*((A*h*((A*h)/2 + 1))/2 + 1) + A*(A*h*((A*h*((A*h)/2 + 1))/2 + 1) + 1)))/6)
   newB = ((h*(6*B + A*B*h + A*h*(B + (A*h*(B + (A*B*h)/2))/2) + A*h*(B + (A*B*h)/2)))/6)
-  newb = -(h*(6*D - 6*F0 + A*h*(D - F0) + A*h*(D - F0 + (A*h*(D - F0))/2) + A*h*(D - F0 + (A*h*(D - F0 + (A*h*(D - F0))/2))/2)))/6
 
   return newA, newB, newb
-  # return A, B, F0, D
 end
 
 function discretise(nX, nY, xspace, yspace)

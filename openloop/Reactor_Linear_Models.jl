@@ -49,26 +49,26 @@ for dd=1:nDD # only loop through
   xs = zeros(2, N)
   linxs = zeros(2, N)
   xs[:,1] = initial_states
-  linxs[:,1] = initial_states
+  linxs[:,1] = initial_states - linsystems[k].b
   # Loop through the rest of time
   for t=2:N
       xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
-      temp = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0 + linsystems[k].b
+      temp = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0
 
-      if (-2.5 < temp[1] < 1.5) && (0.0 < temp[2] < 1000) # some of the linearisations are unbounded
+      # if (-2.5 < temp[1] < 1.5) && (0.0 < temp[2] < 1000) # some of the linearisations are unbounded
         linxs[:, t] = temp
-      else
-        linxs[:, t] = linxs[:, t-1]
-      end
+      # else
+        # linxs[:, t] = linxs[:, t-1]
+      # end
   end
 
   subplot(nDD, 1, dd)
   x1, = plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-  x2, = plot(linxs[1,:][:], linxs[2,:][:], "r--", linewidth=3)
+  x2, = plot(linxs[1,:][:] + linsystems[k].b[1], linxs[2,:][:]+ linsystems[k].b[2], "r--", linewidth=3)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-  plot(linxs[1,1], linxs[2,1], "ro", markersize=10, markeredgewidth = 4)
-  plot(linxs[1,end], linxs[2,end], "rx", markersize=10, markeredgewidth = 4)
+  plot(linxs[1,1]+ linsystems[k].b[1], linxs[2,1]+ linsystems[k].b[2], "ro", markersize=10, markeredgewidth = 4)
+  plot(linxs[1,end]+ linsystems[k].b[1], linxs[2,end]+ linsystems[k].b[2], "rx", markersize=10, markeredgewidth = 4)
   ylabel("Temperature [K]")
 
   ## Comment out as necessary!
