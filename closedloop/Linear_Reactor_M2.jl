@@ -22,7 +22,7 @@ end
 
 init_state = [0.50; 400]
 h = 0.1 # time discretisation
-tend = 150.0 # end simulation time
+tend = 2000.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -33,25 +33,31 @@ xspace = [0.0, 1.0]
 yspace = [250, 550]
 
 # Specify the linear model
-npoints = 1
-linsystems = Reactor.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr) # doesnt work weirdly...
-A = linsystems[3].A
-B = linsystems[3].B
-b = linsystems[3].b
+linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr) # doesnt work weirdly...
+A = linsystems[2].A
+B = linsystems[2].B
+b = linsystems[2].b
 C = eye(2)
 Q = eye(2) # plant mismatch/noise
 Q[1] = 1e-5
-Q[4] = 4.
+Q[4] = 1.
 R = eye(2)
 R[1] = 1e-3
 R[4] = 10.0 # measurement noise
 lin_cstr = LLDS.llds(A, B, C, Q, R)
 
+# Controller
+QQ = zeros(2, 2)
+QQ[1] = 1.0
+RR = 1.0
+x_offset = [0.999645305751902, -67.947277331772852]
+u_offset = [3.154364633264485e+003]
+K = LQR.lqr(A, B, QQ, RR)
 
 # Plant initialisation
 linxs = zeros(2, N)
 linxs[:, 1] = init_state - b
-us = zeros(N) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t=1)...
+us = zeros(N-1) # simulate some control movement.
 
 # Simulate plant
 state_dist = MvNormal(Q)
@@ -66,48 +72,33 @@ filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(init_mean, init_covar, ys[:, 1]-b, lin_cstr)
 for t=2:N
-  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t], h, cstr) + rand(state_dist) # actual plant
+  if t%10 == 0 || t==2
+    us[t-1] = -K*(filtermeans[:, t-1] - x_offset) + u_offset # controller action
+  else
+    us[t-1] = us[t-2]
+  end
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr) + rand(state_dist) # actual plant
   ys[:, t] = lin_cstr.C*xs[:, t] + rand(norm_dist) # measured from actual plant
-  linxs[:, t], temp = LLDS.step(linxs[:, t-1], us[t-1], lin_cstr)
   filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[:, t]-b, lin_cstr)
 end
 
-linxs = linxs .+ b
 filtermeans = filtermeans .+ b
 
 rc("font", family="serif", size=24)
 
-skip = 120
-figure(1) # Kalman Filter Demonstration
-x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-f1, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
-b1 = 0.0
-for k=1:skip:N
-  p1, p2 = Ellipse.ellipse(filtermeans[:,k], filtercovars[:,:, k])
-  b1, = plot(p1, p2, "b")
-end
-plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
-plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
-plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-ylabel("Temperature [K]")
-xlabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
-
 
 skipm = skip
-figure(2) # Filtering
-subplot(2,1,1)
+figure(1) # Filtering
+subplot(3,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-linx1, = plot(ts, linxs[1,:]', "r--", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
 k1, = plot(ts[1:skip:end], filtermeans[1, 1:skip:end]', "bx", markersize=5, markeredgewidth = 2)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1,linx1],["Nonlinear Model","Linear Model"], loc="best")
+legend([x1],["Nonlinear Model"], loc="best")
 xlim([0, tend])
 ylim([0, 1])
-subplot(2,1,2)
+subplot(3,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-linx2, = plot(ts, linxs[2,:]', "r--", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts[1:skip:end], filtermeans[2, 1:skip:end]', "bx", markersize=5, markeredgewidth = 2)
 ylabel("Temperature [K]")
@@ -115,3 +106,5 @@ xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
 ylim([minimum(xs[2,:]), maximum(xs[2,:])])
+subplot(3,1,3)
+plot(ts[1:end-1], us)
