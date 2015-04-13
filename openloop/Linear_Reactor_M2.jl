@@ -33,11 +33,10 @@ xspace = [0.0, 1.0]
 yspace = [250, 550]
 
 # Specify the linear model
-npoints = 1
-linsystems = Reactor.getLinearSystems_randomly(npoints, xspace, yspace, h, cstr) # doesnt work weirdly...
-A = linsystems[3].A
-B = linsystems[3].B
-b = linsystems[3].b
+linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr) # doesnt work weirdly...
+A = linsystems[2].A
+B = linsystems[2].B
+b = linsystems[2].b
 C = eye(2)
 Q = eye(2) # plant mismatch/noise
 Q[1] = 1e-5
