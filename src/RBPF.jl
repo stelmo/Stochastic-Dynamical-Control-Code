@@ -40,7 +40,7 @@ function init_RBPF(sdist, mu_init, sigma_init, xN, nP)
   particles = Particles(zeros(xN, nP), zeros(xN, xN, nP), zeros(Int64, nP), zeros(nP))
   for p=1:nP
     sdraw = rand(sdist)
-    particles.mus[:, p] = mu_init
+    particles.mus[:, p] = mu_init # normal mu
     particles.sigmas[:,:, p] = sigma_init
     particles.ss[p] = sdraw
     particles.ws[p] = 1./nP # uniform initial weight
@@ -57,7 +57,7 @@ function init_filter!(particles::Particles, u, y, models::Array{Model, 1})
   for p=1:N
     for s=1:nS
       if particles.ss[p] == s
-        particles.mus[:,p] = particles.mus[:, p] - models[particles.ss[p]].b
+        particles.mus[:,p] = particles.mus[:, p] - models[particles.ss[p]].b # adjust mu for specific switch
         mu = models[s].C * (models[s].A*particles.mus[:, p] + models[s].B*u)
         sigma = models[s].C * (models[s].A*particles.sigmas[:,:,p]*models[s].A' + models[s].Q) * models[s].C' + models[s].R
         d = MvNormal(mu, sigma)
@@ -66,6 +66,8 @@ function init_filter!(particles::Particles, u, y, models::Array{Model, 1})
         else
           particles.ws[p] = particles.ws[p]*pdf(d, y-models[s].b) # weight of each particle
         end
+        particles.mus[:,p] = particles.mus[:, p] + models[particles.ss[p]].b # fix mu for specific switch
+
       end
     end
   end
@@ -82,11 +84,6 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
 
   nX, N = size(particles.mus)
   nS = length(models)
-
-  #fix mus using previous switch
-  for p=1:N
-    particles.mus[:,p] = particles.mus[:, p] + models[particles.ss[p]].b
-  end
 
   # This can be made more compact but at the cost of clarity
   # first draw switch sample
@@ -116,12 +113,16 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
         pvar =  models[s].Q + models[s].A*particles.sigmas[:,:, p]*transpose(models[s].A)
         kalmanGain = pvar*transpose(models[s].C)*inv(models[s].C*pvar*transpose(models[s].C) + models[s].R)
         ypred = models[s].C*pmean #predicted measurement
-        updatedMean = pmean + kalmanGain*(y - ypred)
+        if length(y) == 1
+          updatedMean = pmean + kalmanGain*(y - models[s].b[2] - ypred) # adjust for state space
+        else
+          updatedMean = pmean + kalmanGain*(y - models[s].b - ypred) # adjust for state space
+        end
         rows, cols = size(pvar)
         updatedVar = (eye(rows) - kalmanGain*models[s].C)*pvar
 
         particles.sigmas[:,:, p] = updatedVar
-        particles.mus[:, p] = updatedMean
+        particles.mus[:, p] = updatedMean + models[s].b # fix
       end
     end
   end
@@ -140,10 +141,6 @@ end
 function resample!(particles::Particles, models::Array{Model, 1})
   N = length(particles.ws)
   resample = rand(Categorical(particles.ws), N) # draw N samples from weighted Categorical
-  # fix mus
-  for p=1:N
-    particles.mus[:,p] = particles.mus[:, p] + models[particles.ss[p]].b
-  end
   copyparticles_mus = copy(particles.mus)
   copyparticles_sigmas = copy(particles.sigmas)
   copyparticles_ss = copy(particles.ss)
@@ -154,11 +151,6 @@ function resample!(particles::Particles, models::Array{Model, 1})
     particles.ws[p] = 1./N
   end
   roughen!(particles)
-  #adjust mus
-  for p=1:N
-    particles.mus[:,p] = particles.mus[:, p] - models[particles.ss[p]].b
-  end
-
 end
 
 function numberEffectiveParticles(particles::Particles)
@@ -197,17 +189,50 @@ function roughen!(particles::Particles)
   end
 end
 
-function getStats(particles::Particles, models::Array{Model, 1})
+function getAveStats(particles::Particles)
   nX, nP = size(particles.mus)
   ave = zeros(nX)
   avesigma = zeros(nX, nX)
   for p=1:nP
-    ave = ave + particles.ws[p]*(particles.mus[:, p] + models[particles.ss[p]].b)
+    ave = ave + particles.ws[p]*particles.mus[:, p]
     avesigma = avesigma + particles.ws[p].*particles.sigmas[:,:, p]
   end
 
   return ave, avesigma
 end
+
+function getMLStats(particles::Particles)
+  nX, nP = size(particles.mus)
+  mlmu = zeros(nX)
+  mlsigma = zeros(nX, nX)
+  prevmaxweight = 0.0
+  for p=1:nP
+    if particles.ws[p] > prevmaxweight
+      mlmu = particles.mus[:, p]
+      mlsigma = particles.sigmas[:,:, p]
+      prevmaxweight = particles.ws[p]
+    end
+  end
+
+  return mlmu, mlsigma
+end
+
+function getMaxTrack(particles, models)
+  numSwitches = length(models)
+  maxtrack = zeros(numSwitches)
+  numParticles = length(particles.ws)
+  tempMaxPos = 1
+  tempMax = 0.0
+  for p=1:numParticles
+    if particles.ws[p] > tempMax
+      tempMax = particles.ws[p]
+      tempMaxPos = particles.ss[p]
+    end
+  end
+  maxtrack[tempMaxPos] = 1.0
+  return maxtrack
+end
+
 
 function getInitialSwitches(initial_states, linsystems::Array{Reactor.LinearReactor,1})
   N = length(linsystems)

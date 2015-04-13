@@ -53,7 +53,7 @@ linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 A = linsystems[2].A
 B = linsystems[2].B
 b = linsystems[2].b
-lin_cstr = LLDS.llds(A, B, b, C, Q, R)
+lin_cstr = LLDS.llds(A, B, C, Q, R)
 
 
 linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
@@ -74,31 +74,43 @@ fcovars = zeros(2,2,N)
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 switchtrack = zeros(length(linsystems), N)
+maxtrack = zeros(length(linsystems), N)
 
 state_dist = MvNormal(Q)
 us = zeros(N)
 measurements = MvNormal(R)
 xs[:,1] = initial_states
 ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
-RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
-fmeans[:,1], fcovars[:,:, 1] = RBPF.getStats(particles)
 
-filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(initial_states, initial_covar, ys[:, 1], lin_cstr)
+RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
+# fmeans[:,1], fcovars[:,:, 1] = RBPF.getAveStats(particles)
+fmeans[:,1], fcovars[:,:, 1] = RBPF.getMLStats(particles)
+
+filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(initial_states-b, initial_covar, ys[:, 1]-b, lin_cstr)
 
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
 end
+maxtrack[:, 1] = RBPF.getMaxTrack(particles, models)
+
 # Loop through the rest of time
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
-  fmeans[:, t], fcovars[:,:, t] = RBPF.getStats(particles)
+  # fmeans[:, t], fcovars[:,:, t] = RBPF.getAveStats(particles)
+  fmeans[:,t], fcovars[:,:, t] = RBPF.getMLStats(particles)
+
+  filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[:, t]-b, lin_cstr)
+
   for k=1:length(linsystems)
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
-  filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[:, t], lin_cstr)
+  maxtrack[:, t] = RBPF.getMaxTrack(particles, models)
+
 end
+
+filtermeans = filtermeans .+ b
 
 rc("font", family="serif", size=24)
 
@@ -137,7 +149,27 @@ xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
 colorbar(im, ax=axes)
 xlabel("Time [min]")
 
-figure(3) # Plot filtered results
+
+figure(3)
+axes = Array(Any, length(linsystems))
+im = 0
+width = 500
+for k=1:length(linsystems)
+  ax = subplot(length(linsystems), 1, k)
+  axes[k] = ax
+  im = imshow(repeat(maxtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
+  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
+  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
+  ylabel(string("S::",k))
+end
+tick_params(axis="x", labelbottom = "on")
+xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
+colorbar(im, ax=axes)
+xlabel("Time [min]")
+
+
+
+figure(4) # Plot filtered results
 skip = int(length(ts)/75)
 skipm = skip
 subplot(2,1,1)
@@ -159,19 +191,19 @@ xlim([0, tend])
 
 
 skip = int(length(ts)/20)
-figure(4) # Kalman Filter Demonstration
+figure(5) # Kalman Filter Demonstration
 x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
 x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
 f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-f2, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "gx", markersize=5, markeredgewidth = 2)
+f2, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
 b1 = 0.0
 b2 = 0.0
 for k=1:skip:N
   p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
-  b1, = plot(p1, p2, "b")
+  b1, = plot(p1, p2, "r")
 
   p3, p4 = Ellipse.ellipse(filtermeans[:,k], filtercovars[:,:, k])
-  b2, = plot(p3, p4, "g")
+  b2, = plot(p3, p4, "b")
 
 end
 plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
