@@ -53,7 +53,6 @@ linxs = zeros(2, N)
 linxs[:, 1] = init_state - b
 us = zeros(N) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t=1)...
 
-
 # Simulate plant
 state_dist = MvNormal(Q)
 norm_dist = MvNormal(lin_cstr.R)
