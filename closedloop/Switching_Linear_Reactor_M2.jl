@@ -35,13 +35,13 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 400] # initial state
+init_state = [0.5; 450] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-3
 R[4] = 10.0
 Q = eye(2)
-Q[1] = 1e-6
+Q[1] = 1e-5
 Q[4] = 0.1
 
 # Divide state space into sectors: n by m
