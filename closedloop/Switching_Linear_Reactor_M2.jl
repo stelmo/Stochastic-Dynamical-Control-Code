@@ -29,7 +29,7 @@ cstr_model = begin
 end
 
 h = 0.1 # time discretisation
-tend = 150. # end simulation time
+tend = 200. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -50,10 +50,13 @@ nY = 2 # cols
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
-linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+# linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+linsystems2 = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+linsystems = [linsystems2[1], linsystems2[2]]
+
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
 
-nP = 500
+nP = 1000
 initial_states = init_state
 initial_covar = eye(2)
 initial_covar[1] = 1e-3
@@ -65,6 +68,19 @@ fmeans = zeros(2, N)
 fcovars = zeros(2,2,N)
 maxtrack = zeros(length(linsystems), N)
 
+# Controllers  - ysp is set here!
+QQ = zeros(2, 2)
+QQ[1] = 1.0
+RR = 1.0
+H = [1.0 0.0]
+controllers = Array(LQR.controller, length(models))
+for k=1:length(models)
+  ysp = 0.01 - models[k].b[1]
+  x_off, u_off = LQR.offset(models[k].A,models[k].B,C,H, ysp)
+  K = LQR.lqr(models[k].A, models[k].B, QQ, RR)
+  controllers[k] = LQR.controller(K, x_off, u_off)
+end
+
 state_dist = MvNormal(Q)
 us = zeros(N)
 measurements = MvNormal(R)
@@ -74,14 +90,25 @@ ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
 RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
 fmeans[:,1], fcovars[:,:, 1] = RBPF.getMLStats(particles)
 maxtrack[:, 1] = RBPF.getMaxTrack(particles, models)
-
+# println("**************************")
 # Loop through the rest of time
 for t=2:N
+  ind = indmax(maxtrack[:, t-1]) # use this model and controller
+  us[t-1] = -controllers[ind].K*(fmeans[:, t-1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+  # if us[t-1] > 6000
+  #   us[t-1] = 6000
+  # end
+  # if us[t-1] < -6000
+  #   us[t-1] = -6000
+  # end
+
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
   fmeans[:,t], fcovars[:,:, t] = RBPF.getMLStats(particles)
   maxtrack[:, t] = RBPF.getMaxTrack(particles, models)
+  # println("**************************")
+
 end
 
 rc("font", family="serif", size=24)
@@ -117,10 +144,8 @@ for k=1:length(linsystems)
 end
 tick_params(axis="x", labelbottom = "on")
 xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-colorbar(im, ax=axes)
+# colorbar(im, ax=axes)
 xlabel("Time [min]")
-
-
 
 figure(3) # Plot filtered results
 skip = int(length(ts)/75)

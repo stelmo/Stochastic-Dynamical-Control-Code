@@ -1,6 +1,12 @@
 #  LQR Controller
 module LQR
 
+type controller
+  K
+  x_off
+  u_off
+end
+
 function lqr(A, B, Q, R)
   # Returns the infinite horizon LQR solution.
   # Don't confuse the weighting matrices Q and R with

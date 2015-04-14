@@ -24,13 +24,11 @@ cstr = begin
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.5; 450]
 h = 0.1 # time discretisation
 tend = 2000.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
-xs[:,1] = init_state
 ys = zeros(2, N) # only one measurement
 
 xspace = [0.0, 1.0]
@@ -39,13 +37,17 @@ yspace = [250, 550]
 # Specify the linear model
 linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr) # doesnt work weirdly...
 opoint = 2
+
+init_state = linsystems[opoint].op + rand(-1:2:1)*rand(2).*[0.5, 100]
+xs[:,1] = init_state
+
 A = linsystems[opoint].A
 B = linsystems[opoint].B
 b = linsystems[opoint].b
 C = eye(2)
 Q = eye(2) # plant mismatch/noise
-Q[1] = 1e-10 #1e-05
-Q[4] = 0.00001 #0.1
+Q[1] = 1e-06 #1e-05
+Q[4] = 0.1 #0.1
 R = eye(2)
 R[1] = 1e-3
 R[4] = 10.0 # measurement noise
@@ -56,9 +58,12 @@ QQ = zeros(2, 2)
 QQ[1] = 1.0
 RR = 1.0
 H = [1.0 0.0]
-ysp = linsystems[opoint].op[1] - b[1] # remember to adjust for ss standard
+# ysp = linsystems[opoint].op[1] - b[1] # remember to adjust for ss standard
 # ysp = 0.01 - b[1]
-# ysp = linsystems[3].op[1] - b[1] # remember to adjust for ss standard
+ysp = linsystems[1].op[1] - b[1] # Low concentration
+# ysp = linsystems[2].op[1] - b[1] # Medium concentration
+# ysp = linsystems[3].op[1] - b[1] # High concentration
+
 x_off, u_off = LQR.offset(A,B,C,H, ysp)
 K = LQR.lqr(A, B, QQ, RR)
 
@@ -79,11 +84,12 @@ filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(init_mean, init_covar, ys[:, 1]-b, lin_cstr)
 
 for t=2:N
-  if t%10 == 0 || t==2 # to start
-    us[t-1] = -K*(filtermeans[:, t-1] - x_off) + u_off # controller action
-  else
-    us[t-1] = us[t-2]
-  end
+  # if t%10 == 0 || t==2 # to start
+  #   us[t-1] = -K*(filtermeans[:, t-1] - x_off) + u_off # controller action
+  # else
+  #   us[t-1] = us[t-2]
+  # end
+  us[t-1] = -K*(filtermeans[:, t-1] - x_off) + u_off # controller action
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr) + rand(state_dist) # actual plant
   ys[:, t] = lin_cstr.C*xs[:, t] + rand(norm_dist) # measured from actual plant
   filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[:, t]-b, lin_cstr)

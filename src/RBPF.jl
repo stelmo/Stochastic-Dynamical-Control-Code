@@ -66,6 +66,7 @@ function init_filter!(particles::Particles, u, y, models::Array{Model, 1})
         else
           particles.ws[p] = particles.ws[p]*pdf(d, y-models[s].b) # weight of each particle
         end
+        # println("Switch: ", s, " Predicts: ", round(mu + models[s].b, 4), "Observed: ", round(y,4), " Weight: ", round(particles.ws[p], 5))
         particles.mus[:,p] = particles.mus[:, p] + models[particles.ss[p]].b # fix mu for specific switch
 
       end
@@ -108,6 +109,9 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
           particles.ws[p] = particles.ws[p]*pdf(d, y-models[s].b) # weight of each particle
         end
         (isnan(particles.ws[p])) && (warn("Particle weight issue..."); particles.ws[p] = 0.0) # in case
+
+        # println("Switch: ", s, " Predicts: ", round(mu + models[s].b, 4), "Observed: ", round(y,4), " Weight: ", round(particles.ws[p], 5))
+
 
         pmean = models[s].A*(particles.mus[:,p] - models[s].b) + models[s].B*u
         pvar =  models[s].Q + models[s].A*particles.sigmas[:,:, p]*transpose(models[s].A)
