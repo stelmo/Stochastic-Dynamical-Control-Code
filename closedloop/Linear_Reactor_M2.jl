@@ -3,7 +3,11 @@
 using LLDS
 using Reactor
 using Ellipse
+using LQR
 
+function Base.convert(::Type{Float64}, x::Array{Float64, 1})
+  return x[1]
+end
 
 # Specify the nonlinear model
 cstr = begin
@@ -20,7 +24,7 @@ cstr = begin
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.50; 400]
+init_state = [0.5; 450]
 h = 0.1 # time discretisation
 tend = 2000.0 # end simulation time
 ts = [0.0:h:tend]
@@ -34,29 +38,31 @@ yspace = [250, 550]
 
 # Specify the linear model
 linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr) # doesnt work weirdly...
-A = linsystems[2].A
-B = linsystems[2].B
-b = linsystems[2].b
+opoint = 2
+A = linsystems[opoint].A
+B = linsystems[opoint].B
+b = linsystems[opoint].b
 C = eye(2)
 Q = eye(2) # plant mismatch/noise
-Q[1] = 1e-5
-Q[4] = 1.
+Q[1] = 1e-10 #1e-06
+Q[4] = 0.00001 #0.1
 R = eye(2)
 R[1] = 1e-3
 R[4] = 10.0 # measurement noise
-lin_cstr = LLDS.llds(A, B, C, Q, R)
+lin_cstr = LLDS.llds(A, B, C, Q, R) # so that the KF works
 
 # Controller
 QQ = zeros(2, 2)
 QQ[1] = 1.0
 RR = 1.0
-x_offset = [0.999645305751902, -67.947277331772852]
-u_offset = [3.154364633264485e+003]
+H = [1.0 0.0]
+ysp = linsystems[opoint].op[1] - b[1] # remember to adjust for ss standard
+# ysp = 0.01 - b[1]
+# ysp = linsystems[3].op[1] - b[1] # remember to adjust for ss standard
+x_off, u_off = LQR.offset(A,B,C,H, ysp)
 K = LQR.lqr(A, B, QQ, RR)
 
 # Plant initialisation
-linxs = zeros(2, N)
-linxs[:, 1] = init_state - b
 us = zeros(N-1) # simulate some control movement.
 
 # Simulate plant
@@ -71,9 +77,10 @@ init_covar[4] = 4.
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(init_mean, init_covar, ys[:, 1]-b, lin_cstr)
+
 for t=2:N
-  if t%10 == 0 || t==2
-    us[t-1] = -K*(filtermeans[:, t-1] - x_offset) + u_offset # controller action
+  if t%10 == 0 || t==2 # to start
+    us[t-1] = -K*(filtermeans[:, t-1] - x_off) + u_off # controller action
   else
     us[t-1] = us[t-2]
   end
@@ -81,29 +88,31 @@ for t=2:N
   ys[:, t] = lin_cstr.C*xs[:, t] + rand(norm_dist) # measured from actual plant
   filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[:, t]-b, lin_cstr)
 end
-
 filtermeans = filtermeans .+ b
+
 
 rc("font", family="serif", size=24)
 
 
-skipm = skip
+skipmeas = int(length(ts)/20)
+skipmean = int(length(ts)/20)
 figure(1) # Filtering
 subplot(3,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k1, = plot(ts[1:skip:end], filtermeans[1, 1:skip:end]', "bx", markersize=5, markeredgewidth = 2)
+y2, = plot(ts[1:skipmeas:end], ys[1, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
+k1, = plot(ts[1:skipmean:end], filtermeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1],["Nonlinear Model"], loc="best")
+legend([y2, x1],["Nonlinear Model Measured", "Nonlinear Model"], loc="best")
 xlim([0, tend])
 ylim([0, 1])
+
 subplot(3,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts[1:skip:end], filtermeans[2, 1:skip:end]', "bx", markersize=5, markeredgewidth = 2)
+y2, = plot(ts[1:skipmeas:end], ys[2, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
+k2, = plot(ts[1:skipmean:end], filtermeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
 ylabel("Temperature [K]")
 xlabel("Time [min]")
-legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
+legend([k2],["Filtered Mean Estimate"], loc="best")
 xlim([0, tend])
 ylim([minimum(xs[2,:]), maximum(xs[2,:])])
 subplot(3,1,3)

@@ -31,19 +31,25 @@ xs[:,1] = init_state
 ys = zeros(2, N) # only one measurement
 
 xspace = [0.0, 1.0]
-yspace = [250, 550]
+yspace = [250, 650]
+
 
 # Specify the linear model
-linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr) # doesnt work weirdly...
-A = linsystems[2].A
-B = linsystems[2].B
-b = linsystems[2].b
-C = eye(2)
+linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 QQ = zeros(2, 2)
 QQ[1] = 1.0
 RR = 1.0
 H = [1. 0.]
-ysp = .9996453057519021
+
+NN = length(linsystems)
+KK =
+for n=1:NN
+
+end
+A = linsystems[2].A
+B = linsystems[2].B
+b = linsystems[2].b
+C = eye(2)
 
 DARE = LQR.dare(A, B, QQ, RR)
 K = LQR.lqr(A, B, QQ, RR)

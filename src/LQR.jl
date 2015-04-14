@@ -61,7 +61,7 @@ function offset(A, B, C, H, ysp)
 end
 
 function getSize(A)
-
+  # wraps size() but with added robustness
   x = size(A)
   r = 0
   c = 0

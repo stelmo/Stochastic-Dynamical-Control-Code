@@ -20,9 +20,9 @@ cstr = begin
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-init_state = [0.50; 400]
+init_state = [0.50; 450]
 h = 0.1 # time discretisation
-tend = 150.0 # end simulation time
+tend = 2000.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -34,13 +34,14 @@ yspace = [250, 550]
 
 # Specify the linear model
 linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr) # doesnt work weirdly...
-A = linsystems[2].A
-B = linsystems[2].B
-b = linsystems[2].b
+opoint = 2
+A = linsystems[opoint].A
+B = linsystems[opoint].B
+b = linsystems[opoint].b
 C = eye(2)
 Q = eye(2) # plant mismatch/noise
-Q[1] = 1e-5
-Q[4] = 4.
+Q[1] = 1e-6
+Q[4] = 0.5
 R = eye(2)
 R[1] = 1e-3
 R[4] = 10.0 # measurement noise
@@ -50,7 +51,7 @@ lin_cstr = LLDS.llds(A, B, C, Q, R)
 # Plant initialisation
 linxs = zeros(2, N)
 linxs[:, 1] = init_state - b
-us = zeros(N) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t=1)...
+us = zeros(N-1) # simulate some control movement. NOTE: us[1] = u(t=0), us[2] =u(t=1)...
 
 
 # Simulate plant
@@ -66,7 +67,7 @@ filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(init_mean, init_covar, ys[:, 1]-b, lin_cstr)
 for t=2:N
-  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t], h, cstr) + rand(state_dist) # actual plant
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr) + rand(state_dist) # actual plant
   ys[:, t] = lin_cstr.C*xs[:, t] + rand(norm_dist) # measured from actual plant
   linxs[:, t], temp = LLDS.step(linxs[:, t-1], us[t-1], lin_cstr)
   filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[:, t]-b, lin_cstr)
