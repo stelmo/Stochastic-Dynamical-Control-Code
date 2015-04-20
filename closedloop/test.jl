@@ -32,7 +32,7 @@ cstr_pf = PF.Model(f,g)
 
 
 init_state = [0.5; 400] # initial state
-tend = 200.0 # end simulation time
+tend = 50.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -64,6 +64,7 @@ usp = offres.zero[2]
 
 fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)
+us = zeros(N-1)
 # Time step 1
 xs[:,1] = init_state
 ys[:, 1] = C*xs[:, 1] + rand(meas_dist) # measured from actual plant
@@ -73,39 +74,42 @@ fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 predictionHorizon = 50
 swarmSize = 100
 swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -100.0, 100, particles, ysp, usp, Q, R, state_dist, cstr_pf)
-tic()
-uu = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf)
-toc()
+# tic()
+# uu = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf)
+# toc()
+
 # Loop through the rest of time
-# for t=2:N
-  # if t%10 == 0 || t==2 # to start
-  #   us[t-1] = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf)
-  # else
-  #   us[t-1] = us[t-2]
-  # end
-#   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
-#   ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
-#   PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
-#   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
-# end
-#
-# rc("font", family="serif", size=24)
-# skip = 150
-#
-# skipm = 20
-# figure(2) # Plot filtered results
-# subplot(2,1,1)
-# x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-# y1, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-# k1, = plot(ts, fmeans[1,:]', "rx", markersize=5, markeredgewidth=2)
-# ylabel(L"Concentration [kmol.m$^{-3}$]")
-# legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
-# xlim([0, tend])
-# subplot(2,1,2)
-# x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-# y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-# k2, = plot(ts, fmeans[2,:]', "rx", markersize=5, markeredgewidth=2)
-# ylabel("Temperature [K]")
-# xlabel("Time [min]")
-# legend([y2],["Nonlinear Model Measured"], loc="best")
-# xlim([0, tend])
+for t=2:N
+  if t%10 == 0 || t==2 # to start
+    us[t-1] = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf)
+  else
+    us[t-1] = us[t-2]
+  end
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
+  ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
+  PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
+  fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
+end
+
+skipm = 20
+rc("font", family="serif", size=24)
+skip = 150
+figure(1)
+
+subplot(3,1,1)
+x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+y1, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+k1, = plot(ts, fmeans[1,:]', "rx", markersize=5, markeredgewidth=2)
+ylabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+xlim([0, tend])
+subplot(3,1,2)
+x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+k2, = plot(ts, fmeans[2,:]', "rx", markersize=5, markeredgewidth=2)
+ylabel("Temperature [K]")
+xlabel("Time [min]")
+legend([y2],["Nonlinear Model Measured"], loc="best")
+xlim([0, tend])
+subplot(3,1,3)
+plot(ts[1:end-1], us)
