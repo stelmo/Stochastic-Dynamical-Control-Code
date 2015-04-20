@@ -115,4 +115,16 @@ function getStats(particles::Particles)
   return mean(fitted), cov(fitted)
 end
 
+function predict!(parts, u, plantdist, model)
+  # Project the particles one step forward.
+  # NOTE: this overwrite parts therefore use a dummy variable!
+
+  nX, nP = size(parts)
+  for p=1:nP
+      noise = rand(plantdist)
+      parts[:, p] = model.f(parts[:, p], u, noise) # predict
+  end
+
+end
+
 end # Module
