@@ -6,7 +6,6 @@
 
 using PF
 using Reactor
-using Ellipse
 using PSO
 
 # Specify the nonlinear model
@@ -47,12 +46,16 @@ init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
 state_covar = eye(2) # state covariance
 state_covar[1] = 1e-5
-state_covar[2] = 4.
+state_covar[2] = 0.1
 state_dist = MvNormal(state_covar) # state distribution
 meas_covar = eye(2)
 meas_covar[1] = 1e-3
 meas_covar[4] = 10.
 meas_dist = MvNormal(meas_covar) # measurement distribution
+
+# Control
+R = 1.0
+Q = [1.0 0;0 0]
 
 fmeans = zeros(2, N)
 fcovars = zeros(2,2, N)

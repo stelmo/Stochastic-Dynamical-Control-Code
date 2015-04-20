@@ -1,9 +1,28 @@
 # Bring into scope all the required packages and modules.
 info("Loading all the required external modules.")
-using Distributions
 using PyPlot
+using NLsolve
+using Distributions
 
-info("Loading all the required internal modules.")
+# if nprocs() == 1
+#   info("Adding additional processes.")
+#   addprocs(CPU_CORES)
+# end
+#
+# @everywhere using Distributions
+#
+# info("Loading all the required internal modules.")
+# @everywhere include(joinpath("src", "Ellipse.jl"))
+# @everywhere include(joinpath("src", "HMM.jl"))
+# @everywhere include(joinpath("src", "Burglar.jl"))
+# @everywhere include(joinpath("src", "Reactor.jl"))
+# @everywhere include(joinpath("src", "LLDS.jl"))
+# @everywhere include(joinpath("src", "PF.jl"))
+# @everywhere include(joinpath("src", "SPF.jl"))
+# @everywhere include(joinpath("src", "RBPF.jl"))
+# @everywhere include(joinpath("src", "LQR.jl"))
+# @everywhere include(joinpath("src", "PSO.jl"))
+
 for func in ["Ellipse.jl",
             "HMM.jl",
             "Burglar.jl",

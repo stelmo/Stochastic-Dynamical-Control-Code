@@ -55,7 +55,7 @@ lin_cstr = LLDS.llds(A, B, C, Q, R) # so that the KF works
 
 # Controller
 QQ = zeros(2, 2)
-QQ[1] = 1.0
+QQ[1] = 1000.0
 RR = 1.0
 H = [1.0 0.0]
 # ysp = linsystems[opoint].op[1] - b[1] # remember to adjust for ss standard

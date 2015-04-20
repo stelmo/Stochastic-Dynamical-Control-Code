@@ -51,8 +51,10 @@ xspace = [0.0, 1.0]
 yspace = [250, 650]
 
 # linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
-linsystems2 = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
-linsystems = [linsystems2[1], linsystems2[2]]
+# linsystems2 = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+# linsystems = [linsystems2[1], linsystems2[2]]
+linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+
 
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
 
@@ -70,12 +72,12 @@ maxtrack = zeros(length(linsystems), N)
 
 # Controllers  - ysp is set here!
 QQ = zeros(2, 2)
-QQ[1] = 1.0
+QQ[1] = 1000.0
 RR = 1.0
 H = [1.0 0.0]
 controllers = Array(LQR.controller, length(models))
 for k=1:length(models)
-  ysp = 0.01 - models[k].b[1]
+  ysp = 0.48 - models[k].b[1]
   x_off, u_off = LQR.offset(models[k].A,models[k].B,C,H, ysp)
   K = LQR.lqr(models[k].A, models[k].B, QQ, RR)
   controllers[k] = LQR.controller(K, x_off, u_off)
