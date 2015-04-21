@@ -4,7 +4,6 @@
 # solution as calculated by the functions in the
 # Linear_Latent_Dynamical_Models folder.
 
-
 using PF
 using Reactor
 using PSO
@@ -39,7 +38,7 @@ xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
 # Initialise the PF
-nP = 100 #number of particles.
+nP = 20 #number of particles.
 init_state_mean = init_state # initial state mean
 init_state_covar = eye(2)*1e-3 # initial covariance
 init_state_covar[4] = 4.0
@@ -55,9 +54,9 @@ meas_covar[4] = 10.
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 # Control
-R = 1.0
-Q = [1.0 0;0 0]
-y_ca = 0.48 # concentration set point
+R = 0.0
+Q = [1000.0 0.0;0.0 0.0]
+y_ca = 0.48934869384882873 # concentration set point
 offres = PSO.offset(y_ca, cstr_model)
 ysp = [y_ca, offres.zero[1]]
 usp = offres.zero[2]
@@ -71,45 +70,48 @@ ys[:, 1] = C*xs[:, 1] + rand(meas_dist) # measured from actual plant
 PF.init_filter!(particles, 0.0, ys[:, 1], meas_dist, cstr_pf)
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 
-predictionHorizon = 50
-swarmSize = 100
-swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -100.0, 100, particles, ysp, usp, Q, R, state_dist, cstr_pf)
-# tic()
-# uu = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf)
-# toc()
+skip = 10 # hold the controller output for this long
+predictionHorizon = 5 # number of controller moves
+swarmSize = 50
+swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -500.0, 500.0, particles, ysp, usp, Q, R, state_dist, cstr_pf, skip)
+tic()
+uu = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf, skip)
+toc()
 
-# Loop through the rest of time
-for t=2:N
-  if t%10 == 0 || t==2 # to start
-    us[t-1] = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf)
-  else
-    us[t-1] = us[t-2]
-  end
-  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
-  ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
-  PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
-  fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
-end
-
-skipm = 20
-rc("font", family="serif", size=24)
-skip = 150
-figure(1)
-
-subplot(3,1,1)
-x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-y1, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k1, = plot(ts, fmeans[1,:]', "rx", markersize=5, markeredgewidth=2)
-ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
-xlim([0, tend])
-subplot(3,1,2)
-x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts, fmeans[2,:]', "rx", markersize=5, markeredgewidth=2)
-ylabel("Temperature [K]")
-xlabel("Time [min]")
-legend([y2],["Nonlinear Model Measured"], loc="best")
-xlim([0, tend])
-subplot(3,1,3)
-plot(ts[1:end-1], us)
+##Loop through the rest of time
+# for t=2:N
+#   if t%skip == 0 || t==2 # to start
+#     swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -500.0, 500.0, particles, ysp, usp, Q, R, state_dist, cstr_pf, skip)
+#     us[t-1] = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_pf, skip)
+#     println(ts[t-1])
+#   else
+#     us[t-1] = us[t-2]
+#   end
+#   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
+#   ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
+#   PF.filter!(particles, 0.0, ys[:, t], state_dist, meas_dist, cstr_pf)
+#   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
+# end
+#
+# skipm = 20
+# rc("font", family="serif", size=24)
+# skip = 150
+# figure(1)
+#
+# subplot(3,1,1)
+# x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+# y1, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+# k1, = plot(ts, fmeans[1,:]', "rx", markersize=5, markeredgewidth=2)
+# ylabel(L"Concentration [kmol.m$^{-3}$]")
+# legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+# xlim([0, tend])
+# subplot(3,1,2)
+# x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+# y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+# k2, = plot(ts, fmeans[2,:]', "rx", markersize=5, markeredgewidth=2)
+# ylabel("Temperature [K]")
+# xlabel("Time [min]")
+# legend([y2],["Nonlinear Model Measured"], loc="best")
+# xlim([0, tend])
+# subplot(3,1,3)
+# plot(ts[1:end-1], us)

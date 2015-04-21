@@ -38,7 +38,7 @@ g(x) = C*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 100 #number of particles.
+nP = 20 #number of particles.
 init_state_mean = init_state # initial state mean
 init_state_covar = eye(2)*1e-3 # initial covariance
 init_state_covar[4] = 4.0

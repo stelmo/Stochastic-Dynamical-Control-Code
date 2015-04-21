@@ -4,9 +4,11 @@ using PyPlot
 using NLsolve
 using Distributions
 
+# You MUST run this from the root directory
 # if nprocs() == 1
 #   info("Adding additional processes.")
 #   addprocs(CPU_CORES)
+#   # addprocs(1)
 # end
 #
 # @everywhere using Distributions

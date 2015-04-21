@@ -3,6 +3,7 @@ module PF
 # non-Gaussian Bayesian state estimation" by Gorden et al (1993).
 
 using Distributions
+using Reactor
 
 type Model
   f::Function # state transition model
@@ -117,7 +118,7 @@ end
 
 function predict!(parts, u, plantdist, model)
   # Project the particles one step forward.
-  # NOTE: this overwrite parts therefore use a dummy variable!
+  # NOTE: this overwrites parts therefore use a dummy variable!
 
   nX, nP = size(parts)
   for p=1:nP
@@ -125,6 +126,38 @@ function predict!(parts, u, plantdist, model)
       parts[:, p] = model.f(parts[:, p], u, noise) # predict
   end
 
+end
+
+function parPredict!(parts, u, plantdist, reactormodel, h)
+  # Uses the reactor function directly
+  parts = customPmap((x) -> Reactor.run_reactor(x, u, h, reactormodel) + rand(plantdist), parts)
+end
+
+function customPmap(f, arr)
+  # Custom pmap
+    np = nprocs()  # determine the number of processes available
+    nX, nP = size(arr)
+    results = zeros(nX, nP)
+    i = 1
+    # function to produce the next work item from the queue.
+    # in this case it's just an index.
+    nextidx() = (idx=i; i+=1; idx)
+    @sync begin
+        for p=1:np
+            if p != myid() || np == 1
+                @async begin
+                    while true
+                        idx = nextidx()
+                        if idx > nP
+                            break
+                        end
+                        results[:, idx] = remotecall_fetch(p, f, arr[:, idx])
+                    end
+                end
+            end
+        end
+    end
+    results
 end
 
 end # Module

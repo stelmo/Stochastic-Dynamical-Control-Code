@@ -19,7 +19,7 @@ type Solution
 end
 
 
-function fitness(particles, us, ysp, usp, Q, R, plantdist, model)
+function fitness(particles, us, ysp, usp, Q, R, plantdist, model, skip)
   # This should ideally be run a few times to get the MC expected value.
   # NOTE: we use the standard quadratic function in the expectation i.e.
   # E[(x-y)'Q(x-y)]
@@ -33,11 +33,43 @@ function fitness(particles, us, ysp, usp, Q, R, plantdist, model)
     fit = fit + particles.w[p]*((parts[:, p]-ysp)'*Q*(parts[:, p]-ysp))
   end
 
-  for n=1:N # predicted error
-    PF.predict!(parts, us[n], plantdist, model) # modifies parts
-    for p=1:nP
-      fit = fit + particles.w[p]*((parts[:, p]-ysp)'*Q*(parts[:, p]-ysp)) + (us[n]-usp)'*R*(us[n]-usp)
+  mvcounter = 1
+  for n=1:N*(1+skip)-1 # predicted error
+
+    #update mvcounter
+    if n%(1+skip) == 0
+      mvcounter += 1
     end
+
+    PF.predict!(parts, us[mvcounter], plantdist, model) # modifies parts
+    for p=1:nP
+      fit = fit + particles.w[p]*(parts[:, p]-ysp)'*Q*(parts[:, p]-ysp)
+    end
+
+    fit = fit + (us[mvcounter]-usp)'*R*(us[mvcounter]-usp)
+  end
+
+  return fit/N
+end
+
+function parFitness(particles, us, ysp, usp, Q, R, plantdist, reactormodel, h)
+  # A parallel implementation of the fitness function - suprisingly not so fast...
+  nX, nP = size(particles.x)
+  parts = copy(particles.x)
+  fit = 0.0
+  N = length(us)
+
+  for p=1:nP # initial error
+    fit = fit + particles.w[p]*((parts[p]-ysp)'*Q*(parts[p]-ysp))
+  end
+
+  for n=1:N # predicted error
+    PF.parPredict!(parts, us[n], plantdist, reactormodel, h) # modifies parts
+    for p=1:nP
+      fit = fit + particles.w[p]*((parts[p]-ysp)'*Q*(parts[p]-ysp))
+    end
+    fit = fit + (us[mvcounter]-usp)'*R*(us[mvcounter]-usp)
+
   end
 
   return fit/N
@@ -61,15 +93,15 @@ function createswarm(nP, nX, umin, umax)
   return swarm, sol
 end
 
-function initswarm(nP, nX, umin, umax, particles, ysp, usp, Q, R, plantdist, model)
+function initswarm(nP, nX, umin, umax, particles, ysp, usp, Q, R, plantdist, model, skip)
 
   swarm = Array(Particle, nP) # create swarm
   sol = Solution(randomr(nX, umin, umax), Inf)
 
   for p=1:nP
     pnow = randomr(nX, umin, umax)
-    swarm[p] = Particle(pnow, 0.5.*randomr(nX, umin, umax), 0.0, pnow)
-    swarm[p].prevbest = fitness(particles, swarm[p].pos, ysp, usp, Q, R, plantdist, model)
+    swarm[p] = Particle(pnow, randomr(nX, umin, umax), 0.0, pnow)
+    swarm[p].prevbest = fitness(particles, swarm[p].pos, ysp, usp, Q, R, plantdist, model, skip)
     if swarm[p].prevbest[1] < sol.posfit[1]
       sol.pos = swarm[p].prevbestpos
       sol.posfit = swarm[p].prevbest
@@ -78,7 +110,7 @@ function initswarm(nP, nX, umin, umax, particles, ysp, usp, Q, R, plantdist, mod
   return swarm, sol
 end
 
-function updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model)
+function updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model, skip)
 # Using optimum parameters
   nP = length(swarm)
   nX = length(swarm[1].pos)
@@ -86,7 +118,7 @@ function updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model)
     swarm[p].vel = 0.7298.*swarm[p].vel + randomr(nX, 0.0, 1.49618).*(swarm[p].prevbestpos - swarm[p].pos) +  randomr(nX, 0.0, 1.49618).*(sol.pos - swarm[p].pos)
     swarm[p].pos = swarm[p].pos + swarm[p].vel
 
-    tempfitness = fitness(particles, swarm[p].pos, ysp, usp, Q, R, plantdist, model)
+    tempfitness = fitness(particles, swarm[p].pos, ysp, usp, Q, R, plantdist, model, skip)
 
     if tempfitness[1] < sol.posfit[1]
       sol.pos = swarm[p].pos
@@ -102,12 +134,13 @@ function updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model)
 
 end
 
-function optimise!(swarm, sol, particles, ysp, usp, Q, R, plantdist,model)
+function optimise!(swarm, sol, particles, ysp, usp, Q, R, plantdist,model, skip)
   # Run the PSO
-  for k=1:50
-    updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model)
-    # println(sol.pos[1])
+  for k=1:100
+    updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model, skip)
+    # println(sol.posfit[1])
   end
+  # println("***********")
   return sol.pos[1]
 end
 
