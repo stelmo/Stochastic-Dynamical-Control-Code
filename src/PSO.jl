@@ -116,9 +116,9 @@ end
 function optimise!(swarm, sol, particles, ysp, usp, Q, R, plantdist,model, skip, h)
   # Run the PSO
 
-  for k=1:50
+  for k=1:100
     updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model, skip, h)
-    println(sol.posfit[1])
+    # println(sol.posfit[1])
   end
   # println("***********")
   return sol.pos[1]

@@ -29,7 +29,7 @@ cstr_model = begin
 end
 
 h = 0.1 # time discretisation
-tend = 200. # end simulation time
+tend = 25. # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -57,6 +57,7 @@ linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 
 
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
+numModels = length(models)
 
 nP = 1000
 initial_states = init_state
@@ -69,11 +70,13 @@ particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2
 fmeans = zeros(2, N)
 fcovars = zeros(2,2,N)
 maxtrack = zeros(length(linsystems), N)
+switchtrack = zeros(length(linsystems), N)
+
 
 # Controllers  - ysp is set here!
 QQ = zeros(2, 2)
-QQ[1] = 1000.0
-RR = 1.0
+QQ[1] = 10000.0
+RR = 0.00001
 H = [1.0 0.0]
 controllers = Array(LQR.controller, length(models))
 for k=1:length(models)
@@ -91,12 +94,17 @@ ys[:, 1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
 
 RBPF.init_filter!(particles, 0.0, ys[:, 1], models)
 fmeans[:,1], fcovars[:,:, 1] = RBPF.getMLStats(particles)
-maxtrack[:, 1] = RBPF.getMaxTrack(particles, models)
+
+for k=1:numModels
+  switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
+end
+
+maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
 # println("**************************")
 # Loop through the rest of time
 for t=2:N
-  ind = indmax(maxtrack[:, t-1]) # use this model and controller
-  us[t-1] = -controllers[ind].K*(fmeans[:, t-1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+  # ind = indmax(maxtrack[:, t-1]) # use this model and controller
+  # us[t-1] = -controllers[ind].K*(fmeans[:, t-1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
   # if us[t-1] > 6000
   #   us[t-1] = 6000
   # end
@@ -108,7 +116,12 @@ for t=2:N
   ys[:, t] = C*xs[:, t] + rand(measurements) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys[:, t], models, A)
   fmeans[:,t], fcovars[:,:, t] = RBPF.getMLStats(particles)
-  maxtrack[:, t] = RBPF.getMaxTrack(particles, models)
+
+  for k=1:numModels
+    switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
+  end
+
+  maxtrack[:, t] = RBPF.getMaxTrack(particles, numModels)
   # println("**************************")
 
 end

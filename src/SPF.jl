@@ -211,4 +211,18 @@ function getDists(linsystems::Array{Reactor.LinearReactor,1}, dist)
   return xdists
 end
 
+function getMaxTrack(particles, numSwitches)
+  maxtrack = zeros(numSwitches)
+  numParticles = length(particles.w)
+  totals = zeros(numSwitches)
+
+  for p=1:numParticles
+    totals[particles.s[p]] += particles.w[p]
+  end
+
+  maxtrack[indmax(totals)] = 1.0
+  return maxtrack
+end
+
+
 end #module

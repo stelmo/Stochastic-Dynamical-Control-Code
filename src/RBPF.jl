@@ -221,19 +221,15 @@ function getMLStats(particles::Particles)
   return mlmu, mlsigma
 end
 
-function getMaxTrack(particles, models)
-  numSwitches = length(models)
+function getMaxTrack(particles, numSwitches)
   maxtrack = zeros(numSwitches)
   numParticles = length(particles.ws)
-  tempMaxPos = 1
-  tempMax = 0.0
+  totals = zeros(numSwitches)
   for p=1:numParticles
-    if particles.ws[p] > tempMax
-      tempMax = particles.ws[p]
-      tempMaxPos = particles.ss[p]
-    end
+    totals[particles.ss[p]] += particles.ws[p]
   end
-  maxtrack[tempMaxPos] = 1.0
+
+  maxtrack[indmax(totals)] = 1.0
   return maxtrack
 end
 

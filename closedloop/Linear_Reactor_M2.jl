@@ -24,8 +24,8 @@ cstr = begin
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-h = 0.1 # time discretisation
-tend = 2000.0 # end simulation time
+h = 0.01 # time discretisation
+tend = 200.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
@@ -55,14 +55,14 @@ lin_cstr = LLDS.llds(A, B, C, Q, R) # so that the KF works
 
 # Controller
 QQ = zeros(2, 2)
-QQ[1] = 1000.0
-RR = 1.0
+QQ[1] = 10000.0
+RR = 0.00001
 H = [1.0 0.0]
 # ysp = linsystems[opoint].op[1] - b[1] # remember to adjust for ss standard
 # ysp = 0.01 - b[1]
-ysp = linsystems[1].op[1] - b[1] # Low concentration
+# ysp = linsystems[1].op[1] - b[1] # Low concentration
 # ysp = linsystems[2].op[1] - b[1] # Medium concentration
-# ysp = linsystems[3].op[1] - b[1] # High concentration
+ysp = linsystems[3].op[1] - b[1] # High concentration
 
 x_off, u_off = LQR.offset(A,B,C,H, ysp)
 K = LQR.lqr(A, B, QQ, RR)
@@ -81,6 +81,7 @@ init_covar[1] = 1e-3
 init_covar[4] = 4.
 filtermeans = zeros(2, N)
 filtercovars = zeros(2,2, N)
+
 filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(init_mean, init_covar, ys[:, 1]-b, lin_cstr)
 
 for t=2:N

@@ -59,9 +59,10 @@ meas_covar[4] = 10.
 meas_dist = MvNormal(meas_covar) # measurement distribution
 
 # Control
-R = 0.0
-Q = [1.0 0.0;0.0 0.0]
-y_ca = 0.48934869384882873 # concentration set point
+R = 0.00001 # need to scale this
+Q = [10000.0 0.0;0.0 0.0]
+# y_ca = 0.48934869384882873
+y_ca = 0.01 # concentration set point
 offres = PSO.offset(y_ca, cstr_model)
 ysp = [y_ca, offres.zero[1]]
 usp = offres.zero[2]
@@ -76,8 +77,8 @@ PF.init_filter!(particles, 0.0, ys[:, 1], meas_dist, cstr_pf)
 
 fmeans[:,1], fcovars[:,:,1] = PF.getStats(particles)
 
-skip = 10 # hold the controller output for this long
-predictionHorizon = 5 # number of controller moves
+skip = 7 # hold the controller output for this long
+predictionHorizon = 10 # number of controller moves
 swarmSize = 50
 
 # swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -500.0, 500.0, particles, ysp, usp, Q, R, state_dist, cstr_model, skip, h)
@@ -85,20 +86,20 @@ swarmSize = 50
 
 ##Loop through the rest of time
 tic()
-swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -500.0, 500.0, particles, ysp, usp, Q, R, state_dist, cstr_model, skip, h)
+swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -1000.0, 1000.0, particles, ysp, usp, Q, R, state_dist, cstr_model, skip, h)
 us[1] = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_model, skip, h)
 
 for t=2:N
   if t%skip == 0
     swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -1000.0, 1000.0, particles, ysp, usp, Q, R, state_dist, cstr_model, skip, h)
     us[t-1] = PSO.optimise!(swarm, sol, particles, ysp, usp, Q, R, state_dist, cstr_model, skip, h)
-    println("Time: ", ts[t-1])
+    # println("Time: ", ts[t-1])
   end
   if t%skip != 0 && t != 2
     us[t-1] = us[t-2]
   end
 
-  println("Controller Input: ", us[t-1])
+  # println("Controller Input: ", us[t-1])
 
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
   ys[:, t] = C*xs[:, t] + rand(meas_dist) # measured from actual plant
@@ -106,6 +107,7 @@ for t=2:N
   fmeans[:,t], fcovars[:,:,t] = PF.getStats(particles)
 end
 toc()
+
 skipm = 20
 rc("font", family="serif", size=24)
 skip = 150
