@@ -63,7 +63,7 @@ for t=2:N
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
   maxtrack[:, t] = RBPF.getMaxTrack(particles, numModels)
-  smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 5)
+  smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 10)
 
   # Controller Input
   # ind = indmax(maxtrack[:, t-1]) # use this model and controller
