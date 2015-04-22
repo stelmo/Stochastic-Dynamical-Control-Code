@@ -34,14 +34,14 @@ N = length(ts)
 xs = zeros(2, N)
 ys = zeros(2, N) # only one measurement
 
-init_state = [0.5; 400] # initial state
+init_state = [0.5; 450] # initial state
 C = eye(2) # observe both states
 R = eye(2)
 R[1] = 1e-3
 R[4] = 10.0
 Q = eye(2)
-Q[1] = 1e-5
-Q[4] = 4.0
+Q[1] = 1e-6
+Q[4] = 0.1
 
 # Divide state space into sectors: n by m
 nX = 2 # rows
@@ -60,6 +60,7 @@ linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 # linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 
 models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
+numModels = length(models)
 
 nP = 500
 initial_states = init_state
@@ -91,7 +92,7 @@ filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(initial_states-b, ini
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
 end
-maxtrack[:, 1] = RBPF.getMaxTrack(particles, models)
+maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
 
 # Loop through the rest of time
 for t=2:N
@@ -106,7 +107,7 @@ for t=2:N
   for k=1:length(linsystems)
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
-  maxtrack[:, t] = RBPF.getMaxTrack(particles, models)
+  maxtrack[:, t] = RBPF.getMaxTrack(particles, numModels)
 
 end
 

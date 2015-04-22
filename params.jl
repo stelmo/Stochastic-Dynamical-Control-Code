@@ -36,7 +36,7 @@ tend = 50.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)
-ys1 = zeros(2, N) # only measure temperature
+ys1 = zeros(N) # only measure temperature
 ys2 = zeros(2, N) # measure both concentration and temperature
 us = zeros(N) # controller input
 

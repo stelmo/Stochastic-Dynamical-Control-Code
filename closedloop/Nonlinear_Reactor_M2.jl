@@ -48,7 +48,7 @@ pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -1000.0, 1000.0, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h)
 us[1] = PSO.optimise!(swarm, sol, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h)
 
-for t=2:50
+for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, pf_cstr)
