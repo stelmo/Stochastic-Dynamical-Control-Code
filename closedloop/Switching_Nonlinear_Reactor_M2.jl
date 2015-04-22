@@ -40,9 +40,9 @@ cstr2 = begin # slower reaction rate
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-initial_states = [0.5; 450] # initial state
+initial_states = [0.5; 400] # initial state
 h = 0.1 # time discretisation
-tend = 150.0 # end simulation time
+tend = 50.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N)

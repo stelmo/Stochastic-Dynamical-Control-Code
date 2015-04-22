@@ -5,6 +5,8 @@
 # the folder: literature/control on dropbox
 module Reactor
 
+using NLsolve
+
 type reactor
   # Supplies the parameters of the reactor. They may change i.e. drift...
   V :: Float64
@@ -177,5 +179,35 @@ function getLinearSystems_randomly(npoints, xspace, yspace, h, model::reactor)
 
   return linsystems
 end
+
+function getNominalLinearSystems(h, model::reactor)
+  # Returns an array of linearised systems
+
+  linsystems = Array(LinearReactor, 3)
+
+  #Get the steady state points
+  xguess1 = [0.073, 493.0]
+  xguess2 = [0.21, 467.0]
+  xguess3 = [0.999, 310.0]
+  f!(x, xvec) = Reactor.reactor_func!(x, 0.0, model, xvec)
+
+  xx1res = nlsolve(f!, xguess1)
+  xx2res = nlsolve(f!, xguess2)
+  xx3res = nlsolve(f!, xguess3)
+
+  ops = zeros(length(xx1res.zero), 3)
+  ops[:, 1] = xx1res.zero
+  ops[:, 2] = xx2res.zero
+  ops[:, 3] = xx3res.zero
+
+  for k=1:3
+    op = ops[:, k]
+    A, B, b = linearise(op, h, model)
+    linsystems[k] = LinearReactor(op, A, B, b)
+  end
+
+  return linsystems
+end
+
 
 end # module
