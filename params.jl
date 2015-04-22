@@ -37,7 +37,7 @@ cstr_model_broken = begin
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e6 #1/min <= the catalyst has denatured
+  k0 = 0.5*72.0e7 #1/min <= the catalyst has denatured
   E = 8.314e4 #kJ/kmol
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3
@@ -60,7 +60,7 @@ us = zeros(N) # controller input
 # Noise settings
 Q = eye(2) # plant noise
 Q[1] = 1e-06
-Q[4] = 0.01
+Q[4] = 0.1
 
 R1 = 10.0 # measurement noise (only temperature)
 R2 = eye(2) # measurement noise (both concentration and temperature)

@@ -3,7 +3,7 @@
 
 include("../params.jl") # load all the parameters and modules
 
-initial_states = [0.5; 400] # initial state
+initial_states = [0.5; 450] # initial state
 
 # Setup Switching Particle Filter
 A = [0.9 0.1;0.1 0.9]
@@ -49,7 +49,7 @@ lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint
 H = [1.0 0.0]
 controllers = Array(LQR.controller, 2)
 for k=1:2
-  ysp = 0.48 - lin_models[k].b[1] # set point is set here
+  ysp = 0.4 - lin_models[k].b[1] # set point is set here
   x_off, u_off = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, ysp)
   K = LQR.lqr(lin_models[k].A, lin_models[k].B, QQ, RR)
   controllers[k] = LQR.controller(K, x_off, u_off)
@@ -65,7 +65,7 @@ for k=1:2
   switchtrack[k, 1] = sum(particles.w[find((x)->x==k, particles.s)])
 end
 maxtrack[:, 1] = SPF.getMaxTrack(particles, numSwitches)
-smoothedtrack[:, 1] = RBPF.smoothedTrack(numSwitches, switchtrack, 1, 20)
+smoothedtrack[:, 1] = RBPF.smoothedTrack(numSwitches, switchtrack, 1, 10)
 
 spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 
@@ -77,7 +77,7 @@ us[1] = -controllers[ind].K*(spfmeans[:, 1] - lin_models[ind].b - controllers[in
 for t=2:N
 
   random_element = rand(state_noise_dist)
-  if ts[t] < 200.0 # break here
+  if ts[t] < 50 # break here
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
     xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
   else
@@ -93,7 +93,7 @@ for t=2:N
     switchtrack[k, t] = sum(particles.w[find((x)->x==k, particles.s)])
   end
   maxtrack[:, t] = SPF.getMaxTrack(particles, numSwitches)
-  smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 20)
+  smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 10)
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
