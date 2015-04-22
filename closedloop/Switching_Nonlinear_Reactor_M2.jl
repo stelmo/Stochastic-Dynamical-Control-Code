@@ -1,66 +1,15 @@
-# Implement the augmented switching dynamical system
+# Control using two nonlinear models and measuring both states
 
-using SPF
-using Reactor
-using Ellipse
-using LLDS
-
-# Add a definition for convert to make our lives easier!
-# But be careful now!
-function Base.convert(::Type{Float64}, x::Array{Float64, 1})
-  return x[1]
-end
-
-# Specify the nonlinear model
-cstr1 = begin
-  V = 5.0 #m3
-  R = 8.314 #kJ/kmol.K
-  CA0 = 1.0 #kmol/m3
-  TA0 = 310.0 #K
-  dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e7 #1/min
-  E = 8.314e4 #kJ/kmol
-  Cp = 0.239 #kJ/kgK
-  rho = 1000.0 #kg/m3
-  F = 100e-3 #m3/min
-  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
-end
-
-cstr2 = begin # slower reaction rate
-  V = 5.0 #m3
-  R = 8.314 #kJ/kmol.K
-  CA0 = 1.0 #kmol/m3
-  TA0 = 310.0 #K
-  dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e6 #1/min # changed here!
-  E = 8.314e4 #kJ/kmol
-  Cp = 0.239 #kJ/kgK # changed here!
-  rho = 1000.0 #kg/m3
-  F = 100e-3 #m3/min
-  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
-end
+include("../params.jl") # load all the parameters and modules
 
 initial_states = [0.5; 400] # initial state
-h = 0.1 # time discretisation
-tend = 50.0 # end simulation time
-ts = [0.0:h:tend]
-N = length(ts)
-xs = zeros(2, N)
-xsnofix = zeros(2, N)
-ys = zeros(2, N)
 
-newC = eye(2)
-R = eye(2)
-R[1] = 1e-3
-R[4] = 10.
-Q = eye(2)
-Q[1] = 1e-6
-Q[4] = 0.01
 
+# Setup Switching Particle Filter
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
-fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr1)
-fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr2)
+fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model)
+fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken)
 gs(x) = newC*x
 F = [fun1, fun2]
 G = [gs, gs]
@@ -105,11 +54,11 @@ for t=2:N
 
   random_element = rand(state_dist)
   if ts[t] < 5.0
-    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
-    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
   else
-    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr2) + random_element
-    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr1) + random_element # actual plant
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model_broken) + random_element
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
   end
 
   ys[:, t] = newC*xs[:, t] + rand(measurements) # measured from actual plant

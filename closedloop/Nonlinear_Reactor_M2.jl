@@ -1,5 +1,5 @@
 # Control using the nonlinear reactor model measuring both concentration and temperature
-
+# NOTE: this is very slow: 1 min simulated costs about 3 min in real life (parameter dependent)
 include("../params.jl") # load all the parameters and modules
 
 # Set up the PF
@@ -38,6 +38,7 @@ usp = offres.zero[2]
 skip = 7 # hold the controller output for this long
 predictionHorizon = 10 # number of controller moves predicted/optimised (control horizon)
 swarmSize = 50 # number of particles in the swarm
+swarmOptRepeat = 100 # high is better but it slows everything down
 
 # Time step 1
 xs[:,1] = init_state
@@ -46,7 +47,7 @@ PF.init_filter!(particles, 0.0, ys2[:, 1], meas_noise_dist, pf_cstr)
 pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 # Controlle action
 swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -1000.0, 1000.0, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h)
-us[1] = PSO.optimise!(swarm, sol, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h)
+us[1] = PSO.optimise!(swarm, sol, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h, swarmOptRepeat)
 
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant

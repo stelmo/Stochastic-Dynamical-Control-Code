@@ -113,10 +113,10 @@ function updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model, s
 
 end
 
-function optimise!(swarm, sol, particles, ysp, usp, Q, R, plantdist,model, skip, h)
+function optimise!(swarm, sol, particles, ysp, usp, Q, R, plantdist,model, skip, h, swarmOptRepeat)
   # Run the PSO
 
-  for k=1:100
+  for k=1:swarmOptRepeat
     updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model, skip, h)
     # println(sol.posfit[1])
   end

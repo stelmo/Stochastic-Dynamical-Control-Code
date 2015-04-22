@@ -30,6 +30,21 @@ cstr_model = begin
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
+# Specify the nonlinear model
+cstr_model_broken = begin
+  V = 5.0 #m3
+  R = 8.314 #kJ/kmol.K
+  CA0 = 1.0 #kmol/m3
+  TA0 = 310.0 #K
+  dH = -4.78e4 #kJ/kmol
+  k0 = 72.0e6 #1/min <= the catalyst has denatured
+  E = 8.314e4 #kJ/kmol
+  Cp = 0.239 #kJ/kgK
+  rho = 1000.0 #kg/m3
+  F = 100e-3 #m3/min
+  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
+end
+
 # Discretise the system
 h = 0.1 # time discretisation
 tend = 20.0 # end simulation time
@@ -37,6 +52,7 @@ ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
 linxs = zeros(2, N) # linear plant
+xsnofix = zeros(2, N) # broken plant
 ys1 = zeros(N) # only measure temperature
 ys2 = zeros(2, N) # measure both concentration and temperature
 us = zeros(N) # controller input
