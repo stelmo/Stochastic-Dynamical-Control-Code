@@ -1,5 +1,6 @@
-# Julia Scripts
-This folder contains all the scripts used to generate the figures as shown in my masters.
+# Open Loop Systems
+
+This folder contains all the scripts used to generate the openloop figures as shown in my masters.
 
 ### Burglar Example: Analytic Hidden Markov Model Inference
 
