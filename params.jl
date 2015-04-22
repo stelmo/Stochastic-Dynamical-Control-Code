@@ -30,7 +30,7 @@ cstr_model = begin
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-# Specify the nonlinear model
+# Specify the nonlinear model of the broken plant
 cstr_model_broken = begin
   V = 5.0 #m3
   R = 8.314 #kJ/kmol.K
@@ -60,7 +60,7 @@ us = zeros(N) # controller input
 # Noise settings
 Q = eye(2) # plant noise
 Q[1] = 1e-06
-Q[4] = 0.1
+Q[4] = 0.01
 
 R1 = 10.0 # measurement noise (only temperature)
 R2 = eye(2) # measurement noise (both concentration and temperature)

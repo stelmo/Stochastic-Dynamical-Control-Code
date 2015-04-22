@@ -1,4 +1,5 @@
 # Control using two nonlinear models and measuring both states
+# NOTE: remember to adjust the model noise parameter
 
 include("../params.jl") # load all the parameters and modules
 
@@ -7,18 +8,18 @@ initial_states = [0.5; 400] # initial state
 # Setup Switching Particle Filter
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
-fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model)
-fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken)
+fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
+fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
 gs(x) = C2*x
 F = [fun1, fun2]
 G = [gs, gs]
 numSwitches = 2
 
-ydists = [MvNormal(R2);MvNormal(R2)]
+ydists = [MvNormal(R2); MvNormal(R2)]
 xdists = [MvNormal(Q); MvNormal(Q)]
 cstr_filter = SPF.Model(F, G, A, xdists, ydists)
 
-nP = 2000 # number of particles
+nP = 1000 # number of particles
 initial_covar = eye(2)
 initial_covar[1] = 1e-3
 initial_covar[4] = 4.0
@@ -64,7 +65,7 @@ for k=1:2
   switchtrack[k, 1] = sum(particles.w[find((x)->x==k, particles.s)])
 end
 maxtrack[:, 1] = SPF.getMaxTrack(particles, numSwitches)
-smoothedtrack[:, 1] = RBPF.smoothedTrack(numSwitches, switchtrack, 1, 10)
+smoothedtrack[:, 1] = RBPF.smoothedTrack(numSwitches, switchtrack, 1, 20)
 
 spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 
@@ -76,7 +77,7 @@ us[1] = -controllers[ind].K*(spfmeans[:, 1] - lin_models[ind].b - controllers[in
 for t=2:N
 
   random_element = rand(state_noise_dist)
-  if ts[t] < 20.0 # break here
+  if ts[t] < 200.0 # break here
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
     xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
   else
@@ -92,7 +93,7 @@ for t=2:N
     switchtrack[k, t] = sum(particles.w[find((x)->x==k, particles.s)])
   end
   maxtrack[:, t] = SPF.getMaxTrack(particles, numSwitches)
-  smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 10)
+  smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 20)
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
@@ -100,30 +101,10 @@ for t=2:N
 
 end
 
-
 # Plot results
-
 rc("font", family="serif", size=24)
 
 figure(1)
-axes = Array(Any, numSwitches)
-im = 0
-width = 500
-for k=1:numSwitches
-  ax = subplot(numSwitches, 1, k)
-  axes[k] = ax
-  im = imshow(repeat(maxtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
-  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
-  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string("S::",k))
-end
-tick_params(axis="x", labelbottom = "on")
-xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-# colorbar(im, ax=axes)
-xlabel("Time [min]")
-
-
-figure(2)
 axes = Array(Any, numSwitches)
 im = 0
 width = 500
@@ -140,29 +121,10 @@ xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
 xlabel("Time [min]")
 
 
-# figure(1)
-# maxswitch = maximum(switchtrack)
-# axes = Array(Any, 2)
-# im = 0
-# width = 500
-# for k=1:2
-#   ax = subplot(2, 1, k)
-#   axes[k] = ax
-#   im = imshow(repeat(switchtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=maxswitch, interpolation="nearest", aspect="auto")
-#   tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
-#   tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-#   ylabel(string("S::",k))
-# end
-# tick_params(axis="x", labelbottom = "on")
-# xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-# colorbar(im, ax=axes)
-# xlabel("Time [min]")
-
-
 skip = int(length(ts)/20)
 skipm = int(length(ts)/20)
 figure(3) # Plot filtered results
-subplot(2,1,1)
+subplot(3,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 x1nf, = plot(ts, xsnofix[1,:]', "g--", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys2[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
@@ -170,22 +132,16 @@ k1, = plot(ts, spfmeans[1,:]', "r--", linewidth=3)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
 xlim([0, tend])
-subplot(2,1,2)
+subplot(3,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 x2nf, = plot(ts, xsnofix[2,:]', "g--", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys2[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts, spfmeans[2,:]', "r--", linewidth=3)
 ylabel("Temperature [K]")
-xlabel("Time [min]")
 legend([y2, x2nf],["Nonlinear Model Measured","Nonlinear Model No Switch"], loc="best")
 xlim([0, tend])
-subplot(2,1,2)
-x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-x2nf, = plot(ts, xsnofix[2,:]', "g--", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys2[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts, spfmeans[2,:]', "r--", linewidth=3)
-ylabel("Temperature [K]")
+subplot(3,1,3)
+plot(ts, us)
+ylabel("Controller Input")
 xlabel("Time [min]")
-legend([y2, x2nf],["Nonlinear Model Measured","Nonlinear Model No Switch"], loc="best")
 xlim([0, tend])
-rc("font",size=22)

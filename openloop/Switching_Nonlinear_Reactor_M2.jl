@@ -40,7 +40,7 @@ cstr2 = begin # slower reaction rate
   Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
 end
 
-initial_states = [0.5; 450] # initial state
+initial_states = [0.5; 400] # initial state
 h = 0.1 # time discretisation
 tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
@@ -55,12 +55,12 @@ R[1] = 1e-3
 R[4] = 10.
 Q = eye(2)
 Q[1] = 1e-6
-Q[4] = 0.01
+Q[4] = 0.1
 
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
-fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr1)
-fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr2)
+fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr1) + w
+fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr2) + w
 gs(x) = newC*x
 F = [fun1, fun2]
 G = [gs, gs]

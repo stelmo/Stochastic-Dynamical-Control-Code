@@ -65,8 +65,8 @@ Q[4] = 0.01
 A = [0.9 0.1;0.1 0.9]
 # A = [0.5 0.5;0.5 0.5]
 
-fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr1)
-fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr2)
+fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr1) + w
+fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr2) + w
 F = [fun1, fun2]
 
 gs1(x) = C1*x
