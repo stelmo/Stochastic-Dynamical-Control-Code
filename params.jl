@@ -32,10 +32,11 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-tend = 150.0 # end simulation time
+tend = 20.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
-xs = zeros(2, N)
+xs = zeros(2, N) # nonlinear plant
+linxs = zeros(2, N) # linear plant
 ys1 = zeros(N) # only measure temperature
 ys2 = zeros(2, N) # measure both concentration and temperature
 us = zeros(N) # controller input

@@ -6,7 +6,7 @@ include("../params.jl") # load all the parameters and modules
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
 opoint = 2 # the specific operating point we are going to use for control
 
-init_state = linsystems[opoint].op + rand(-1:2:1)*rand(2).*[0.2, 10] # random initial point near operating point
+init_state = [0.5, 450] # random initial point near operating point
 
 # Set the state space model
 A = linsystems[opoint].A
@@ -17,7 +17,7 @@ b = linsystems[opoint].b # offset from the origin
 # ysp = linsystems[1].op[1] - b[1] # Low concentration
 ysp = linsystems[2].op[1] - b[1] # Medium concentration
 # ysp = linsystems[3].op[1] - b[1] # High concentration
-ysp = 0.7 - b[1] # Medium concentration
+# ysp = 0.1 - b[1]
 
 # Create the controller
 H = [1.0 0.0] # only attempt to control the concentration
@@ -50,11 +50,6 @@ for t=2:N
 
   # Compute controller action
   us[t] = -K*(kfmeans[:, t] - x_off) + u_off # controller action
-  # if t%10 == 0
-  #   us[t-1] = -K*(kfmeans[:, t-1] - x_off) + u_off # controller action
-  # else
-  #   us[t-1] = us[t-2]
-  # end
 
 end
 kfmeans = kfmeans .+ b

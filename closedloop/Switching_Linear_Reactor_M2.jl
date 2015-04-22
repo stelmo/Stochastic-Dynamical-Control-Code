@@ -28,7 +28,7 @@ smoothedtrack = zeros(length(linsystems), N)
 H = [1.0 0.0]
 controllers = Array(LQR.controller, length(models))
 for k=1:length(models)
-  ysp = 0.48 - models[k].b[1] # set point is set here
+  ysp = 0.1 - models[k].b[1] # set point is set here
   x_off, u_off = LQR.offset(models[k].A,models[k].B, C2, H, ysp)
   K = LQR.lqr(models[k].A, models[k].B, QQ, RR)
   controllers[k] = LQR.controller(K, x_off, u_off)
@@ -49,11 +49,11 @@ maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
 smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
-# insert (hopefully)!
+ind = indmax(smoothedtrack[:, 1]) # use this model and controller
+us[1] = -controllers[ind].K*(rbpfmeans[:, 1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
 
 #Loop through the rest of time
 for t=2:N
-
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys2[:, t], models, A)
@@ -66,14 +66,8 @@ for t=2:N
   smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 10)
 
   # Controller Input
-  # ind = indmax(maxtrack[:, t-1]) # use this model and controller
-  # us[t-1] = -controllers[ind].K*(rbpfmeans[:, t-1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
-  # if us[t-1] > 6000
-  #   us[t-1] = 6000
-  # end
-  # if us[t-1] < -6000
-  #   us[t-1] = -6000
-  # end
+  ind = indmax(smoothedtrack[:, t]) # use this model and controller
+  us[t] = -controllers[ind].K*(rbpfmeans[:, t] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
 
 end
 
@@ -135,7 +129,7 @@ xlabel("Time [min]")
 figure(4) # Tracking
 skip = int(length(ts)/75)
 skipm = skip
-subplot(2,1,1)
+subplot(3,1,1)
 x1, = plot(ts, xs[1,:]', "k", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys2[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
 k1, = plot(ts[1:skip:end], rbpfmeans[1, 1:skip:end]', "r--",linewidth=3)
@@ -143,11 +137,15 @@ ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1],["Nonlinear Model"], loc="best")
 xlim([0, tend])
 ylim([0, 1])
-subplot(2,1,2)
+subplot(3,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
 y2, = plot(ts[1:skipm:end], ys2[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
 k2, = plot(ts[1:skip:end], rbpfmeans[2, 1:skip:end]', "r--",linewidth=3)
 ylabel("Temperature [K]")
-xlabel("Time [min]")
 legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
+xlim([0, tend])
+subplot(3,1,3)
+x2, = plot(ts, us)
+ylabel("Temperature [K]")
+xlabel("Time [min]")
 xlim([0, tend])
