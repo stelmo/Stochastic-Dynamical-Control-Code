@@ -6,6 +6,11 @@ init_state = [0.5; 450] # initial state
 
 # Get the three linear models about the nominal operating points
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
+# xspace = [0.0, 1.0]
+# yspace = [250, 500]
+# nX = 2 # rows
+# nY = 2 # cols
+# linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 
 # Setup the RBPF
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
@@ -28,7 +33,7 @@ smoothedtrack = zeros(length(linsystems), N)
 H = [1.0 0.0]
 controllers = Array(LQR.controller, length(models))
 for k=1:length(models)
-  ysp = 0.01 - models[k].b[1] # set point is set here
+  ysp = 0.48 - models[k].b[1] # set point is set here
   x_off, u_off = LQR.offset(models[k].A,models[k].B, C2, H, ysp)
   K = LQR.lqr(models[k].A, models[k].B, QQ, RR)
   controllers[k] = LQR.controller(K, x_off, u_off)

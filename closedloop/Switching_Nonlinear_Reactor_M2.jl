@@ -97,7 +97,7 @@ for t=2:N
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   us[t] = -controllers[ind].K*(spfmeans[:, t] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
-  
+
 end
 
 
@@ -169,6 +169,15 @@ y2, = plot(ts[1:skipm:end], ys2[1, 1:skipm:end][:], "kx", markersize=5, markered
 k1, = plot(ts, spfmeans[1,:]', "r--", linewidth=3)
 ylabel(L"Concentration [kmol.m$^{-3}$]")
 legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+xlim([0, tend])
+subplot(2,1,2)
+x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+x2nf, = plot(ts, xsnofix[2,:]', "g--", linewidth=3)
+y2, = plot(ts[1:skipm:end], ys2[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+k2, = plot(ts, spfmeans[2,:]', "r--", linewidth=3)
+ylabel("Temperature [K]")
+xlabel("Time [min]")
+legend([y2, x2nf],["Nonlinear Model Measured","Nonlinear Model No Switch"], loc="best")
 xlim([0, tend])
 subplot(2,1,2)
 x2, = plot(ts, xs[2,:]', "k", linewidth=3)
