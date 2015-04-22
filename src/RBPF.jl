@@ -233,6 +233,33 @@ function getMaxTrack(particles, numSwitches)
   return maxtrack
 end
 
+function smoothedTrack(numSwitches, switchtrack, ind, N)
+  # returns a smoothed version of maxtrack given the history of the switch movements
+  sN = getHistory(ind, N) # number of time intervals backwards we look
+  modswitchtrack = sum(switchtrack[:, ind-sN:ind], 2)
+  modmaxtrack = zeros(numSwitches)
+  modmaxtrack[indmax(modswitchtrack)] = 1.0
+  return modmaxtrack
+end
+
+function getHistory(ind, N)
+  history = 0
+  flag = true
+
+  for k=1:N
+    if ind-k == 0
+      history = k
+      flag = false
+      break
+    end
+  end
+
+  if flag
+    history = N
+  end
+
+  return history-1
+end
 
 function getInitialSwitches(initial_states, linsystems::Array{Reactor.LinearReactor,1})
   N = length(linsystems)

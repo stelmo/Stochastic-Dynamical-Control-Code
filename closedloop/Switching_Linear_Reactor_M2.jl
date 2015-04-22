@@ -2,7 +2,7 @@
 
 include("../params.jl") # load all the parameters and modules
 
-init_state = [0.5; 400] # initial state
+init_state = [0.5; 450] # initial state
 
 # Get the three linear models about the nominal operating points
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
@@ -22,6 +22,7 @@ particles = RBPF.init_RBPF(Categorical(sguess), init_state, initial_covar, 2, nP
 
 maxtrack = zeros(length(linsystems), N) # keep track of the most likely model
 switchtrack = zeros(length(linsystems), N) # keep track of the model/switch distribution
+smoothedtrack = zeros(length(linsystems), N)
 
 # Setup the controllers
 H = [1.0 0.0]
@@ -45,8 +46,10 @@ for k=1:numModels
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
 end
 maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
+smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
+# insert (hopefully)!
 
 #Loop through the rest of time
 for t=2:N
@@ -60,6 +63,7 @@ for t=2:N
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
   maxtrack[:, t] = RBPF.getMaxTrack(particles, numModels)
+  smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 5)
 
   # Controller Input
   # ind = indmax(maxtrack[:, t-1]) # use this model and controller
@@ -111,7 +115,24 @@ xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
 # colorbar(im, ax=axes)
 xlabel("Time [min]")
 
-figure(3) # Tracking
+figure(3) # Model selection
+axes = Array(Any, length(linsystems))
+im = 0
+width = 500
+for k=1:length(linsystems)
+  ax = subplot(length(linsystems), 1, k)
+  axes[k] = ax
+  im = imshow(repeat(smoothedtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
+  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
+  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
+  ylabel(string("S::",k))
+end
+tick_params(axis="x", labelbottom = "on")
+xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
+# colorbar(im, ax=axes)
+xlabel("Time [min]")
+
+figure(4) # Tracking
 skip = int(length(ts)/75)
 skipm = skip
 subplot(2,1,1)

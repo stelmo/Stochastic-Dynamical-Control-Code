@@ -17,6 +17,7 @@ b = linsystems[opoint].b # offset from the origin
 # ysp = linsystems[1].op[1] - b[1] # Low concentration
 ysp = linsystems[2].op[1] - b[1] # Medium concentration
 # ysp = linsystems[3].op[1] - b[1] # High concentration
+ysp = 0.7 - b[1] # Medium concentration
 
 # Create the controller
 H = [1.0 0.0] # only attempt to control the concentration
@@ -31,7 +32,7 @@ kfmeans = zeros(2, N)
 kfcovars = zeros(2,2, N)
 
 # Filter initialisation
-init_mean = init_state - b
+init_mean = init_state - b # state space offset
 init_covar = eye(2)
 init_covar[1] = 1e-3
 init_covar[4] = 4.
@@ -83,5 +84,6 @@ xlim([0, tend])
 ylim([minimum(xs[2,:]), maximum(xs[2,:])])
 subplot(3,1,3)
 plot(ts, us)
+xlim([0, tend])
 xlabel("Time [min]")
 ylabel("Controller Input")

@@ -4,7 +4,7 @@ Code for M. Eng. in Control Engineering
 ## Required Internal Modules:
 
 **NB: Run the script `init_sys.jl` at startup to load all the required modules!**
-**NB: Run the script `params.jl` before each simulation to update the parameters!**
+**NB: Run the script `params.jl` before each simulation to update the parameters as required!**
 
 ## Required External Julia Packages:
 

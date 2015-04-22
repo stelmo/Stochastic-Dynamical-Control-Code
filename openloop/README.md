@@ -1,11 +1,10 @@
 # Open Loop Systems
 
-This folder contains all the scripts used to generate the openloop figures as shown in my masters.
+This folder contains all the scripts used to generate the open loop figures as shown in my masters.
 
 ### Burglar Example: Analytic Hidden Markov Model Inference
 
 1. Execute `HMM_burglar_example.jl` to generate the HMM figures.  
-
 
 ### Linear Reactor: Kalman Filtering and Prediction
 
