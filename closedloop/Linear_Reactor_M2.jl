@@ -28,19 +28,11 @@ K = LQR.lqr(A, B, QQ, RR) # controller
 kf_cstr = LLDS.llds(A, B, C2, Q, R2) # set up the KF object (measuring both states)
 state_noise_dist = MvNormal(Q)
 meas_noise_dist = MvNormal(R2)
-kfmeans = zeros(2, N)
-kfcovars = zeros(2,2, N)
-
-# Filter initialisation
-init_mean = init_state - b # state space offset
-init_covar = eye(2)
-init_covar[1] = 1e-3
-init_covar[4] = 4.
 
 # First time step of the simulation
 xs[:,1] = init_state # set simulation starting point to the random initial state
 ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measure from actual plant
-kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_mean, init_covar, ys2[:, 1]-b, kf_cstr) # filter
+kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys2[:, 1]-b, kf_cstr) # filter
 us[1] = -K*(kfmeans[:, 1] - x_off) + u_off # controller action
 
 for t=2:N

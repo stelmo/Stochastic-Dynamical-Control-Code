@@ -20,15 +20,9 @@ xdists = [MvNormal(Q); MvNormal(Q)]
 cstr_filter = SPF.Model(F, G, A, xdists, ydists)
 
 nP = 1000 # number of particles
-initial_covar = eye(2)
-initial_covar[1] = 1e-3
-initial_covar[4] = 4.0
-xdist = MvNormal(initial_states, initial_covar)
+xdist = MvNormal(init_state, init_state_covar)
 sdist = Categorical([0.9, 0.1])
 particles = SPF.init_SPF(xdist, sdist, nP, 2)
-
-spfmeans = zeros(2, N)
-spfcovars = zeros(2,2, N)
 
 switchtrack = zeros(numSwitches, N)
 maxtrack = zeros(numSwitches, N)
@@ -56,8 +50,8 @@ for k=1:2
 end
 
 # Setup simulation
-xs[:,1] = initial_states
-xsnofix[:,1] = initial_states
+xs[:, 1] = initial_states
+xsnofix[:, 1] = initial_states
 ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
 SPF.init_filter!(particles, 0.0, ys2[:, 1], cstr_filter)
 

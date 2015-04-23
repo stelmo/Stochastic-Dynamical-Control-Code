@@ -11,22 +11,12 @@ pf_cstr = PF.Model(f,g) # PF object
 init_state = [0.5; 400] # initial state
 
 # Initialise the PF
-pfmeans = zeros(2, N)
-pfcovars = zeros(2,2, N)
 nP = 20 # number of particles.
-init_state_mean = init_state # initial state mean
-init_state_covar = eye(2)*1e-3 # initial covariance
-init_state_covar[4] = 4.0
-init_dist = MvNormal(init_state_mean, init_state_covar) # prior distribution
+init_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
-state_covar = eye(2) # state covariance
-state_covar[1] = 1e-5
-state_covar[2] = 0.1
-state_noise_dist = MvNormal(state_covar) # state distribution
-meas_covar = eye(2)
-meas_covar[1] = 1e-3
-meas_covar[4] = 10.
-meas_noise_dist = MvNormal(meas_covar) # measurement distribution
+
+state_noise_dist = MvNormal(Q) # state distribution
+meas_noise_dist = MvNormal(R2) # measurement distribution
 
 # Controller setup
 y_ca = 0.7 # concentration set point (0.48934869384882873)

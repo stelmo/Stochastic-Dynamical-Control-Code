@@ -16,14 +16,9 @@ linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
 numModels = length(models) # number of linear models (will be 3)
 nP = 1000 # number of particles
-rbpfmeans = zeros(2, N)
-rbpfcovars = zeros(2,2,N)
 
-initial_covar = eye(2) # prior covariance (init_state is the prior mean)
-initial_covar[1] = 1e-3
-initial_covar[4] = 4.0
 sguess =  RBPF.getInitialSwitches(init_state, linsystems) # prior switch distribution
-particles = RBPF.init_RBPF(Categorical(sguess), init_state, initial_covar, 2, nP)
+particles = RBPF.init_RBPF(Categorical(sguess), init_state, init_state_covar, 2, nP)
 
 maxtrack = zeros(length(linsystems), N) # keep track of the most likely model
 switchtrack = zeros(length(linsystems), N) # keep track of the model/switch distribution

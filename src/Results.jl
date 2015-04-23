@@ -176,5 +176,29 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   xlim([0, tend])
 end
 
+function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means, f1name, f2name)
+
+  skipm = int(length(ts)/20)
+  skip = int(length(ts)/20)
+  tend = ts[end]
+  figure() # Plot filtered results
+  subplot(2,1,1)
+  x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+  k1, = plot(ts[1:skip:end], f1means[1,1:skip:end]', "rx", markersize=5, markeredgewidth=2)
+  y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+  k12, = plot(ts[1:skip:end], f2means[1, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
+  ylabel(L"Concentration [kmol.m$^{-3}$]")
+  legend([x1, k1],["Nonlinear Model","$(f1name)"], loc="best")
+  xlim([0, tend])
+  subplot(2,1,2)
+  x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+  y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+  k2, = plot(ts[1:skip:end], f1means[2,1:skip:end]', "rx", markersize=5, markeredgewidth=2)
+  k22, = plot(ts[1:skip:end], f2means[2, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
+  ylabel("Temperature [K]")
+  xlabel("Time [min]")
+  legend([y2, k22],["Nonlinear Model Measured", "$(f2name)"], loc="best")
+  xlim([0, tend])
+end
 
 end #module
