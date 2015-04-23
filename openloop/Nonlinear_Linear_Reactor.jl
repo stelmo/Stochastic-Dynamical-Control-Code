@@ -16,7 +16,7 @@ lin_cstr = LLDS.llds(A, B, C2, Q, R2) # KF object
 
 # Setup the PF
 f(x, u, w) = A*x + B*u + w
-g(x) = C2*x# state observation
+g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 nP = 500 #number of particles.
 

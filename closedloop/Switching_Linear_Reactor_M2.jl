@@ -76,81 +76,11 @@ for t=2:N
 
 end
 
-
 # Plot results
-rc("font", family="serif", size=24)
+Results.plotStateSpaceSwitch(linsystems, xs)
 
-figure(1) # Model and state space
-for k=1:length(linsystems)
-  plot(linsystems[k].op[1],linsystems[k].op[2],"kx",markersize=5, markeredgewidth=1)
-annotate(string("Switch: ", k),
-      xy=[linsystems[k].op[1],linsystems[k].op[2]],
-      xytext=[linsystems[k].op[1],linsystems[k].op[2]],
-      fontsize=22.0,
-      ha="center",
-      va="bottom")
-end
-plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
-plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-xlim([-0.1, 1.1])
-xlabel(L"Concentration [kmol.m$^{-3}$]")
-ylabel("Temperature [K]")
+Results.plotSwitchSelection(numModels, maxtrack, ts, false)
 
-figure(2) # Model selection
-axes = Array(Any, length(linsystems))
-im = 0
-width = 500
-for k=1:length(linsystems)
-  ax = subplot(length(linsystems), 1, k)
-  axes[k] = ax
-  im = imshow(repeat(maxtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
-  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
-  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string("S::",k))
-end
-tick_params(axis="x", labelbottom = "on")
-xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-# colorbar(im, ax=axes)
-xlabel("Time [min]")
+Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
-figure(3) # Model selection
-axes = Array(Any, length(linsystems))
-im = 0
-width = 500
-for k=1:length(linsystems)
-  ax = subplot(length(linsystems), 1, k)
-  axes[k] = ax
-  im = imshow(repeat(smoothedtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
-  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
-  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string("S::",k))
-end
-tick_params(axis="x", labelbottom = "on")
-xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-# colorbar(im, ax=axes)
-xlabel("Time [min]")
-
-figure(4) # Tracking
-skip = int(length(ts)/75)
-skipm = skip
-subplot(3,1,1)
-x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys2[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k1, = plot(ts[1:skip:end], rbpfmeans[1, 1:skip:end]', "r--",linewidth=3)
-ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1],["Nonlinear Model"], loc="best")
-xlim([0, tend])
-ylim([0, 1])
-subplot(3,1,2)
-x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys2[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts[1:skip:end], rbpfmeans[2, 1:skip:end]', "r--",linewidth=3)
-ylabel("Temperature [K]")
-legend([y2, k2],["Nonlinear Model Measured", "Filtered Mean Estimate"], loc="best")
-xlim([0, tend])
-subplot(3,1,3)
-x2, = plot(ts, us)
-ylabel("Temperature [K]")
-xlabel("Time [min]")
-xlim([0, tend])
+Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2)

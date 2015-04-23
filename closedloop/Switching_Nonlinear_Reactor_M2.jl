@@ -102,46 +102,8 @@ for t=2:N
 end
 
 # Plot results
-rc("font", family="serif", size=24)
+Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
 
-figure(1)
-axes = Array(Any, numSwitches)
-im = 0
-width = 500
-for k=1:numSwitches
-  ax = subplot(numSwitches, 1, k)
-  axes[k] = ax
-  im = imshow(repeat(smoothedtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
-  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
-  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string("S::",k))
-end
-tick_params(axis="x", labelbottom = "on")
-xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-xlabel("Time [min]")
+Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
-
-skip = int(length(ts)/20)
-skipm = int(length(ts)/20)
-figure(3) # Plot filtered results
-subplot(3,1,1)
-x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-x1nf, = plot(ts, xsnofix[1,:]', "g--", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys2[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k1, = plot(ts, spfmeans[1,:]', "r--", linewidth=3)
-ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
-xlim([0, tend])
-subplot(3,1,2)
-x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-x2nf, = plot(ts, xsnofix[2,:]', "g--", linewidth=3)
-y2, = plot(ts[1:skipm:end], ys2[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts, spfmeans[2,:]', "r--", linewidth=3)
-ylabel("Temperature [K]")
-legend([y2, x2nf],["Nonlinear Model Measured","Nonlinear Model No Switch"], loc="best")
-xlim([0, tend])
-subplot(3,1,3)
-plot(ts, us)
-ylabel("Controller Input")
-xlabel("Time [min]")
-xlim([0, tend])
+Results.plotTracking(ts, xs, ys2, spfmeans, us, 2)

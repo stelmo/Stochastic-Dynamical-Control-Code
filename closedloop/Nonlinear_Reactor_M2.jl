@@ -69,25 +69,4 @@ for t=2:N
 end
 
 #  Plot Results
-rc("font", family="serif", size=24)
-skipmeas = int(length(ts)/20)
-
-figure(1)
-subplot(3,1,1)
-x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-y1, = plot(ts[1:skipmeas:end], ys2[1, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
-k1, = plot(ts, pfmeans[1,:]', "rx", markersize=5, markeredgewidth=2)
-ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
-xlim([0, tend])
-subplot(3,1,2)
-x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipmeas:end], ys2[2, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts, pfmeans[2,:]', "rx", markersize=5, markeredgewidth=2)
-ylabel("Temperature [K]")
-legend([y2],["Nonlinear Model Measured"], loc="best")
-xlim([0, tend])
-subplot(3,1,3)
-plot(ts, us)
-xlabel("Time [min]")
-ylabel("Controller Input")
+Results.plotTracking(ts, xs, ys2, pfmeans, us, 2)

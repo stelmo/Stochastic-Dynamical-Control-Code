@@ -55,30 +55,4 @@ end
 kfmeans = kfmeans .+ b
 
 # Plot the results
-rc("font", family="serif", size=24)
-
-skipmeas = int(length(ts)/20)
-skipmean = int(length(ts)/20)
-figure(1) # Filtering
-subplot(3,1,1)
-x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipmeas:end], ys2[1, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
-k1, = plot(ts[1:skipmean:end], kfmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
-ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([y2, x1],["Nonlinear Model Measured", "Nonlinear Model"], loc="best")
-xlim([0, tend])
-ylim([0, 1])
-
-subplot(3,1,2)
-x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:skipmeas:end], ys2[2, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts[1:skipmean:end], kfmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
-ylabel("Temperature [K]")
-legend([k2],["Filtered Mean Estimate"], loc="best")
-xlim([0, tend])
-ylim([minimum(xs[2,:]), maximum(xs[2,:])])
-subplot(3,1,3)
-plot(ts, us)
-xlim([0, tend])
-xlabel("Time [min]")
-ylabel("Controller Input")
+Results.plotTracking(ts, xs, ys2, kfmeans, us, 2)
