@@ -14,6 +14,7 @@ This folder contains all the scripts used to generate the closed loop figures as
 
 1. Execute the script `Switching_Linear_Reactor_M2.jl`
 
-### Control using multiple nonlinear models
+### Control using multiple linear models where the underlying nonlinear reactor functions change
 
 1. Execute the script `Switching_Nonlinear_Reactor_M2.jl`
+2. Execite the script `Switching_Nonlinear_vs_Linear_Reactor.jl` 
