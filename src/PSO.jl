@@ -115,11 +115,11 @@ end
 
 function optimise!(swarm, sol, particles, ysp, usp, Q, R, plantdist,model, skip, h, swarmOptRepeat)
   # Run the PSO
-  firstfit = 0.0
+  # firstfit = 0.0
   for k=1:swarmOptRepeat
     updateswarm!(swarm, sol, particles, ysp, usp, Q, R, plantdist, model, skip, h)
-    (k==1) && (firstfit = sol.posfit)
-    (sol.posfit[1] < firstfit*0.1) && (break) # stop iterating if you have improved the guesses by an order of magnitude
+    # (k==1) && (firstfit = sol.posfit)
+    # (sol.posfit[1] < firstfit*0.1) && (break) # stop iterating if you have improved the guesses by an order of magnitude
   end
 
   # println("***********")
