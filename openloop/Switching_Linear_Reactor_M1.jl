@@ -1,46 +1,8 @@
-# Implement the augmented switching dynamical system
+# Switching Linear dynamical system measuring one state
 
-using RBPF
-using SPF
-using Reactor
-using Ellipse
-using LLDS
-
-# Add a definition for convert to make our lives easier!
-# But be careful now!
-function Base.convert(::Type{Float64}, x::Array{Float64, 1})
-  return x[1]
-end
-
-# Specify the nonlinear model
-cstr_model = begin
-  V = 5.0; #m3
-  R = 8.314; #kJ/kmol.K
-  CA0 = 1.0; #kmol/m3
-  TA0 = 310.0; #K
-  dH = -4.78e4; #kJ/kmol
-  k0 = 72.0e7; #1/min
-  E = 8.314e4; #kJ/kmol
-  Cp = 0.239; #kJ/kgK
-  rho = 1000.0; #kg/m3
-  F = 100e-3; #m3/min
-  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
-end
-
-h = 0.1 # time discretisation
-tend = 150. # end simulation time
-ts = [0.0:h:tend]
-N = length(ts)
-xs = zeros(2, N)
-ys = zeros(N) # only one measurement
+include("../params.jl") # load all the parameters and modules
 
 init_state = [0.5; 400] # initial state
-C =  [0.0 1.0]
-R = eye(1)
-R[1] = 10.0
-Q = eye(2)
-Q[1] = 1e-5
-Q[4] = 4.0
 
 # Divide state space into sectors: n by m
 nX = 2 # rows
@@ -48,160 +10,72 @@ nY = 2 # cols
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
-linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
+linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 A = linsystems[2].A
 B = linsystems[2].B
 b = linsystems[2].b
-lin_cstr = LLDS.llds(A, B, C, Q, R)
-
+lin_cstr = LLDS.llds(A, B, C1, Q, R1)
 
 linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
-# linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
-models, A = RBPF.setup_RBPF(linsystems, C, Q, R)
+models, A = RBPF.setup_RBPF(linsystems, C1, Q, R1)
+numModels = length(models)
 
-nP = 500
-initial_states = init_state
-initial_covar = eye(2)
-initial_covar[1] = 1e-6
-initial_covar[4] = 1.0
-sguess =  RBPF.getInitialSwitches(initial_states, linsystems)
-particles = RBPF.init_RBPF(Categorical(sguess), initial_states, initial_covar, 2, nP)
+nP = 500 # number of particles
+sguess =  RBPF.getInitialSwitches(init_state, linsystems)
+particles = RBPF.init_RBPF(Categorical(sguess), init_state, init_state_covar, 2, nP)
 
-fmeans = zeros(2, N)
-fcovars = zeros(2,2, N)
-filtermeans = zeros(2, N)
-filtercovars = zeros(2,2, N)
 switchtrack = zeros(length(linsystems), N)
 maxtrack = zeros(length(linsystems), N)
+smoothedtrack = zeros(length(linsystems), N)
 
-state_dist = MvNormal(Q)
-us = zeros(N)
-measurements = MvNormal(R)
-xs[:,1] = initial_states
-ys[1] = C*xs[:, 1] + rand(measurements) # measured from actual plant
+state_noise_dist = MvNormal(Q)
+meas_noise_dist = MvNormal(R1)
+
+xs[:,1] = init_state
+ys1[1] = C1*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
 
 RBPF.init_filter!(particles, 0.0, ys[1], models)
-# fmeans[:,1], fcovars[:,:, 1] = RBPF.getAveStats(particles)
-fmeans[:,1], fcovars[:,:, 1] = RBPF.getMLStats(particles)
+# rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
+rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
 
-filtermeans[:, 1], filtercovars[:,:, 1] = LLDS.init_filter(initial_states-b, initial_covar, ys[1]-b[2], lin_cstr)
+kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys1[1]-b[2], lin_cstr)
 
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
 end
-maxtrack[:, 1] = RBPF.getMaxTrack(particles, models)
+maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
+smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 #Loop through the rest of time
 for t=2:N
-  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_dist) # actual plant
-  ys[t] = C*xs[:, t] + rand(measurements) # measured from actual plant
+  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
+  ys1[t] = C1*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
 
-  RBPF.filter!(particles, us[t-1], ys[t], models, A)
-  # fmeans[:, t], fcovars[:,:, t] = RBPF.getAveStats(particles)
-  fmeans[:,t], fcovars[:,:, t] = RBPF.getMLStats(particles)
+  RBPF.filter!(particles, us[t-1], ys1[t], models, A)
+  # rbpfmeans[:, t], rbpfcovars[:,:, t] = RBPF.getAveStats(particles)
+  rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getMLStats(particles)
 
-  filtermeans[:, t], filtercovars[:,:, t] = LLDS.step_filter(filtermeans[:, t-1], filtercovars[:,:, t-1], us[t-1], ys[t]-b[2], lin_cstr)
+  kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys1[t]-b[2], lin_cstr)
 
   for k=1:length(linsystems)
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
-  maxtrack[:, t] = RBPF.getMaxTrack(particles, models)
+  maxtrack[:, t] = RBPF.getMaxTrack(particles, numModels)
+  smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 10)
 
 end
 
-filtermeans = filtermeans .+ b
+kfmeans = kfmeans .+ b
 
-rc("font", family="serif", size=24)
+# Plot results
+Results.plotStateSpaceSwitch(linsystems, xs)
 
-figure(1)
-for k=1:length(linsystems)
-  plot(linsystems[k].op[1],linsystems[k].op[2],"kx",markersize=5, markeredgewidth=1)
-annotate(string("Switch: ", k),
-      xy=[linsystems[k].op[1],linsystems[k].op[2]],
-      xytext=[linsystems[k].op[1],linsystems[k].op[2]],
-      fontsize=22.0,
-      ha="center",
-      va="bottom")
-end
-plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
-plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-xlim([-0.1, 1.1])
-ylim([250, 650])
-xlabel(L"Concentration [kmol.m$^{-3}$]")
-ylabel("Temperature [K]")
+Results.plotSwitchSelection(numModels, switchtrack, ts, true)
 
-figure(2)
-maxswitch = maximum(switchtrack)
-axes = Array(Any, length(linsystems))
-im = 0
-width = 500
-for k=1:length(linsystems)
-  ax = subplot(length(linsystems), 1, k)
-  axes[k] = ax
-  im = imshow(repeat(switchtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=maxswitch, interpolation="nearest", aspect="auto")
-  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
-  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string("S::",k))
-end
-tick_params(axis="x", labelbottom = "on")
-xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-colorbar(im, ax=axes)
-xlabel("Time [min]")
+Results.plotSwitchSelection(numModels, maxtrack, ts, false)
 
-figure(3)
-axes = Array(Any, length(linsystems))
-im = 0
-width = 500
-for k=1:length(linsystems)
-  ax = subplot(length(linsystems), 1, k)
-  axes[k] = ax
-  im = imshow(repeat(maxtrack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
-  tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
-  tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-  ylabel(string("S::",k))
-end
-tick_params(axis="x", labelbottom = "on")
-xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
-colorbar(im, ax=axes)
-xlabel("Time [min]")
+Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
+Results.plotTracking(ts, xs, ys1, rbpfmeans, us, 1)
 
-figure(4) # Plot filtered results
-skip = int(length(ts)/75)
-subplot(2,1,1)
-x1, = plot(ts, xs[1,:]', "k", linewidth=3)
-k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
-ylabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
-xlim([0, tend])
-subplot(2,1,2)
-x2, = plot(ts, xs[2,:]', "k", linewidth=3)
-y2, = plot(ts[1:skip:end], ys[1:skip:end], "kx", markersize=5, markeredgewidth=1)
-k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
-ylabel("Temperature [K]")
-xlabel("Time [min]")
-legend([y2],["Nonlinear Model Measured"], loc="best")
-xlim([0, tend])
-
-skip = int(length(ts)/20)
-figure(5) # Kalman Filter Demonstration
-x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
-f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-f2, = plot(filtermeans[1, 1:skip:end][:], filtermeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
-b1 = 0.0
-b2 = 0.0
-for k=1:skip:N
-  p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
-  b1, = plot(p1, p2, "r")
-
-  p3, p4 = Ellipse.ellipse(filtermeans[:,k], filtercovars[:,:, k])
-  b2, = plot(p3, p4, "b")
-end
-plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
-plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
-plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-ylabel("Temperature [K]")
-xlabel(L"Concentration [kmol.m$^{-3}$]")
-legend([x1,f1,f2, b1, b2],["Nonlinear Model","Switching Kalman Filter Mean","Kalman Filter Mean", L"Switching Kalman Filter $1\sigma$-Ellipse",L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
+Results.plotEllipseComp(rbpfmeans, rbpfcovars, "Switching Kalman Filter", kfmeans, kfcovars, "Kalman Filter", xs, ts)

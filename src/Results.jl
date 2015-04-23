@@ -95,12 +95,12 @@ function plotSwitchSelection(numSwitches, strack, ts, cbaron)
   xlabel("Time [min]")
 end
 
-function plotEllipses(ts, xs, ys, fmeans, fcovars)
+function plotEllipses(ts, xs, ys, fmeans, fcovars, fname)
 
   rc("font", family="serif", size=24)
   N = length(ts)
   skip = int(length(ts)/20)
-  figure(1)
+  figure()
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
   b1 = 0.0
@@ -113,8 +113,39 @@ function plotEllipses(ts, xs, ys, fmeans, fcovars)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
-  legend([x1,f1, b1],["Nonlinear Model","Kalman Filter Mean", L"Kalman Filter $1\sigma$-Ellipse"], loc="best")
+  temp = string("$(fname) ", L"$\sigma$-Ellipse")
+  legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
+
+function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts)
+
+  N = length(ts)
+  skip = int(length(ts)/20)
+  figure()
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+  x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+  f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+  f2, = plot(f2means[1, 1:skip:end][:], f2means[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
+  b1 = 0.0
+  b2 = 0.0
+  for k=1:skip:N
+    p1, p2 = Ellipse.ellipse(f1means[:,k], f1covars[:,:, k])
+    b1, = plot(p1, p2, "r")
+
+    p3, p4 = Ellipse.ellipse(f2means[:,k], f2covars[:,:, k])
+    b2, = plot(p3, p4, "b")
+  end
+  plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+  plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+  plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
+  ylabel("Temperature [K]")
+  xlabel(L"Concentration [kmol.m$^{-3}$]")
+  temp1 = string("$(f1name) ", L"$\sigma$-Ellipse")
+  temp2 = string("$(f2name) ", L"$\sigma$-Ellipse")
+  legend([x1,f1,f2, b1, b2],["Nonlinear Model","$(f1name) Mean","$(f2name) Mean", temp1, temp2], loc="best")
+end
+
+
 
 
 end #module

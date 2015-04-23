@@ -10,6 +10,7 @@ using PSO
 using RBPF
 using SPF
 using Results
+using NLsolve
 
 # Extend the Base Library
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
@@ -48,7 +49,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-tend = 100.0 # end simulation time
+tend = 50.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
@@ -61,8 +62,13 @@ us = zeros(N) # controller input
 init_state_covar = eye(2) # prior covariance
 init_state_covar[1] = 1e-3
 init_state_covar[4] = 4.
-pfmeans = zeros(2, N) # particle filter means
-pfcovars = zeros(2,2, N) # particle filter covariances (assumed Gaussian)
+
+pfmeans = zeros(2, N) # Particle Filter means
+pfcovars = zeros(2,2, N) # Particle Filter covariances (assumed Gaussian)
+rbpfmeans = zeros(2, N) # RBPF means
+rbpfcovars = zeros(2,2, N) # RBPF covariances
+kfmeans = zeros(2, N) # Kalman Filter means
+kfcovars = zeros(2,2, N) # Kalman Filter covariances
 
 
 # Noise settings
@@ -70,7 +76,7 @@ Q = eye(2) # plant noise
 Q[1] = 1e-06
 Q[4] = 0.1
 
-R1 = 10.0 # measurement noise (only temperature)
+R1 = eye(1)*10.0 # measurement noise (only temperature)
 R2 = eye(2) # measurement noise (both concentration and temperature)
 R2[1] = 1e-3
 R2[4] = 10.0

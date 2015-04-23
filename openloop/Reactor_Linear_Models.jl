@@ -1,29 +1,10 @@
 # Linearisation Procedure
 
-using Reactor
-
-# Introduce the reactor
-cstr = begin
-  V = 5.0 #m3
-  R = 8.314 #kJ/kmol.K
-  CA0 = 1.0 #kmol/m3
-  TA0 = 310.0 #K
-  dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e7 #1/min
-  E = 8.314e4 #kJ/kmol
-  Cp = 0.239 #kJ/kgK
-  rho = 1000.0 #kg/m3
-  F = 100e-3 #m3/min
-  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
-end
-
-h = 0.01 # time discretisation
-tend = 50.0 # end simulation time
-ts = [0.0:h:tend]
+include("../params.jl") # load all the parameters and modules
 
 xspace = [0.0, 1.0]
 yspace = [250, 650]
-linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr)
+linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 
 rc("font", family="serif", size=24)
 figure(1)
@@ -44,7 +25,7 @@ for dd=1:nDD # only loop through
 
   # Loop through the rest of time
   for t=2:N
-      xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
+      xs[:, t] = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr_model) # actual plant
       linxs[:, t] = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0
   end
 

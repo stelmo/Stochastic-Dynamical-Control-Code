@@ -31,6 +31,6 @@ for t=2:N
 end
 
 # Plot results
-Results.plotEllipses(ts, xs, ys2, pfmeans, pfcovars)
+Results.plotEllipses(ts, xs, ys2, pfmeans, pfcovars, "Particle Filter")
 
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2)

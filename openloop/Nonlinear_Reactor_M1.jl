@@ -15,7 +15,7 @@ prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 
 state_noise_dist = MvNormal(Q) # state distribution
-meas_noise_dist = MvNormal(eye(1)*R1) # measurement distribution
+meas_noise_dist = MvNormal(R1) # measurement distribution
 
 # Time step 1
 xs[:, 1] = init_state
@@ -31,6 +31,6 @@ for t=2:N
 end
 
 # Plot results
-Results.plotEllipses(ts, xs, ys1, pfmeans, pfcovars)
+Results.plotEllipses(ts, xs, ys1, pfmeans, pfcovars, "Particle Filter")
 
 Results.plotTracking(ts, xs, ys1, pfmeans, us, 1)

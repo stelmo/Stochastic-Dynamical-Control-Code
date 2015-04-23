@@ -1,25 +1,7 @@
-# Linearisation Procedure
+# Check the stability of the different linearisation points over time
+# Note: small time spans required here
 
-using Reactor
-
-# Introduce the reactor
-cstr = begin
-  V = 5.0 #m3
-  R = 8.314 #kJ/kmol.K
-  CA0 = 1.0 #kmol/m3
-  TA0 = 310.0 #K
-  dH = -4.78e4 #kJ/kmol
-  k0 = 72.0e7 #1/min
-  E = 8.314e4 #kJ/kmol
-  Cp = 0.239 #kJ/kgK
-  rho = 1000.0 #kg/m3
-  F = 100e-3 #m3/min
-  Reactor.reactor(V, R, CA0, TA0, dH, k0, E, Cp, rho, F)
-end
-
-h = 0.001 # time discretisation
-tend = 5.0 # end simulation time
-ts = [0.0:h:tend]
+include("../params.jl") # load all the parameters and modules
 
 # Divide state space into sectors: n by m
 nX = 20 # rows
@@ -29,7 +11,7 @@ total_ops = nX*nY # ignore the nominal ss points
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 
-linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr)
+linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 
 diff = zeros(nY, nX)
 xpoints = zeros(nX)
@@ -51,7 +33,7 @@ for x=1:nX
     # Loop through the rest of time
     flag = false
     for t=2:N
-        temp1 = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr) # actual plant
+        temp1 = Reactor.run_reactor(xs[:, t-1], 0.0, h, cstr_model) # actual plant
         temp2 = linsystems[k].A*linxs[:, t-1] + linsystems[k].B*0.0
         if isnan(temp1[1]) || isnan(temp1[2])
           flag = true
