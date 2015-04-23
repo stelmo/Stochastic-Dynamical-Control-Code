@@ -11,6 +11,7 @@ Code for M. Eng. in Control Engineering
 
 1. Distributions
 2. PyPlot
+3. NLsolve
 
 ## Running the Code:
 
