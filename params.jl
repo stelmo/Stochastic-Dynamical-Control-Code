@@ -69,7 +69,8 @@ rbpfmeans = zeros(2, N) # RBPF means
 rbpfcovars = zeros(2,2, N) # RBPF covariances
 kfmeans = zeros(2, N) # Kalman Filter means
 kfcovars = zeros(2,2, N) # Kalman Filter covariances
-
+spfmeans  = zeros(2, N) # Kalman Filter means
+spfcovars = zeros(2,2, N)
 
 # Noise settings
 Q = eye(2) # plant noise

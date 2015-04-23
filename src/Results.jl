@@ -145,7 +145,36 @@ function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, x
   legend([x1,f1,f2, b1, b2],["Nonlinear Model","$(f1name) Mean","$(f2name) Mean", temp1, temp2], loc="best")
 end
 
+function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
 
+  N = length(ts)
+  tend = ts[end]
+  skipm = int(length(ts)/20)
+  figure() # Plot filtered results
+  subplot(2,1,1)
+  x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+  x1nf, = plot(ts, xsb[1,:]', "g--", linewidth=3)
+  if obs == 2
+    y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+  end
+  k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
+  ylabel(L"Concentration [kmol.m$^{-3}$]")
+  legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+  xlim([0, tend])
+  subplot(2,1,2)
+  x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+  x2nf, = plot(ts, xsb[2,:]', "g--", linewidth=3)
+  if obs == 2
+    y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
+  else
+    y2, = plot(ts[1:skipm:end], ys[1:skipm:end], "kx", markersize=5, markeredgewidth=1)
+  end
+  k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
+  ylabel("Temperature [K]")
+  xlabel("Time [min]")
+  legend([y2, x2nf],["Nonlinear Model Measured","Nonlinear Model No Switch"], loc="best")
+  xlim([0, tend])
+end
 
 
 end #module
