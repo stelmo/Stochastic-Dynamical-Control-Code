@@ -49,7 +49,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-tend = 50.0 # end simulation time
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
@@ -57,7 +57,9 @@ linxs = zeros(2, N) # linear plant
 xsnofix = zeros(2, N) # broken plant
 ys1 = zeros(N) # only measure temperature
 ys2 = zeros(2, N) # measure both concentration and temperature
+ys2nofix = zeros(2, N)
 us = zeros(N) # controller input
+usnofix = zeros(N)
 
 init_state_covar = eye(2) # prior covariance
 init_state_covar[1] = 1e-3

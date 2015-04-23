@@ -51,7 +51,9 @@ end
 
 # Setup simulation
 xs[:, 1] = init_state
+xsnofix[:, 1] = init_state
 ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
+ys2nofix[:, 1] = C2*xsnofix[:, 1] + rand(meas_noise_dist) # measured from actual plant
 
 SPF.init_filter!(particles, 0.0, ys2[:, 1], cstr_filter)
 
@@ -66,6 +68,7 @@ spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 us[1] = -controllers[ind].K*(spfmeans[:, 1] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+usnofix[1] = -controllers[1].K*(spfmeans[:, 1] - lin_models[1].b - controllers[1].x_off) + controllers[1].u_off
 
 # Loop through the rest of time
 for t=2:N
@@ -73,8 +76,10 @@ for t=2:N
   random_element = rand(state_noise_dist)
   if ts[t] < 50 # break here
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], usnofix[t-1], h, cstr_model) + random_element # actual plant
   else
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model_broken) + random_element
+    xsnofix[:, t] = Reactor.run_reactor(xsnofix[:, t-1], usnofix[t-1], h, cstr_model_broken) + random_element # actual plant
   end
 
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
@@ -91,6 +96,7 @@ for t=2:N
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   us[t] = -controllers[ind].K*(spfmeans[:, t] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+  usnofix[t] = -controllers[1].K*(spfmeans[:, t] - lin_models[1].b - controllers[1].x_off) + controllers[1].u_off # controller action
 
 end
 

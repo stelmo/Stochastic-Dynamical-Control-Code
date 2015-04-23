@@ -19,7 +19,7 @@ state_noise_dist = MvNormal(Q) # state distribution
 meas_noise_dist = MvNormal(R2) # measurement distribution
 
 # Controller setup
-y_ca = 0.7 # concentration set point (0.48934869384882873)
+y_ca = 0.48 # concentration set point (0.48934869384882873)
 offres = PSO.offset(y_ca, cstr_model)
 ys2p = [y_ca, offres.zero[1]]
 usp = offres.zero[2]
@@ -48,7 +48,7 @@ for t=2:N
   # Controller action
   if t%skip == 0
     swarm, sol = PSO.initswarm(swarmSize, predictionHorizon, -1000.0, 1000.0, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h)
-    us[t] = PSO.optimise!(swarm, sol, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h)
+    us[t] = PSO.optimise!(swarm, sol, particles, ys2p, usp, QQ, RR, state_noise_dist, cstr_model, skip, h, swarmOptRepeat)
     println("Time: ", ts[t])
   end
   if t%skip != 0

@@ -40,7 +40,7 @@ RBPF.init_filter!(particles, 0.0, ys2[:, 1], models)
 # rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
 rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
 
-kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, initial_covar, ys2[:, 1]-b, lin_cstr)
+kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys2[:, 1]-b, lin_cstr)
 
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
