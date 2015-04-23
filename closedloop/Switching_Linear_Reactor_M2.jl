@@ -40,7 +40,7 @@ xs[:,1] = init_state
 ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
 
 RBPF.init_filter!(particles, 0.0, ys2[:, 1], models)
-rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
+rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
 
 for k=1:numModels
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
@@ -57,7 +57,7 @@ for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
   RBPF.filter!(particles, us[t-1], ys2[:, t], models, A)
-  rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getMLStats(particles)
+  rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getAveStats(particles)
 
   for k=1:numModels
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])

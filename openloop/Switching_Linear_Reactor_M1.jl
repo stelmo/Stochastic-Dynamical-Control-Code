@@ -35,8 +35,8 @@ xs[:,1] = init_state
 ys1[1] = C1*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
 
 RBPF.init_filter!(particles, 0.0, ys[1], models)
-# rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
-rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
+rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
+# rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
 
 kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys1[1]-b[2], lin_cstr)
 
@@ -52,8 +52,8 @@ for t=2:N
   ys1[t] = C1*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
 
   RBPF.filter!(particles, us[t-1], ys1[t], models, A)
-  # rbpfmeans[:, t], rbpfcovars[:,:, t] = RBPF.getAveStats(particles)
-  rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getMLStats(particles)
+  rbpfmeans[:, t], rbpfcovars[:,:, t] = RBPF.getAveStats(particles)
+  # rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getMLStats(particles)
 
   kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys1[t]-b[2], lin_cstr)
 

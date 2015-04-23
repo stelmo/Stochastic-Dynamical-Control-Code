@@ -201,4 +201,35 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means, f1name, f2name)
   xlim([0, tend])
 end
 
+function plotTrackingComparison(ts, xs1, us1, xs2, us2)
+
+    tend = ts[end]
+
+    rc("font", family="serif", size=24)
+
+    figure()
+    subplot(3,1,1)
+    x11, = plot(ts, xs1[1,:]', "r", linewidth=3)
+    x12, = plot(ts, xs2[1,:]', "b", linewidth=3)
+    ylabel(L"Concentration [kmol.m$^{-3}$]")
+    legend([x11],["Switching Controller"], loc="best")
+    xlim([0, tend])
+    ylim([0, 1])
+
+    subplot(3,1,2)
+    x12, = plot(ts, xs1[2,:]', "r", linewidth=3)
+    x22, = plot(ts, xs2[2,:]', "b", linewidth=3)
+    ylabel("Temperature [K]")
+    legend([x22],["Switching Controller"], loc="best")
+    xlim([0, tend])
+    ylim([minimum(xs2[2,:]), maximum(xs2[2,:])])
+
+    subplot(3,1,3)
+    u1, = plot(ts, us1, "r", linewidth=3)
+    u2, = plot(ts, us2, "b", linewidth=3)
+    xlim([0, tend])
+    ylabel("Controller Input")
+    xlabel("Time [min]")
+end
+
 end #module

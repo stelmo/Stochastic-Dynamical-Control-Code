@@ -12,8 +12,8 @@ init_state = [0.5; 400] # initial state
 
 # Initialise the PF
 nP = 20 # number of particles.
-init_dist = MvNormal(init_state, init_state_covar) # prior distribution
-particles = PF.init_PF(init_dist, nP, 2) # initialise the particles
+prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
+particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 
 state_noise_dist = MvNormal(Q) # state distribution
 meas_noise_dist = MvNormal(R2) # measurement distribution
