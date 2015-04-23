@@ -58,6 +58,13 @@ ys1 = zeros(N) # only measure temperature
 ys2 = zeros(2, N) # measure both concentration and temperature
 us = zeros(N) # controller input
 
+init_state_covar = eye(2) # prior covariance
+init_state_covar[1] = 1e-3
+init_state_covar[4] = 4.
+pfmeans = zeros(2, N) # particle filter means
+pfcovars = zeros(2,2, N) # particle filter covariances (assumed Gaussian)
+
+
 # Noise settings
 Q = eye(2) # plant noise
 Q[1] = 1e-06
