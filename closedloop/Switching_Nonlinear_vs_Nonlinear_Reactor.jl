@@ -119,6 +119,6 @@ for t=2:N
 end
 
 # Plot results
-Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
+Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
 Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix)
