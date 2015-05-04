@@ -25,10 +25,10 @@ ys2p = [y_ca, offres.zero[1]]
 usp = offres.zero[2]
 
 # PSO setup
-skip = 7 # hold the controller output for this long
-predictionHorizon = 10 # number of controller moves predicted/optimised (control horizon)
+skip = 5 # hold the controller output for this long
+predictionHorizon = 15 # number of controller moves predicted/optimised (control horizon)
 swarmSize = 50 # number of particles in the swarm
-swarmOptRepeat = 100 # high is better but it slows everything down
+swarmOptRepeat = 150 # high is better but it slows everything down
 
 # Time step 1
 xs[:,1] = init_state
