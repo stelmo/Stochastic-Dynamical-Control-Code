@@ -14,6 +14,7 @@ for func in ["Ellipse.jl",
             "RBPF.jl",
             "LQR.jl",
             "PSO.jl",
-            "Results.jl"]
+            "Results.jl",
+            "MPC.jl"]
   include(joinpath("src",func))
 end

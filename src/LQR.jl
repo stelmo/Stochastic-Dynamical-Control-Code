@@ -68,15 +68,21 @@ end
 
 function getSize(A)
   # wraps size() but with added robustness
-  x = size(A)
   r = 0
   c = 0
-  if length(x) == 1
-    r = x[1]
-    c = 0
+  
+  if length(A)==1
+    r = 1
+    c = 1
   else
-    r = x[1]
-    c = x[2]
+    x = size(A)
+    if length(x) == 1
+      r = x[1]
+      c = 0
+    else
+      r = x[1]
+      c = x[2]
+    end
   end
 
   return r, c

@@ -95,7 +95,7 @@ function plotSwitchSelection(numSwitches, strack, ts, cbaron)
   xlabel("Time [min]")
 end
 
-function plotEllipses(ts, xs, ys, fmeans, fcovars, fname)
+function plotEllipses(ts, xs, fmeans, fcovars, fname)
 
   rc("font", family="serif", size=24)
   N = length(ts)
@@ -116,6 +116,34 @@ function plotEllipses(ts, xs, ys, fmeans, fcovars, fname)
   temp = string("$(fname) ", L"$\sigma$-Ellipse")
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
+
+function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip)
+
+  rc("font", family="serif", size=24)
+  figure() # dont create a new figure
+  N = size(pmeans)
+  f1, = plot(pmeans[1, 1], pmeans[2, 1], "ro", markersize=5, markeredgewidth = 2)
+  f1, = plot(pmeans[1, end], pmeans[2, end], "rx", markersize=5, markeredgewidth = 2)
+  f1, = plot(pmeans[1, 2:pskip:end][:], pmeans[2, 2:pskip:end][:], "rx", markersize=5, markeredgewidth = 2)
+
+  # f2, = plot(fmeans[1, 1], fmeans[2, 1], "bo", markersize=5, markeredgewidth = 2)
+  # f2, = plot(fmeans[1, end], fmeans[2, end], "bx", markersize=5, markeredgewidth = 2)
+  f2, = plot(fmeans[1, fstart+1:pskip:fstart+N[2]][:], fmeans[2, fstart+1:pskip:fstart+N[2]][:], "bx", markersize=5, markeredgewidth = 2)
+
+  b1 = 0.0
+  b2 = 0.0
+  for k=1:pskip:N[2]
+    p1, p2 = Ellipse.ellipse(pmeans[:,k], pcovars[:,:, k])
+    b1, = plot(p1, p2, "r")
+
+    p1, p2 = Ellipse.ellipse(fmeans[:,fstart+k], fcovars[:,:, fstart+k])
+    b2, = plot(p1, p2, "b")
+  end
+  ylabel("Temperature [K]")
+  xlabel(L"Concentration [kmol.m$^{-3}$]")
+  legend([b1, b2],["Prediction", "Filter"], loc="best")
+end
+
 
 function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts)
 
