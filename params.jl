@@ -13,8 +13,6 @@ using Results
 using NLsolve
 using MPC
 
-# seed the random number generator
-srand(28)
 
 # Extend the Base Library
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
