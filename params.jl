@@ -53,7 +53,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-tend = 200.0 # end simulation time
+tend = 20.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
@@ -94,5 +94,5 @@ C1 = [0.0 1.0] # we measure only temperature
 
 # Controller settings (using quadratic cost function)
 QQ = zeros(2, 2)
-QQ[1] = 10000.0*100.0
-RR = 0.00001
+QQ[1] = 10000.0*100. # due to the magnitude of the concentration
+RR = 0.00001 #

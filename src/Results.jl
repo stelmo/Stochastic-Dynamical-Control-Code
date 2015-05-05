@@ -117,7 +117,41 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
-function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip)
+function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp)
+
+  rc("font", family="serif", size=24)
+  N = length(ts)
+  skip = int(length(ts)/40)
+  figure()
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+  f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
+  b1 = 0.0
+  for k=1:skip:N
+    p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
+    b1, = plot(p1, p2, "b")
+  end
+  plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+  plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+  plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
+
+  # line = [b,c] => y + bx + c = 0
+  # line => y = - bx - c
+
+  lxs = [-0.1:0.05:1.1]
+  lys = -line[1].*lxs .- line[2]
+  xlim([0.0, 1.0])
+  ylim([minimum(xs[2,:]-10), maximum(xs[2, :]+10)])
+  plot(lxs, lys, "r-")
+
+  plot(sp[1], sp[2], "gx",markersize=8, markeredgewidth = 4)
+
+  ylabel("Temperature [K]")
+  xlabel(L"Concentration [kmol.m$^{-3}$]")
+  temp = string("$(fname) ", L"$\sigma$-Ellipse")
+  legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
+end
+
+function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip::Int64)
 
   rc("font", family="serif", size=24)
   figure() # dont create a new figure
