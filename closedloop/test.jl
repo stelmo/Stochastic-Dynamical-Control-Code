@@ -6,6 +6,9 @@ using JuMP
 using Mosek
 using Ipopt
 
+# seed the random number generator
+srand(51)
+
 # Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
 opoint = 2 # the specific operating point we are going to use for control
@@ -40,10 +43,9 @@ kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_cova
 
 # Setup MPC
 horizon = 100
-lim = 390.0
 # m = Model(solver=MosekSolver(LOG=0, OPTIMIZER=MSK_OPTIMIZER_INTPNT)) # chooses optimiser by itself
-# m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
-m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
+m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
+# m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
 
 @defVar(m, x[1:2, 1:horizon])
 # @defVar(m, -5000.0 <= u[1:horizon-1] <= 5000.0)
@@ -63,19 +65,18 @@ for k=3:horizon
 end
 
 # add state constraints
-for k=2:horizon # can't do anything about k=1
-  @addConstraint(m, 75.0*(x[1, k] + b[1]) + (x[2, k] + b[2]) >= lim)
-end
-
-t = 1
+lim = 450.0
 aline = 75.0
 cline = -lim
 bline = 1.0
+for k=2:horizon # can't do anything about k=1
+  @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= lim)
+end
 
 # add distribution constraints
-for k=2:horizon # can't do anything about k=1
-  @addNLConstraint(m, (cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]))^2/(aline^2*kfcovars[1,1,t] + bline^2*kfcovars[2,2,t] + aline*bline*kfcovars[1,2,t] + aline*bline*kfcovars[2,1,t]) >= 2.2788)
-end
+# for k=2:horizon # can't do anything about k=1
+#   @addNLConstraint(m, (cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]))^2/(aline^2*kfcovars[1,1,1] + bline^2*kfcovars[2,2,1] + aline*bline*kfcovars[1,2,1] + aline*bline*kfcovars[2,1,1]) >= 2.2788)
+# end
 
 @setObjective(m, Min, sum{x[1, i]*QQ[1]*x[1, i] + u[i]*RR*u[i], i=1:horizon-1} + x[1, horizon]*QQ[1]*x[1, horizon])
 
@@ -91,7 +92,7 @@ for t=2:N
   # Compute controller action
   # m = Model(solver=MosekSolver(LOG=0, OPTIMIZER=MSK_OPTIMIZER_INTPNT)) # chooses optimiser by itself
   # m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
-  # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
+  m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
 
   @defVar(m, x[1:2, 1:horizon])
   # @defVar(m, -5000.0 <= u[1:horizon-1] <= 5000.0)
@@ -101,7 +102,7 @@ for t=2:N
   @addConstraint(m, x[2, 1] == kfmeans[2, t])
   @addConstraint(m, x[1, 2] == A[1,1]*kfmeans[1, t] + A[1,2]*kfmeans[2, t]+ B[1]*u[1])
   @addConstraint(m, x[2, 2] == A[2,1]*kfmeans[1, t] + A[2,2]*kfmeans[2, t] + B[2]*u[1])
-  for k=3:prediction_horizon
+  for k=3:horizon
     @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1])
     @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1])
   end
@@ -112,12 +113,12 @@ for t=2:N
   end
 
   # add distribution constraints
-  for k=2:horizon # can't do anything about k=1
-    @addNLConstraint(m, (cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]))^2/(aline^2*kfcovars[1,1,t] + bline^2*kfcovars[2,2,t] + aline*bline*kfcovars[1,2,t] + aline*bline*kfcovars[2,1,t]) >= 2.2788)
-  end
-
+  # for k=2:horizon # can't do anything about k=1
+  #   @addNLConstraint(m, (cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]))^2/(aline^2*kfcovars[1,1,t] + bline^2*kfcovars[2,2,t] + aline*bline*kfcovars[1,2,t] + aline*bline*kfcovars[2,1,t]) >= 2.2788)
+  # end
 
   @setObjective(m, Min, sum{x[1, i]*QQ[1]*x[1, i] + u[i]*RR*u[i], i=1:horizon-1} + x[1, horizon]*QQ[1]*x[1, horizon])
+
   status = solve(m)
   us[t] = getValue(u[1]) # get the controller input
 
@@ -125,5 +126,5 @@ end
 kfmeans = kfmeans .+ b
 
 # # Plot the results
-Results.plotTracking(ts, xs, ys2, kfmeans, us, 2)
+# Results.plotTracking(ts, xs, ys2, kfmeans, us, 2)
 Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op)
