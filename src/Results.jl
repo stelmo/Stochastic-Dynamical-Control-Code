@@ -117,20 +117,22 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
-function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp)
+function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf)
 
   rc("font", family="serif", size=24)
   N = length(ts)
-  skip = int(length(ts)/40)
-  figure()
-  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+  skip = 1
+
+  nf && figure() # only create a new figure if required
+
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3, alpha=0.5)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
   b1 = 0.0
   for k=1:skip:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
     b1, = plot(p1, p2, "b")
   end
-  plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+  plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2, alpha=0.5)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 

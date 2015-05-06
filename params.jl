@@ -94,3 +94,6 @@ C1 = [0.0 1.0] # we measure only temperature
 QQ = zeros(2, 2)
 QQ[1] = 10000.0 # due to the magnitude of the concentration
 RR = 0.000001 #
+
+# seed the random number generator
+# srand(98653)

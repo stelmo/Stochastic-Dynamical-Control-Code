@@ -5,9 +5,6 @@ include("../params.jl") # load all the parameters and modules
 using JuMP
 using Ipopt
 
-# seed the random number generator
-srand(85)
-
 # Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
 opoint = 2 # the specific operating point we are going to use for control
@@ -69,12 +66,6 @@ for k=2:horizon # can't do anything about k=1
   @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
 end
 
-# add distribution constraints
-sigma = 4.605 # this should match the chi square value in Ellipse
-for k=2:horizon # don't do anything about k=1
-  @addNLConstraint(m, (cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]))^2/(aline^2*kfcovars[1,1,1] + bline^2*kfcovars[2,2,1] + aline*bline*kfcovars[1,2,1] + aline*bline*kfcovars[2,1,1]) >= sigma)
-end
-
 @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2)
 
 status = solve(m)
@@ -107,11 +98,6 @@ for t=2:N
     @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
   end
 
-  # add distribution constraints
-  for k=2:horizon # can't do anything about k=1
-    @addNLConstraint(m, (cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]))^2/(aline^2*kfcovars[1,1,t] + bline^2*kfcovars[2,2,t] + aline*bline*kfcovars[1,2,t] + aline*bline*kfcovars[2,1,t]) >= sigma)
-  end
-
   @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2)
 
   status = solve(m)
@@ -123,4 +109,4 @@ kfmeans = kfmeans .+ b
 
 # # Plot the results
 # Results.plotTracking(ts, xs, ys2, kfmeans, us, 2)
-Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, false)
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op)
