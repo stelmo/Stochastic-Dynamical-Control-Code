@@ -27,7 +27,9 @@ function ellipse(mean, covariance)
       angle = angle + 2*pi
   end
 
-  chisquare_val = sqrt(2.2788) # one sigma ellipse 68% confidence
+  # chisquare_val = sqrt(2.2788) # one sigma ellipse 68% confidence
+  chisquare_val = sqrt(4.605) # 90 % confidence region
+
   theta_grid = linspace(0.0,2.0*pi)
   phi = angle
   X0=mean[1]

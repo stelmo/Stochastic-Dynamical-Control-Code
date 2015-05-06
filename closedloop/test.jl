@@ -43,9 +43,8 @@ kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_cova
 
 # Setup MPC
 horizon = 100
-# m = Model(solver=MosekSolver(LOG=0, OPTIMIZER=MSK_OPTIMIZER_INTPNT)) # chooses optimiser by itself
-m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
-# m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
+# m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
+m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
 
 @defVar(m, x[1:2, 1:horizon])
 # @defVar(m, -5000.0 <= u[1:horizon-1] <= 5000.0)
