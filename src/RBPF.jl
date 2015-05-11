@@ -133,8 +133,9 @@ function filter!(particles::Particles, u, y, models::Array{Model, 1}, A)
 
   # particles.ws = particles.ws .+ abs(minimum(particles.ws)) #no negative number issue
   (maximum(particles.ws) < (1.0/(N^2))) && warn("The particles all have very small weight...")
+  (sum(particles.ws) == 0.0) && error("Zero cumulative weight...")
   particles.ws = particles.ws ./ sum(particles.ws)
-  (true in isnan(particles.ws)) && error("Particles have become degenerate!")
+  (true in isnan(particles.ws)) && error("Particles have become degenerate! (after normalisation)")
 
 
   if numberEffectiveParticles(particles) < N/2

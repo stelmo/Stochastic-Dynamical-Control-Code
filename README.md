@@ -12,6 +12,9 @@ Code for M. Eng. in Control Engineering
 1. Distributions
 2. PyPlot
 3. NLsolve
+4. JuMP
+5. Ipopt (including the optimisation library)
+6. Mosek (including the optimisation library)
 
 ## Running the Code:
 

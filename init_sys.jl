@@ -3,6 +3,8 @@ info("Loading all the required external modules.")
 using PyPlot
 using NLsolve
 using Distributions
+using JuMP
+using Ipopt
 
 for func in ["Ellipse.jl",
             "HMM.jl",

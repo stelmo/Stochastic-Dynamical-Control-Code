@@ -34,7 +34,7 @@ meas_noise_dist = MvNormal(R1)
 xs[:,1] = init_state
 ys1[1] = C1*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
 
-RBPF.init_filter!(particles, 0.0, ys[1], models)
+RBPF.init_filter!(particles, 0.0, ys1[1], models)
 rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
 # rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
 
@@ -76,6 +76,6 @@ Results.plotSwitchSelection(numModels, maxtrack, ts, false)
 
 Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
-Results.plotTracking(ts, xs, ys1, rbpfmeans, us, 1)
+Results.plotTracking(ts, xs, ys1, rbpfmeans, us, 1, )
 
 Results.plotEllipseComp(rbpfmeans, rbpfcovars, "Switching Kalman Filter", kfmeans, kfcovars, "Kalman Filter", xs, ts)

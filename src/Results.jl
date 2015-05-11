@@ -4,6 +4,55 @@ module Results
 using PyPlot
 using Ellipse
 
+function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
+
+  tend = ts[end]
+  setpoints = ones(length(ts))*setpoint
+
+  umax = maximum(abs(us))
+  if umax == 0.0
+    subplt = 2
+  else
+    subplt = 3
+  end
+  rc("font", family="serif", size=24)
+
+  skipmeas = int(length(ts)/20)
+  skipmean = int(length(ts)/20)
+  figure()
+  subplot(subplt,1,1)
+  x1, = plot(ts, xs[1,:]', "k", linewidth=3)
+  if obs == 2 # plot second measurement
+    y2, = plot(ts[1:skipmeas:end], ys[1, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
+  end
+  k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
+  ksp = plot(ts, setpoints, "g-", linewidth=3)
+  ylabel(L"Concentration [kmol.m$^{-3}$]")
+  legend([x1],["Nonlinear Model"], loc="best")
+  xlim([0, tend])
+  ylim([0, 1])
+
+  subplot(subplt,1,2)
+  x2, = plot(ts, xs[2,:]', "k", linewidth=3)
+  if obs == 1
+    y2, = plot(ts[1:skipmeas:end], ys[1:skipmeas:end], "kx", markersize=5, markeredgewidth=1)
+  else
+    y2, = plot(ts[1:skipmeas:end], ys[2, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
+  end
+  k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
+  ylabel("Temperature [K]")
+  legend([k2, y2],["Filtered Mean Estimate", "Nonlinear Model Measured"], loc="best")
+  xlim([0, tend])
+  ylim([minimum(xs[2,:]), maximum(xs[2,:])])
+  if subplt == 3
+    subplot(subplt,1,3)
+    plot(ts, us)
+    xlim([0, tend])
+    ylabel("Controller Input")
+  end
+  xlabel("Time [min]")
+end
+
 function plotTracking(ts, xs, ys, fmeans, us, obs)
 
   tend = ts[end]
@@ -29,6 +78,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   legend([x1],["Nonlinear Model"], loc="best")
   xlim([0, tend])
   ylim([0, 1])
+
   subplot(subplt,1,2)
   x2, = plot(ts, xs[2,:]', "k", linewidth=3)
   if obs == 1
@@ -49,6 +99,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   end
   xlabel("Time [min]")
 end
+
 
 function plotStateSpaceSwitch(linsystems, xs)
 
@@ -125,14 +176,14 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf)
 
   nf && figure() # only create a new figure if required
 
-  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3, alpha=0.5)
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
   b1 = 0.0
   for k=1:skip:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
     b1, = plot(p1, p2, "b")
   end
-  plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2, alpha=0.5)
+  plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 
