@@ -17,6 +17,8 @@ This folder contains all the scripts used to generate the closed loop figures as
 4. `MPC_RBPF_VAR.jl` => Switching MPC using the Rao Blackwellised Particle Filter to select which model to use. Stochastic constraints.
 5. `MPC_SPF_MEAN.jl` => Switching MPC using the Switching Particle Filter to select which model to use. Deterministic constraints. In this scenario the plant breaks.
 6. `MPC_SPF_VAR.jl` => Switching MPC using the Switching Particle Filter to select which model to use. Stochastic constraints. In this scenario the plant breaks.
+7. `MPC_SPF_MEAN_COMP.jl` => Comparing (5) to the case where no switching occurs.
+8. `MPC_SPF_VAR_COMP.jl` => Comparing (6) to the case where no switching occurs.
 
 ### Nonlinear MPC
 
