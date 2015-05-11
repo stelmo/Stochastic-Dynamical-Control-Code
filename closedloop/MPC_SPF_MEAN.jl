@@ -44,7 +44,7 @@ lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -403.0 # negative of the y axis intercept
+cline = -395.0 # negative of the y axis intercept
 bline = 1.0
 
 # Setup simulation
@@ -85,7 +85,7 @@ for t=2:N
     switchtrack[k, t] = sum(particles.w[find((x)->x==k, particles.s)])
   end
   maxtrack[:, t] = SPF.getMaxTrack(particles, numSwitches)
-  smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 20)
+  smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 40)
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller

@@ -51,7 +51,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-tend = 250.0 # end simulation time
+tend = 150.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
