@@ -231,7 +231,6 @@ function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip::Int64)
   legend([b1, b2],["Prediction", "Filter"], loc="best")
 end
 
-
 function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts)
 
   N = length(ts)
