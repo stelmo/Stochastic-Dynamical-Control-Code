@@ -35,8 +35,17 @@ meas_noise_dist = MvNormal(R2)
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 linsystems_broken = Reactor.getNominalLinearSystems(h, cstr_model_broken)
 opoint = 2 # the specific linear model we will use
+ysp = linsystems[opoint].op[1]
 
+lin_models = Array(RBPF.Model, 2)
+lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystems[opoint].b, C2, Q, R2)
+lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
 
+horizon = 150
+# add state constraints
+aline = 10. # slope of constraint line ax + by + c = 0
+cline = -403.0 # negative of the y axis intercept
+bline = 1.0
 
 # Setup simulation
 xs[:, 1] = init_state
@@ -54,7 +63,8 @@ spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
-us[1] = -controllers[ind].K*(spfmeans[:, 1] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+yspfix = ysp - lin_models[ind].b[1]
+us[1] = MPC.mpc_mean(spfmeans[:, 1] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, false)# get the controller input
 
 # Loop through the rest of time
 for t=2:N
@@ -79,7 +89,8 @@ for t=2:N
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
-  us[t] = -controllers[ind].K*(spfmeans[:, t] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+  yspfix = ysp - lin_models[ind].b[1]
+  us[t] = MPC.mpc_mean(spfmeans[:, t] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, false)# get the controller input
 
 end
 
@@ -88,4 +99,6 @@ Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
 
 Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
-Results.plotTracking(ts, xs, ys2, spfmeans, us, 2)
+Results.plotTracking(ts, xs, ys2, spfmeans, us, 2, ysp)
+
+Results.plotEllipses(ts, xs, spfmeans, spfcovars, "MPC", [aline, cline], linsystems[opoint].op, true)
