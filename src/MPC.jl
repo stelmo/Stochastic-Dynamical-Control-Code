@@ -12,10 +12,10 @@ function mpc_mean(kfmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, li
 
   @defVar(m, x[1:2, 1:horizon])
 
-  if limu
-    @defVar(m, -15000.0 <= u[1:horizon-1] <= 15000.0)
-  else
+  if limu == 0.0
     @defVar(m, u[1:horizon-1])
+  else
+    @defVar(m, -limu <= u[1:horizon-1] <= limu)
   end
 
   @addConstraint(m, x[1, 1] == kfmean[1])

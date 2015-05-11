@@ -49,7 +49,7 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 yspfix = ysp - linsystems[ind].b[1]
-us[1] = MPC.mpc_mean(rbpfmeans[:, 1]-linsystems[ind].b[1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, true, true)# get the controller input
+us[1] = MPC.mpc_mean(rbpfmeans[:, 1]-linsystems[ind].b[1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 20000.0, true) # get the controller input
 
 #Loop through the rest of time
 for t=2:N
@@ -67,7 +67,7 @@ for t=2:N
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   yspfix = ysp - linsystems[ind].b[1]
-  us[t] = MPC.mpc_mean(rbpfmeans[:, t]-linsystems[ind].b, horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, true, true)# get the controller input
+  us[t] = MPC.mpc_mean(rbpfmeans[:, t]-linsystems[ind].b, horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 20000.0, true)# get the controller input
 end
 
 # Plot results
