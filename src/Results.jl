@@ -335,7 +335,7 @@ function plotTrackingComparison(ts, xs1, us1, xs2, us2)
     x12, = plot(ts, xs1[2,:]', "r", linewidth=3)
     x22, = plot(ts, xs2[2,:]', "b", linewidth=3)
     ylabel("Temperature [K]")
-    legend([x22],["Switching Controller"], loc="best")
+    legend([x22],["Static Controller"], loc="best")
     xlim([0, tend])
     ylim([minimum(xs2[2,:]), maximum(xs2[2,:])])
 

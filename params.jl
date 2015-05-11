@@ -51,7 +51,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-tend = 20.0 # end simulation time
+tend = 200.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
@@ -96,4 +96,4 @@ QQ[1] = 10000.0 # due to the magnitude of the concentration
 RR = 0.000001 #
 
 # seed the random number generator
-# srand(745)
+srand(745)

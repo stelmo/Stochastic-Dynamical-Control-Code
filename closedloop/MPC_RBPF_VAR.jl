@@ -27,8 +27,7 @@ smoothedtrack = zeros(length(linsystems), N)
 # Setup MPC
 horizon = 150
 # add state constraints
-# 540 @ 0.0 and 440 @ 0.8
-aline = 125.0 # slope of constraint line ax + by + c = 0
+aline = 80.0 # slope of constraint line ax + by + c = 0
 cline = -550.0 # negative of the y axis intercept
 bline = 1.0
 
@@ -49,7 +48,7 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 yspfix = ysp - linsystems[ind].b[1]
-us[1] = MPC.mpc_mean(rbpfmeans[:, 1]-linsystems[ind].b[1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, true) # get the controller input
+us[1] = MPC.mpc_var(rbpfmeans[:, 1]-linsystems[ind].b[1], rbpfcovars[:,:, 1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, true) # get the controller input
 
 #Loop through the rest of time
 for t=2:N
@@ -67,7 +66,7 @@ for t=2:N
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   yspfix = ysp - linsystems[ind].b[1]
-  us[t] = MPC.mpc_mean(rbpfmeans[:, t]-linsystems[ind].b, horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, true)# get the controller input
+  us[t] = MPC.mpc_var(rbpfmeans[:, t]-linsystems[ind].b, rbpfcovars[:,:, t], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, true)# get the controller input
 end
 
 # Plot results

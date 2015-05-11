@@ -27,8 +27,7 @@ smoothedtrack = zeros(length(linsystems), N)
 # Setup MPC
 horizon = 150
 # add state constraints
-# 540 @ 0.0 and 440 @ 0.8
-aline = 125.0 # slope of constraint line ax + by + c = 0
+aline = 80.0 # slope of constraint line ax + by + c = 0
 cline = -550.0 # negative of the y axis intercept
 bline = 1.0
 

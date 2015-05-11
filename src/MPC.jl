@@ -47,18 +47,19 @@ function mpc_mean(kfmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, li
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_var(kfmean, kfcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, limu)
+function mpc_var(kfmean, kfcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, limu, revconstr)
   # return the MPC control input using a linear system
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
 
   @defVar(m, x[1:2, 1:horizon])
 
-  if limu
-    @defVar(m, -15000.0 <= u[1:horizon-1] <= 15000.0)
-  else
+  if limu == 0.0
     @defVar(m, u[1:horizon-1])
+  else
+    @defVar(m, -limu <= u[1:horizon-1] <= limu)
   end
+
 
   @addConstraint(m, x[1, 1] == kfmean[1])
   @addConstraint(m, x[2, 1] == kfmean[2])
@@ -71,8 +72,14 @@ function mpc_var(kfmean, kfcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
   end
 
   # # add state constraints
-  for k=2:horizon # can't do anything about k=1
-    @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
+  if revconstr
+    for k=2:horizon # can't do anything about k=1
+      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
+    end
+  else
+    for k=2:horizon # can't do anything about k=1
+      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
+    end
   end
 
   # add distribution constraints
