@@ -1,6 +1,6 @@
 module MPC
 
-warn("Hardcoded for the CSTR")
+warn("MPC is hardcoded for the CSTR!")
 
 using JuMP
 using Ipopt

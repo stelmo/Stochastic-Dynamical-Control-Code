@@ -1,7 +1,7 @@
 # Rao Blackwellised Particle Filter
 module RBPF
 # WARNING: this is made specifically for the system I am investigating
-warn("RBPF is hardcoded for this system!")
+warn("RBPF is hardcoded for the CSTR!")
 using Distributions
 using Reactor
 using LLDS
