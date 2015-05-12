@@ -121,4 +121,4 @@ end
 # Plot results
 Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
-Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix)
+Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix, 0.48)

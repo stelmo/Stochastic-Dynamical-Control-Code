@@ -55,7 +55,7 @@ ysp = linsystems[opoint].op[1]
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -395.0 # negative of the y axis intercept
+cline = -403.0 # negative of the y axis intercept
 bline = 1.0
 
 
