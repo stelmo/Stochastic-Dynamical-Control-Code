@@ -100,7 +100,6 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   xlabel("Time [min]")
 end
 
-
 function plotStateSpaceSwitch(linsystems, xs)
 
   rc("font", family="serif", size=24)
@@ -231,7 +230,7 @@ function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip::Int64)
   legend([b1, b2],["Prediction", "Filter"], loc="best")
 end
 
-function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts)
+function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts, line, sp)
 
   N = length(ts)
   skip = int(length(ts)/20)
@@ -249,6 +248,16 @@ function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, x
     p3, p4 = Ellipse.ellipse(f2means[:,k], f2covars[:,:, k])
     b2, = plot(p3, p4, "b")
   end
+
+  # line = [b,c] => y + bx + c = 0
+  # line => y = - bx - c
+
+  lxs = [-0.1:0.05:1.1]
+  lys = -line[1].*lxs .- line[2]
+  plot(lxs, lys, "r-")
+  plot(sp[1], sp[2], "gx",markersize=8, markeredgewidth = 4)
+
+
   plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
@@ -315,9 +324,11 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means, f1name, f2name)
   xlim([0, tend])
 end
 
-function plotTrackingComparison(ts, xs1, us1, xs2, us2)
+function plotTrackingComparison(ts, xs1, us1, xs2, us2, setpoint)
 
     tend = ts[end]
+
+    setpoints = ones(length(ts))*setpoint
 
     rc("font", family="serif", size=24)
 
@@ -325,6 +336,7 @@ function plotTrackingComparison(ts, xs1, us1, xs2, us2)
     subplot(3,1,1)
     x11, = plot(ts, xs1[1,:]', "r", linewidth=3)
     x12, = plot(ts, xs2[1,:]', "b", linewidth=3)
+    ksp = plot(ts, setpoints, "g-", linewidth=3)
     ylabel(L"Concentration [kmol.m$^{-3}$]")
     legend([x11],["Switching Controller"], loc="best")
     xlim([0, tend])

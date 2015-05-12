@@ -127,6 +127,6 @@ toc()
 # Plot results
 Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
-Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix)
+Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix, ysp)
 
-Results.plotEllipseComp(spfmeans, spfcovars, "SPF", pfmeans, pfcovars, "PF", xs, ts)
+Results.plotEllipseComp(spfmeans, spfcovars, "SPF", pfmeans, pfcovars, "PF", xs, ts, [aline, cline], linsystems[opoint].op)
