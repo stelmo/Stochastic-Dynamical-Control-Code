@@ -71,11 +71,11 @@ for t=2:N
 end
 toc()
 # Plot results
-# Results.plotStateSpaceSwitch(linsystems, xs)
-#
-# Results.plotSwitchSelection(numModels, maxtrack, ts, false)
-#
-# Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
+Results.plotStateSpaceSwitch(linsystems, xs)
+
+Results.plotSwitchSelection(numModels, maxtrack, ts, false)
+
+Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
 Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, ysp)
 
