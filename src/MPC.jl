@@ -3,7 +3,7 @@ module MPC
 warn("MPC is hardcoded for the CSTR!")
 
 using JuMP
-using Ipopt
+using Ipopt # the back up optimisation routine
 using Mosek # can't handle the nonconvex constraint
 
 function mpc_mean(kfmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, limu, limstepu, revconstr)
@@ -185,6 +185,11 @@ function mpc_var(kfmean, kfcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
   @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
+  if status != :Optimal
+    warn("Mosek did not converge. Attempting to use Ipopt...")
+    unow = mpc_var_i(kfmean, kfcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, limu, limstepu, revconstr, swapcon)
+    return unow
+  end
 
   return getValue(u[1]) # get the controller input
 end
@@ -238,14 +243,14 @@ function mpc_var_i(kfmean, kfcovar, horizon, A, B, b, aline, bline, cline, QQ, R
   #   @addConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
   # end
 
-  # # add distribution constraints
-  # sigma = 4.605 # this should match the chi square value in Ellipse
-  # rsquared = [aline, bline]'*kfcovar*[aline, bline]
-  # r = rsquared[1]
-  # c = aline*b[1] + bline*b[2] + cline
-  # for k=2:horizon # don't do anything about k=1
-  #   @addNLConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
-  # end
+  # add distribution constraints
+  sigma = 4.605 # this should match the chi square value in Ellipse
+  rsquared = [aline, bline]'*kfcovar*[aline, bline]
+  r = rsquared[1]
+  c = aline*b[1] + bline*b[2] + cline
+  for k=2:horizon # don't do anything about k=1
+    @addNLConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
+  end
 
 
   # sigma = 4.605 # this should match the chi square value in Ellipse
@@ -256,6 +261,10 @@ function mpc_var_i(kfmean, kfcovar, horizon, A, B, b, aline, bline, cline, QQ, R
   @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
+
+  if status == :Optimal
+    info("Ipopt has converged!")
+  end
 
   return getValue(u[1]) # get the controller input
 end
