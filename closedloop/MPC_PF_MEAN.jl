@@ -15,8 +15,8 @@ b = linsystems[opoint].b # offset from the origin
 
 # Set point
 # ysp = linsystems[1].op[1] - b[1] # Low concentration
-# ysp = linsystems[2].op[1] - b[1] # Medium concentration
-ysp = 0.55 - b[1]
+ysp = linsystems[2].op[1] - b[1] # Medium concentration
+# ysp = 0.01 - b[1]
 
 f(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 g(x) = C2*x # state observation
@@ -51,7 +51,7 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
-
+  # ysp = -0.25 - b[1]
   us[t] = MPC.mpc_mean(pfmeans[:, t]-b, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 25000.0, 1000.0, false)
 end
 toc()
