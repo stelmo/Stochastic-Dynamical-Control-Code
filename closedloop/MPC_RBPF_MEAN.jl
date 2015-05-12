@@ -25,9 +25,10 @@ switchtrack = zeros(length(linsystems), N) # keep track of the model/switch dist
 smoothedtrack = zeros(length(linsystems), N)
 
 # Setup MPC
+RR = 0.000001
 horizon = 150
 # add state constraints
-aline = 80.0 # slope of constraint line ax + by + c = 0
+aline = 10.0 # slope of constraint line ax + by + c = 0
 cline = -550.0 # negative of the y axis intercept
 bline = 1.0
 
@@ -48,8 +49,8 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 yspfix = ysp - linsystems[ind].b[1]
-us[1] = MPC.mpc_mean(rbpfmeans[:, 1]-linsystems[ind].b[1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, true) # get the controller input
-
+us[1] = MPC.mpc_mean(rbpfmeans[:, 1]-linsystems[ind].b[1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 25000.0, 1000.0, true) # get the controller input
+tic()
 #Loop through the rest of time
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
@@ -66,15 +67,15 @@ for t=2:N
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   yspfix = ysp - linsystems[ind].b[1]
-  us[t] = MPC.mpc_mean(rbpfmeans[:, t]-linsystems[ind].b, horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, true)# get the controller input
+  us[t] = MPC.mpc_mean(rbpfmeans[:, t]-linsystems[ind].b, horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 25000.0, 1000.0, true)# get the controller input
 end
-
+toc()
 # Plot results
-Results.plotStateSpaceSwitch(linsystems, xs)
-
-Results.plotSwitchSelection(numModels, maxtrack, ts, false)
-
-Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
+# Results.plotStateSpaceSwitch(linsystems, xs)
+#
+# Results.plotSwitchSelection(numModels, maxtrack, ts, false)
+#
+# Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
 Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, ysp)
 
