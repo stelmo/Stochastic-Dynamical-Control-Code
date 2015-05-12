@@ -51,7 +51,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-tend = 40.0 # end simulation time
+tend = 50.0 # end simulation time
 ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
@@ -96,5 +96,5 @@ QQ[1] = 10000.0 # due to the magnitude of the concentration
 RR = 0.000001 #
 
 # seed the random number generator
-# srand(745) # good for KF
-srand(3265) # good for RBPF
+srand(745) # good for KF, SPF
+# srand(3265) # good for RBPF

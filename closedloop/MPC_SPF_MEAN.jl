@@ -44,7 +44,7 @@ lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -395.0 # negative of the y axis intercept
+cline = -403.0 # negative of the y axis intercept
 bline = 1.0
 
 # Setup simulation
@@ -64,9 +64,10 @@ spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 yspfix = ysp - lin_models[ind].b[1]
-us[1] = MPC.mpc_mean(spfmeans[:, 1] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, false)# get the controller input
+us[1] = MPC.mpc_mean(spfmeans[:, 1] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, 1000.0, false)# get the controller input
 
 # Loop through the rest of time
+tic()
 for t=2:N
 
   random_element = rand(state_noise_dist)
@@ -90,9 +91,10 @@ for t=2:N
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   yspfix = ysp - lin_models[ind].b[1]
-  us[t] = MPC.mpc_mean(spfmeans[:, t] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, false)# get the controller input
+  us[t] = MPC.mpc_mean(spfmeans[:, t] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0,1000.0, false)# get the controller input
 
 end
+toc()
 
 # Plot results
 Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
