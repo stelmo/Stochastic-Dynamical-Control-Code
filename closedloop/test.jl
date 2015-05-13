@@ -3,40 +3,91 @@ include("../params.jl")
 using JuMP
 using Ipopt
 
-kfmean = [0.5, 450]
+init_state = [0.5; 400] # initial state
+
+f(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model) + w
+g(x) = C2*x # state observation
+
+cstr_pf = PF.Model(f,g)
+
+# Initialise the PF
+nP = 1 # number of particles.
+prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
+particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
+state_noise_dist = MvNormal(Q) # state distribution
+meas_noise_dist = MvNormal(R2) # measurement distribution
+
+# Time step 1
+xs[:,1] = init_state
+ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
+PF.init_filter!(particles, 0.0, ys2[:, 1], meas_noise_dist, cstr_pf)
+
+
 limu = 15000.0
 limustep = 1000.0
 horizon = 10
 ysp = 0.48
+nH = 5 #horizon
 
 m = Model(solver=IpoptSolver(print_level=0)) #
 
-@defVar(m, x[1:2, 1:horizon])
+@defVar(m, x1[1:nP, 1:nH]) # concen
+@defVar(m, x2[1:nP, 1:nH]) # temp
 
 if limu == 0.0
-  @defVar(m, u[1:horizon-1])
+  @defVar(m, u[1:nH-1])
 else
-  @defVar(m, -limu <= u[1:horizon-1] <= limu)
+  @defVar(m, -limu <= u[1:nH-1] <= limu)
+end
+#
+# @defVar(m, k11[1:nP, 1:nH-1])
+# @defVar(m, k12[1:nP, 1:nH-1])
+#
+# @defVar(m, k21[1:nP, 1:nH-1])
+# @defVar(m, k22[1:nP, 1:nH-1])
+#
+# @defVar(m, k31[1:nP, 1:nH-1])
+# @defVar(m, k32[1:nP, 1:nH-1])
+#
+# @defVar(m, k41[1:nP, 1:nH-1])
+# @defVar(m, k42[1:nP, 1:nH-1])
+
+
+for np=1:nP # initial state for all particles
+  @addConstraint(m, x1[np, 1] == particles.x[1, np])
+  @addConstraint(m, x2[np, 1] == particles.x[2, np])
 end
 
-@addConstraint(m, x[1, 1] == kfmean[1])
-@addConstraint(m, x[2, 1] == kfmean[2])
+# @defNLExpr(k11expr[np=1:nP, nh=1:nH-1], (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - x1[np, nh]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh])
+#
+# @defNLExpr(k12expr[np=1:nP, nh=1:nH-1], (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - x2[np, nh]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh] + u[nh]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
 
 
-@defNLExpr(x1, (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - kfmean[1]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*kfmean[2]))*kfmean[1])
-@defNLExpr(x2, (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - kfmean[2]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*kfmean[2]))*kfmean[1] + u[1]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
+## loop over horizon
+for nh=1:nH-1
+  for np=1:nP # over each particle
 
-@defVar(m, k1[1:2])
-@defVar(m, k2[1:2])
-@defVar(m, k3[1:2])
-@defVar(m, k4[1:2])
+    # @addNLConstraint(m, k11expr[np, nh] == k11[np, nh])
 
-@addNLConstraint(m, k1[1] == x1)
-@addNLConstraint(m, k1[2] == x2)
+    # @addNLConstraint(m, k12[np, nh] == k12expr[np, nh])
 
+    # (x1[np, nh-1] + 0.5*h*k11[np, nh-1])
+    # (x2[np, nh-1] + 0.5*h*k12[np, nh-1])
+    #
+    # @addNLConstraint(m, k21[np, nh-1] == (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - (x1[np, nh-1] + 0.5*h*k11[np, nh-1])) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*(x2[np, nh-1] + 0.5*h*k12[np, nh-1])))*(x1[np, nh-1] + 0.5*h*k11[np, nh-1]))
+    #
+    # @addNLConstraint(m, k22[np, nh-1] == (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - (x2[np, nh-1] + 0.5*h*k12[np, nh-1])) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*(x2[np, nh-1] + 0.5*h*k12[np, nh-1])))*(x1[np, nh-1] + 0.5*h*k11[np, nh-1]) + u[nh-1]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
+    #
+    # @addNLConstraint(m, x2[np, nh] == x2[np, nh-1] + (h/6.0)*(k12[np, nh-1] + 2.0*k21[np, nh-1] + 2.0*k32[np, nh-1] + k42[np, nh-1]))
+    # @addNLConstraint(m, x1[np, nh] == x1[np, nh-1] + (h/6.0)*(k11[np, nh-1] + 2.0*k21[np, nh-1] + 2.0*k31[np, nh-1] + k41[np, nh-1]))
 
-@addConstraint(m, x[1, 2] == kfmean[1] + h*k1[1])
-@addConstraint(m, x[2, 2] == kfmean[2] + h*k1[2])
+    @addNLConstraint(m, x1[np, nh+1] == x1[np, nh] + (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - x1[np, nh]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh])
+    @addNLConstraint(m, x2[np, nh+1] == x2[np, nh] + (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - x2[np, nh]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh] + u[nh]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
+
+  end
+end
+
+# end setting constraints over the horizon
 
 # Reactor.run_reactor(xs1[:, t-1], us[t-1], h, cstr_model)[1]
 # function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::reactor)
@@ -79,6 +130,8 @@ end
 #   @addConstraint(m, u[k]-u[k-1] >= -limstepu)
 # end
 
-@setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+@setObjective(m, Min, sum{x1[1, i]^2, i=1:nH})
 
+# @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+#
 status = solve(m)

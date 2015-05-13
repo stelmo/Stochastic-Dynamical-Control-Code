@@ -12,6 +12,9 @@ using SPF
 using Results
 using NLsolve
 using MPC
+using JuMP
+using Ipopt
+using Mosek
 
 
 # Extend the Base Library
