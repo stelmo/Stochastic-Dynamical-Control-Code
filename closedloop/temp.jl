@@ -1,84 +1,94 @@
-include("../params.jl")
-
-using JuMP
 using Ipopt
 
-init_state = [0.5; 400] # initial state
+# hs071
+# min x1 * x4 * (x1 + x2 + x3) + x3
+# st  x1 * x2 * x3 * x4 >= 25
+#     x1^2 + x2^2 + x3^2 + x4^2 = 40
+#     1 <= x1, x2, x3, x4 <= 5
+# Start at (1,5,5,1)
+# End at (1.000..., 4.743..., 3.821..., 1.379...)
 
-f(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model) + w
-g(x) = C2*x # state observation
-
-cstr_pf = PF.Model(f,g)
-
-# Initialise the PF
-nP = 5 # number of particles.
-prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
-particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
-state_noise_dist = MvNormal(Q) # state distribution
-meas_noise_dist = MvNormal(R2) # measurement distribution
-
-# Time step 1
-xs[:,1] = init_state
-ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
-PF.init_filter!(particles, 0.0, ys2[:, 1], meas_noise_dist, cstr_pf)
-
-
-limu = 15000.0
-limustep = 1000.0
-horizon = 10
-ysp = 0.48
-nH = 5 #horizon
-
-m = Model(solver=IpoptSolver(print_level=0)) #
-
-@defVar(m, x1[1:nP, 1:nH]) # concen
-@defVar(m, x2[1:nP, 1:nH]) # temp
-
-if limu == 0.0
-  @defVar(m, u[1:nH-1])
-else
-  @defVar(m, -limu <= u[1:nH-1] <= limu)
+function eval_f(x)
+  return x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3]
 end
 
-for np=1:nP # initial state for all particles
-  @addConstraint(m, x1[np, 1] == particles.x[1, np])
-  @addConstraint(m, x2[np, 1] == particles.x[2, np])
+function eval_g(x, g)
+    # Bad: g    = zeros(2)  # Allocates new array
+    # OK:  g[:] = zeros(2)  # Modifies 'in place'
+    # g[1] = x[1]   * x[2]   * x[3]   * x[4]
+    k = 2
+    function g11(x)
+      println(k)
+      return k*x[1]   * x[2]
+    end
+
+    function g12(x)
+     return x[3]   * x[4]
+    end
+
+    function g1(x)
+      return  g11(x)  * g12(x)
+    end
+
+    function g2(x)
+      return x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2
+    end
+
+    g[1] = g1(x)
+    g[2] = x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2
+  end
+
+function eval_grad_f(x, grad_f)
+  # Bad: grad_f    = zeros(4)  # Allocates new array
+  # OK:  grad_f[:] = zeros(4)  # Modifies 'in place'
+  grad_f[1] = x[1] * x[4] + x[4] * (x[1] + x[2] + x[3])
+  grad_f[2] = x[1] * x[4]
+  grad_f[3] = x[1] * x[4] + 1
+  grad_f[4] = x[1] * (x[1] + x[2] + x[3])
 end
 
-#
-for np=1:nP
-  @addNLConstraint(m, x1[np, 2] == x1[np, 1] + h*((cstr_model.F/cstr_model.V) * (cstr_model.CA0 - x1[np, 2]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, 2]))*x1[np, 2]))
-#
-# @addNLConstraint(m, x2[np, nh+1] == x2[np, nh] + (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - x2[np, nh]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh] + u[nh]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
+function eval_jac_g(x, mode, rows, cols, values)
+  if mode == :Structure
+    # Constraint (row) 1
+    rows[1] = 1; cols[1] = 1
+    rows[2] = 1; cols[2] = 2
+    rows[3] = 1; cols[3] = 3
+    rows[4] = 1; cols[4] = 4
+    # Constraint (row) 2
+    rows[5] = 2; cols[5] = 1
+    rows[6] = 2; cols[6] = 2
+    rows[7] = 2; cols[7] = 3
+    rows[8] = 2; cols[8] = 4
+  else
+    # Constraint (row) 1
+    values[1] = x[2]*x[3]*x[4]  # 1,1
+    values[2] = x[1]*x[3]*x[4]  # 1,2
+    values[3] = x[1]*x[2]*x[4]  # 1,3
+    values[4] = x[1]*x[2]*x[3]  # 1,4
+    # Constraint (row) 2
+    values[5] = 2*x[1]  # 2,1
+    values[6] = 2*x[2]  # 2,2
+    values[7] = 2*x[3]  # 2,3
+    values[8] = 2*x[4]  # 2,4
+  end
 end
 
-# @defNLExpr(k11expr[np=1:nP, nh=1:nH-1], (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - x1[np, nh]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh])
-#
-# @defNLExpr(k12expr[np=1:nP, nh=1:nH-1], (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - x2[np, nh]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh] + u[nh]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
+n = 4
+x_L = [1.0, 1.0, 1.0, 1.0]
+x_U = [5.0, 5.0, 5.0, 5.0]
 
-    # @addNLConstraint(m, k11expr[np, nh] == k11[np, nh])
+m = 2
+g_L = [25.0, 40.0]
+g_U = [2.0e19, 40.0]
 
-    # @addNLConstraint(m, k12[np, nh] == k12expr[np, nh])
+prob = createProblem(n, x_L, x_U, m, g_L, g_U, 8, 1,
+                     eval_f, eval_g, eval_grad_f, eval_jac_g)
 
-    # (x1[np, nh-1] + 0.5*h*k11[np, nh-1])
-    # (x2[np, nh-1] + 0.5*h*k12[np, nh-1])
-    #
-    # @addNLConstraint(m, k21[np, nh-1] == (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - (x1[np, nh-1] + 0.5*h*k11[np, nh-1])) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*(x2[np, nh-1] + 0.5*h*k12[np, nh-1])))*(x1[np, nh-1] + 0.5*h*k11[np, nh-1]))
-    #
-    # @addNLConstraint(m, k22[np, nh-1] == (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - (x2[np, nh-1] + 0.5*h*k12[np, nh-1])) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*(x2[np, nh-1] + 0.5*h*k12[np, nh-1])))*(x1[np, nh-1] + 0.5*h*k11[np, nh-1]) + u[nh-1]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
-    #
-    # @addNLConstraint(m, x2[np, nh] == x2[np, nh-1] + (h/6.0)*(k12[np, nh-1] + 2.0*k21[np, nh-1] + 2.0*k32[np, nh-1] + k42[np, nh-1]))
-    # @addNLConstraint(m, x1[np, nh] == x1[np, nh-1] + (h/6.0)*(k11[np, nh-1] + 2.0*k21[np, nh-1] + 2.0*k31[np, nh-1] + k41[np, nh-1]))
+addOption(prob, "hessian_approximation", "limited-memory")
 
-#     @addNLConstraint(m, x1[np, nh+1] == x1[np, nh] + (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - x1[np, nh]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh])
-#     @addNLConstraint(m, x2[np, nh+1] == x2[np, nh] + (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - x2[np, nh]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh] + u[nh]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
-#
-#   end
-# end
-#
+prob.x = [1.0, 5.0, 5.0, 1.0]
+status = solveProblem(prob)
 
-@setObjective(m, Min, sum{u[i]^2, i=1:nH-1})
-
-
-#
-status = solve(m)
+println(Ipopt.ApplicationReturnStatus[status])
+println(prob.x)
+println(prob.obj_val)

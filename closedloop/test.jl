@@ -11,7 +11,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 1 # number of particles.
+nP = 5 # number of particles.
 prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
@@ -27,111 +27,137 @@ limu = 15000.0
 limustep = 1000.0
 horizon = 10
 ysp = 0.48
-nH = 5 #horizon
-
-m = Model(solver=IpoptSolver(print_level=0)) #
-
-@defVar(m, x1[1:nP, 1:nH]) # concen
-@defVar(m, x2[1:nP, 1:nH]) # temp
-
-if limu == 0.0
-  @defVar(m, u[1:nH-1])
-else
-  @defVar(m, -limu <= u[1:nH-1] <= limu)
-end
-#
-# @defVar(m, k11[1:nP, 1:nH-1])
-# @defVar(m, k12[1:nP, 1:nH-1])
-#
-# @defVar(m, k21[1:nP, 1:nH-1])
-# @defVar(m, k22[1:nP, 1:nH-1])
-#
-# @defVar(m, k31[1:nP, 1:nH-1])
-# @defVar(m, k32[1:nP, 1:nH-1])
-#
-# @defVar(m, k41[1:nP, 1:nH-1])
-# @defVar(m, k42[1:nP, 1:nH-1])
+nH = 3 #horizon
 
 
-for np=1:nP # initial state for all particles
-  @addConstraint(m, x1[np, 1] == particles.x[1, np])
-  @addConstraint(m, x2[np, 1] == particles.x[2, np])
+## Start IPOPT
+
+function eval_f(x)
+  # Objective function
+  totvar = 3*nH-1 #(x1, x2, u)
+  ustart = 2*nH+1 # remember x = (concentration and temperature)
+  return sum(x[ustart:1:end].^2)
 end
 
-# @defNLExpr(k11expr[np=1:nP, nh=1:nH-1], (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - x1[np, nh]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh])
-#
-# @defNLExpr(k12expr[np=1:nP, nh=1:nH-1], (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - x2[np, nh]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh] + u[nh]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
-
-
-## loop over horizon
-for nh=1:nH-1
-  for np=1:nP # over each particle
-
-    # @addNLConstraint(m, k11expr[np, nh] == k11[np, nh])
-
-    # @addNLConstraint(m, k12[np, nh] == k12expr[np, nh])
-
-    # (x1[np, nh-1] + 0.5*h*k11[np, nh-1])
-    # (x2[np, nh-1] + 0.5*h*k12[np, nh-1])
-    #
-    # @addNLConstraint(m, k21[np, nh-1] == (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - (x1[np, nh-1] + 0.5*h*k11[np, nh-1])) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*(x2[np, nh-1] + 0.5*h*k12[np, nh-1])))*(x1[np, nh-1] + 0.5*h*k11[np, nh-1]))
-    #
-    # @addNLConstraint(m, k22[np, nh-1] == (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - (x2[np, nh-1] + 0.5*h*k12[np, nh-1])) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*(x2[np, nh-1] + 0.5*h*k12[np, nh-1])))*(x1[np, nh-1] + 0.5*h*k11[np, nh-1]) + u[nh-1]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
-    #
-    # @addNLConstraint(m, x2[np, nh] == x2[np, nh-1] + (h/6.0)*(k12[np, nh-1] + 2.0*k21[np, nh-1] + 2.0*k32[np, nh-1] + k42[np, nh-1]))
-    # @addNLConstraint(m, x1[np, nh] == x1[np, nh-1] + (h/6.0)*(k11[np, nh-1] + 2.0*k21[np, nh-1] + 2.0*k31[np, nh-1] + k41[np, nh-1]))
-
-    @addNLConstraint(m, x1[np, nh+1] == x1[np, nh] + (cstr_model.F/cstr_model.V) * (cstr_model.CA0 - x1[np, nh]) - cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh])
-    @addNLConstraint(m, x2[np, nh+1] == x2[np, nh] + (cstr_model.F/cstr_model.V) * (cstr_model.TA0 - x2[np, nh]) - (cstr_model.dH/(cstr_model.rho*cstr_model.Cp))*cstr_model.k0*exp(-cstr_model.E/(cstr_model.R*x2[np, nh]))*x1[np, nh] + u[nh]/(cstr_model.rho*cstr_model.Cp*cstr_model.V))
-
+function eval_grad_f(x, grad_f)
+  # Gradient of the objective function
+  for i=1:nH-1
+    grad_f[i] = 2.0
   end
 end
 
-# end setting constraints over the horizon
+function eval_g(x, g)
+  # Constraints
+  # parameters
+  V = 5.0 #m3
+  R = 8.314 #kJ/kmol.K
+  CA0 = 1.0 #kmol/m3
+  TA0 = 310.0 #K
+  dH = -4.78e4 #kJ/kmol
+  k0 = 72.0e7 #1/min
+  E = 8.314e4 #kJ/kmol
+  Cp = 0.239 #kJ/kgK
+  rho = 1000.0 #kg/m3
+  F = 100e-3 #m3/min
 
-# Reactor.run_reactor(xs1[:, t-1], us[t-1], h, cstr_model)[1]
-# function run_reactor(xprev::Array{Float64, 1}, u::Float64, h::Float64, model::reactor)
-#   # Use Runga-Kutta method to solve for the next time step using the full
-#   # nonlinear model.
-#   k1 :: Array{Float64, 1} = reactor_ode(xprev, u, model)
-#   k2 :: Array{Float64, 1} = reactor_ode(xprev + 0.5*h.*k1, u, model)
-#   k3 :: Array{Float64, 1} = reactor_ode(xprev + 0.5*h.*k2, u, model)
-#   k4 :: Array{Float64, 1} = reactor_ode(xprev + h.*k3, u, model)
-#   xnow :: Array{Float64, 1} = xprev + (h/6.0)*(k1 + 2.0*k2 + 2.0*k3 + k4)
-#   return xnow
-# end
-#
-#
-# xnow[1] = (model.F/model.V) * (model.CA0 - xprev[1]) - model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1]
-# xnow[2] = (model.F/model.V) * (model.TA0 - xprev[2]) - (model.dH/(model.rho*model.Cp))*model.k0*exp(-model.E/(model.R*xprev[2]))*xprev[1] + u/(model.rho*model.Cp*model.V)
+  # assume Forward Euler is good enough!
+  function x1(x)
+    return (F/V) * (CA0 - x[1]) - k0*exp(-E/(R*x[2]))*x[1]
+  end
 
+  function x2(x, u)
+    return (F/V) * (TA0 - x[2]) - (dH/(rho*Cp))*k0*exp(-E/(R*x[2]))*x[1] + u/(rho*Cp*V)
+  end
 
-# @addConstraint(m, x[1, 2] == Reactor.run_reactor(kfmeans, u[1], h, cstr_model)[1])
-# @addConstraint(m, x[2, 2] == Reactor.run_reactor(kfmeans, u[1], h, cstr_model)[2])
+  totvar = 3*nH-1
+  ustart = 2*nH+1
 
-# for k=3:horizon
-#   @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1])
-#   @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1])
-# end
+  g[1] = x[1] - particles.x[1,1] # needs to be zero
+  g[2] = x[2] - particles.x[2,1] # needs to be zero
 
-# # add state constraints
-# if revconstr
-#   for k=2:horizon # can't do anything about k=1
-#     @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
-#   end
-# else
-#   for k=2:horizon # can't do anything about k=1
-#     @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
-#   end
-# end
+  ucounter = ustart
+  for i=3:2:ustart-1
+    g[i] = x[i] - x[i-2] - h*x1([x[i-2], x[i-1]])
+    g[i+1] = x[i+1] - x[i-1] - h*x2([x[i-2], x[i-1]], x[ucounter])
+    ucounter += 1
+  end
+end
 
-# for k=2:horizon-1
-#   @addConstraint(m, u[k]-u[k-1] <= limstepu)
-#   @addConstraint(m, u[k]-u[k-1] >= -limstepu)
-# end
+function eval_jac_g(x, mode, rows, cols, value)
+  # parameters
+  V = 5.0 #m3
+  R = 8.314 #kJ/kmol.K
+  CA0 = 1.0 #kmol/m3
+  TA0 = 310.0 #K
+  dH = -4.78e4 #kJ/kmol
+  k0 = 72.0e7 #1/min
+  E = 8.314e4 #kJ/kmol
+  Cp = 0.239 #kJ/kgK
+  rho = 1000.0 #kg/m3
+  F = 100e-3 #m3/min
 
-@setObjective(m, Min, sum{x1[1, i]^2, i=1:nH})
+  if mode == :Structure
+    rows[1] = 1; cols[1] = 1
+    rows[2] = 2; cols[2] = 2
 
-# @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
-#
-status = solve(m)
+    rowcount = 3
+    colown = 1
+    ucount = 2*nH+1
+
+    totdyncons = 2 + 4*(2*(nH-1))
+    for i=3:8:totdyncons # in terms of horizon
+      rows[i] = rowcount; cols[i] = colown
+      rows[i+1] = rowcount; cols[i+1] = colown + 1
+      rows[i+2] = rowcount; cols[i+2] = colown + 2
+      rows[i+3] = rowcount; cols[i+3] = ucount
+
+      rows[i+4] = rowcount + 1; cols[i+4] = colown
+      rows[i+5] = rowcount + 1; cols[i+5] = colown + 1
+      rows[i+6] = rowcount + 1; cols[i+6] = colown + 3
+      rows[i+7] = rowcount + 1; cols[i+7] = ucount
+      rowcount += 2
+      ucount += 1
+      colown += 2
+    end
+
+  else
+    value[1] = 1.0
+    value[2] = 1.0
+
+    varval = 1
+    totdyncons = 2 + 4*(2*(nH-1))
+    for i=3:8:totdyncons # in terms of horizon
+      value[i] = -(1.0 + h*(-F/V-k0*exp(-E/(R*x[varval+1]))))
+      value[i+1] = -h*(-x[varval]*k0*exp(-E/(R*x[varval+1]))*(E/(R*x[varval+1]^2)))
+      value[i+2] = 1.0
+      value[i+3] = 0.0
+
+      value[i+4] = -h*(-dH/(rho*Cp)*k0*exp(-E/(R*x[varval+1])))
+      value[i+5] = -(1.0 -h*(F/V + dH/(rho*Cp)*k0*exp(-E/(R*x[varval+1]))*(E/(R*x[varval+1]^2))*x[varval]))
+      value[i+6] = 1.0
+      value[i+7] = 1.0/(rho*Cp*V)
+      varval += 2
+    end
+  end
+end
+
+numvars = 3*nH-1
+x_L = -1.0e5*ones(numvars)
+x_U = 1.0e5*ones(numvars)
+
+numcons = nH*2
+g_L = -0.1*ones(numcons)
+g_U = 0.1*ones(numcons)
+totdyncons = 2 + 4*(2*(nH-1))
+
+prob = createProblem(numvars, x_L, x_U, numcons, g_L, g_U, totdyncons, 10,
+                     eval_f, eval_g, eval_grad_f, eval_jac_g)
+
+addOption(prob, "hessian_approximation", "limited-memory")
+
+prob.x = [particles.x[1,1], particles.x[2,1], zeros(numvars-2)]
+status = solveProblem(prob)
+
+println(Ipopt.ApplicationReturnStatus[status])
+println(prob.x)
+println(prob.obj_val)
