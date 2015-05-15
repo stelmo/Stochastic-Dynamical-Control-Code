@@ -5,6 +5,7 @@ using NLsolve
 using Distributions
 using JuMP
 using Ipopt
+using KernelDensity
 
 for func in ["Ellipse.jl",
             "HMM.jl",
