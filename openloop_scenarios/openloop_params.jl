@@ -15,7 +15,7 @@ using MPC
 using JuMP
 using Ipopt
 using Mosek
-
+using Auxiliary
 
 # Extend the Base Library
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
@@ -54,7 +54,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-ts = [0.0:h:tend] # tend is set in the calling script!!!!
+ts = [0.0:h:tend]
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
 linxs = zeros(2, N) # linear plant
