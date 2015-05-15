@@ -167,7 +167,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
-function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf)
+function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma=4.605)
 
   rc("font", family="serif", size=24)
   N = length(ts)
@@ -179,7 +179,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
   b1 = 0.0
   for k=1:skip:N
-    p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
+    p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k], sigma)
     b1, = plot(p1, p2, "b")
   end
   plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)

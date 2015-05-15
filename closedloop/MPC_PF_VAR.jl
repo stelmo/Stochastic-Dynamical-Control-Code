@@ -43,7 +43,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -403.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0)# get the controller input
+us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0)# get the controller input
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant

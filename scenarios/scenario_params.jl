@@ -78,6 +78,8 @@ kfcovars = zeros(2,2, N) # Kalman Filter covariances
 spfmeans  = zeros(2, N) # Kalman Filter means
 spfcovars = zeros(2,2, N)
 
+kldiv = zeros(N) # Kullback-Leibler Divergence as a function of time
+
 # Noise settings
 Q = eye(2) # plant noise
 Q[1] = 1e-06
@@ -98,5 +100,5 @@ QQ[1] = 10000.0 # due to the magnitude of the concentration
 RR = 0.000001 #
 
 # seed the random number generator
-srand(745) # good for KF, SPF
+# srand(745) # good for KF, SPF
 # srand(3265) # good for RBPF

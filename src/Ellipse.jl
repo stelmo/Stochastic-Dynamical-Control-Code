@@ -1,7 +1,7 @@
 # Plot 1-Sigma Ellipses
 module Ellipse
 
-function ellipse(mean, covariance)
+function ellipse(mean, covariance, sigma=4.605)
   # Plots a confidence ellipse around 2D Gaussians.
   # Converted to Julia from the Matlab function:
   # http://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
@@ -27,8 +27,7 @@ function ellipse(mean, covariance)
       angle = angle + 2*pi
   end
 
-  # chisquare_val = sqrt(2.2788) # one sigma ellipse 68% confidence
-  chisquare_val = sqrt(4.605) # 90 % confidence region
+  chisquare_val = sqrt(sigma)
 
   theta_grid = linspace(0.0,2.0*pi)
   phi = angle

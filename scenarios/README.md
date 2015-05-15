@@ -12,6 +12,12 @@ This folder contains stand alone scripts for illustration purposes. They are der
 
 ## Single Model Linear MPC
 
-1. `lin_mod_lin_mpc_gauss.jl` => Linear plant model controlled with a linear MPC. Plant and measurement noise is Gaussian with known distributions. The control objective is to keep the system at the unsteady operating point using the minimum controller effort (standard QP MPC objective function).
+1. `lin_mod_lin_mpc_gauss_mean.jl` => Linear plant model controlled with a linear MPC. Plant and measurement noise is Gaussian with known distributions. The control objective is to keep the system at the unsteady operating point using the minimum controller effort (standard QP MPC objective function). Standard deterministic constraints.
+
+2. `lin_mod_lin_mpc_gauss_var_conf_x.jl` => exactly the same system as before but with the additional stochastic constraint. The suffix `_x.jl` indicates the confidence of the constraint based on the Gaussian assumption i.e. it is read off from a Chi Squared Distribution table (with 2 DOF in this case).
+
+
+
+
 
 ## Switching Model Linear MPC

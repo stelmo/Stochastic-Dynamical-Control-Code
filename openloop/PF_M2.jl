@@ -10,7 +10,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 20 # number of particles.
+nP = 2000 # number of particles.
 prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
@@ -30,7 +30,12 @@ for t=2:N
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 end
 
-# Plot results
-Results.plotEllipses(ts, xs, ys2, pfmeans, pfcovars, "Particle Filter")
+using Auxiliary
 
-Results.plotTracking(ts, xs, ys2, pfmeans, us, 2)
+println(Auxiliary.KL(particles.x, particles.w, pfmeans[:, end], pfcovars[:,:, end]))
+Auxiliary.showEstimatedDensity(particles.x, particles.w, pfmeans[:, end], pfcovars[:,:, end])
+
+# Plot results
+# Results.plotEllipses(ts, xs, pfmeans, pfcovars, "Particle Filter")
+#
+# Results.plotTracking(ts, xs, ys2, pfmeans, us, 2)
