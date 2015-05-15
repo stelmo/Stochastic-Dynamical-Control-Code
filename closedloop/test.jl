@@ -41,7 +41,7 @@ end
 
 function eval_grad_f(x, grad_f)
   # Gradient of the objective function
-  for i=1:nH-1
+  for i=1:nH-1 # FIX!!!!!!!!!!!!!!!!!!!!
     grad_f[i] = 2.0
   end
 end
