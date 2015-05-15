@@ -358,4 +358,12 @@ function plotTrackingComparison(ts, xs1, us1, xs2, us2, setpoint)
     xlabel("Time [min]")
 end
 
+function plotKLdiv(ts, kldiv)
+  rc("font", family="serif", size=24)
+  figure()
+  plot(ts, kldiv, "r", linewidth=3)
+  xlabel("time [min]")
+  ylabel("Divergence [Nats]")
+end
+
 end #module

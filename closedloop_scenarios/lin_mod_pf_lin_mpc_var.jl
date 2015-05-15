@@ -25,7 +25,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 100 # number of particles.
+nP = 1000 # number of particles.
 prior_dist = MvNormal(init_state-b, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
@@ -45,7 +45,7 @@ cline = -403.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0, Q)# get the controller input
-kldiv[1] = Auxiliary.
+kldiv[1] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1])
 tic()
 for t=2:N
   xs[:, t] = A*xs[:, t-1] + B*us[t-1] + rand(state_noise_dist) # actual plant
@@ -54,6 +54,8 @@ for t=2:N
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
   us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0, Q)
+
+  kldiv[t] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, t], pfcovars[:,:, t])
 end
 toc()
 pfmeans =pfmeans .+ b
@@ -65,3 +67,5 @@ ys2 = ys2 .+ b
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
 
 Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true)
+
+Results.plotKLdiv(ts, kldiv)
