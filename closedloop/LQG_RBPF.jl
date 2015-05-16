@@ -9,6 +9,9 @@ linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 
 # Setup the RBPF
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
+A = [0.999 0.01 0.000;
+     0.001 0.98 0.001;
+     0.000 0.01 0.999]
 numModels = length(models) # number of linear models (will be 3)
 nP = 1500 # number of particles
 
@@ -45,6 +48,7 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
+# ind = indmax(maxtrack[:, 1]) # use this model and controller
 us[1] = -controllers[ind].K*(rbpfmeans[:, 1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
 
 #Loop through the rest of time
@@ -62,6 +66,7 @@ for t=2:N
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
+  # ind = indmax(maxtrack[:, t]) # use this model and controller
   us[t] = -controllers[ind].K*(rbpfmeans[:, t] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
   # us[t] = 0.0
 end

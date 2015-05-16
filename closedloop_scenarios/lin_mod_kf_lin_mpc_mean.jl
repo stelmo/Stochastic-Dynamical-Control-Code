@@ -1,8 +1,8 @@
 # Linear Plant controlled with a linear MPC using a KF to estimate the state.
 # Conventional deterministic constraints.
 
-tend = 50 # end time of simulation
-include("scenario_params.jl") # load all the parameters and modules
+tend = 20 # end time of simulation
+include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from scenario_params.jl
@@ -16,9 +16,7 @@ B = linsystems[opoint].B
 b = linsystems[opoint].b # offset from the origin
 
 # Set point
-# ysp = linsystems[1].op[1] - b[1] # Low concentration
 ysp = linsystems[2].op[1] - b[1] # Medium concentration
-# ysp = 0.55 - b[1]
 
 # Set up the KF
 kf_cstr = LLDS.llds(A, B, C2, Q, R2) # set up the KF object (measuring both states)

@@ -14,8 +14,8 @@ B = linsystems[opoint].B
 b = linsystems[opoint].b # offset from the origin
 
 # Set point
-# ysp = linsystems[1].op[1] - b[1] # Low concentration
-ysp = linsystems[2].op[1] - b[1] # Medium concentration
+ysp = linsystems[1].op[1] - b[1] # Low concentration
+# ysp = linsystems[2].op[1] - b[1] # Medium concentration
 # ysp = linsystems[3].op[1] - b[1] # High concentration
 # ysp = 0.1 - b[1]
 
@@ -43,7 +43,6 @@ for t=2:N
 
   # Compute controller action
   us[t] = -K*(kfmeans[:, t] - x_off) + u_off # controller action
-
 end
 kfmeans = kfmeans .+ b
 

@@ -23,7 +23,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 50000 # number of particles.
+nP = 70000 # number of particles.
 prior_dist = MvNormal(init_state-b, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
@@ -39,7 +39,7 @@ pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -413.0 # negative of the y axis intercept
+cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0, Q, 9.21)# get the controller input

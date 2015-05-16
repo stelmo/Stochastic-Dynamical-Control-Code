@@ -2,7 +2,7 @@
 
 include("../params.jl") # load all the parameters and modules
 
-init_state = [0.5; 400] # initial state
+init_state = [0.5; 450] # initial state
 
 # Divide state space into sectors: n by m
 nX = 2 # rows
@@ -14,14 +14,12 @@ linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 A = linsystems[2].A
 B = linsystems[2].B
 b = linsystems[2].b
+lin_cstr = LLDS.llds(A, B, C2, Q, R2)
 
 
 # linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
-A = [0.99 0.01 0.00;
-     0.01 0.98 0.01;
-     0.00 0.01 0.99]
 numModels = length(models)
 
 nP = 500
@@ -42,6 +40,7 @@ RBPF.init_filter!(particles, 0.0, ys2[:, 1], models)
 rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
 # rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
 
+kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys2[:, 1]-b, lin_cstr)
 
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
@@ -57,6 +56,8 @@ for t=2:N
   rbpfmeans[:, t], rbpfcovars[:,:, t] = RBPF.getAveStats(particles)
   # rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getMLStats(particles)
 
+  kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t]-b, lin_cstr)
+
   for k=1:length(linsystems)
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
@@ -65,6 +66,7 @@ for t=2:N
 
 end
 
+kfmeans = kfmeans .+ b
 
 # Plot results
 Results.plotStateSpaceSwitch(linsystems, xs)
@@ -76,3 +78,5 @@ Results.plotSwitchSelection(numModels, maxtrack, ts, false)
 Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
 Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2)
+
+Results.plotEllipseComp(rbpfmeans, rbpfcovars, "Switching Kalman Filter", kfmeans, kfcovars, "Kalman Filter", xs, ts)

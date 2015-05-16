@@ -6,7 +6,7 @@ using JuMP
 using Ipopt # the back up optimisation routine
 using Mosek # can't handle the nonconvex constraint
 
-function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, limu, limstepu, revconstr)
+function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
   # return the MPC control input using a linear system
 
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -46,20 +46,20 @@ function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, l
     @addConstraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
 
   if status != :Optimal
     warn("Mosek did not converge. Attempting to use Ipopt...")
-    unow = mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, limu, limstepu, revconstr)
+    unow = mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
     return unow
   end
 
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, limu, limstepu, revconstr)
+function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
   # Back up optimiser.
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -98,7 +98,7 @@ function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp,
     @addConstraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2, i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
 
@@ -238,6 +238,15 @@ function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, R
   end
 
   return getValue(u[1]) # get the controller input
+end
+
+function mpc_targets(ysp, d, A, B)
+
+  AA = [A-eye(2) B]
+  AA = [AA; [1.0 0.0] 0.0]
+  bb = [d, ysp]
+
+  return AA\bb 
 end
 
 end
