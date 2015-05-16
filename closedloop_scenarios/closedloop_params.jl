@@ -100,5 +100,5 @@ QQ[1] = 10000.0 # due to the magnitude of the concentration
 RR = 0.000001 #
 
 # seed the random number generator
-# srand(745) # good for KF, SPF
+srand(745) # good for KF, SPF
 # srand(3265) # good for RBPF

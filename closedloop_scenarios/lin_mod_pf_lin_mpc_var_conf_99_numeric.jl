@@ -1,7 +1,7 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 20
-include("scenario_params.jl") # load all the parameters and modules
+tend = 15
+include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
@@ -15,9 +15,7 @@ B = linsystems[opoint].B
 b = linsystems[opoint].b # offset from the origin
 
 # Set point
-# ysp = linsystems[1].op[1] - b[1] # Low concentration
 ysp = linsystems[2].op[1] - b[1] # Medium concentration
-# ysp = 0.55 - b[1]
 
 f(x, u, w) = A*x + B*u + w
 g(x) = C2*x # state observation
@@ -25,7 +23,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 1000 # number of particles.
+nP = 2000 # number of particles.
 prior_dist = MvNormal(init_state-b, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
@@ -41,10 +39,10 @@ pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -403.0 # negative of the y axis intercept
+cline = -413.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0, Q)# get the controller input
+us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0, Q, 9.21)# get the controller input
 kldiv[1] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1])
 tic()
 for t=2:N
@@ -53,7 +51,7 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
-  us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0, Q)
+  us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0, Q, 9.21)
 
   kldiv[t] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, t], pfcovars[:,:, t])
 end

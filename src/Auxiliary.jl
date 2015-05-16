@@ -26,10 +26,9 @@ function KL(part_states, part_weights, m, S)
   return (1.0/N)*kldiv
 end
 
-function showEstimatedDensity(part_states, part_weights, m, S)
+function showEstimatedDensity(part_states, part_weights)
   # Discrete Kullback-Leibler divergence test wrt a multivariate normal model.
 
-  dnorm = MvNormal(m, S)
   dcat = Categorical(part_weights)
   N = length(part_weights)
   new_states = zeros(2, N)
@@ -38,7 +37,7 @@ function showEstimatedDensity(part_states, part_weights, m, S)
     new_states[:, k] = part_states[:, i]
   end
   estden = kde(new_states')
-
+  figure() # new figure otherwise very cluttered
   contour(estden)
 end
 
