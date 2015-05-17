@@ -17,6 +17,9 @@ b = linsystems[opoint].b # offset from the origin
 # ysp = linsystems[1].op[1] - b[1] # Low concentration
 ysp = linsystems[2].op[1] - b[1] # Medium concentration
 # ysp = 0.55 - b[1]
+# Set point
+H = [1.0 0.0] # only attempt to control the concentration
+x_off, usp = LQR.offset(A,B,C2,H, ysp) # control offset
 
 f(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 g(x) = C2*x # state observation
@@ -43,7 +46,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -403.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0)# get the controller input
+us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0)# get the controller input
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
@@ -51,7 +54,7 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
-  us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, 15000.0, 1000.0, false, 1.0)
+  us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0)
 end
 toc()
 

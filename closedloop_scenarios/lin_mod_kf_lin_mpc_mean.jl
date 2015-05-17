@@ -1,4 +1,4 @@
-# Linear Plant controlled with a linear MPC using a KF to estimate the state.
+# Linear plant controlled with a linear MPC using a KF to estimate the state.
 # Conventional deterministic constraints.
 
 tend = 20 # end time of simulation
