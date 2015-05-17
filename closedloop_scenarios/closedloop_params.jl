@@ -79,8 +79,6 @@ kfcovars = zeros(2,2, N) # Kalman Filter covariances
 spfmeans  = zeros(2, N) # Kalman Filter means
 spfcovars = zeros(2,2, N)
 
-kldiv = zeros(N) # Kullback-Leibler Divergence as a function of time
-
 # Noise settings
 Q = eye(2) # plant noise
 Q[1] = 1e-06
