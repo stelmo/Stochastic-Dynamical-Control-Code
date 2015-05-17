@@ -45,7 +45,8 @@ cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21)# get the controller input
-kldiv[1] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1])
+temp_states = zeros(2, nP)
+kldiv[1] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1], temp_states)
 tic()
 for t=2:N
   xs[:, t] = A*xs[:, t-1] + B*us[t-1] + rand(state_noise_dist) # actual plant
@@ -55,7 +56,7 @@ for t=2:N
 
   us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21)
 
-  kldiv[t] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, t], pfcovars[:,:, t])
+  kldiv[t] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, t], pfcovars[:,:, t], temp_states)
 end
 toc()
 pfmeans =pfmeans .+ b
