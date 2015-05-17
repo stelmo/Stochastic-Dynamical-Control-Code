@@ -44,11 +44,11 @@ for t=2:N
   kldiv[t] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, t], pfcovars[:,:, t])
 end
 toc()
-pfmeans = pfmeans .+ b
 xs = xs .+ b
+pfmeans = pfmeans .+ b
 ys2 = ys2 .+ b
 
-
+# Plot results
 Results.plotKLdiv(ts, kldiv)
 
-# Auxiliary.showEstimatedDensity(particles.x, particles.w, pfmeans[:, end], pfcovars[:,:, end])
+Results.plotTracking(ts, xs, ys2, pfmeans, us, 2)
