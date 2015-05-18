@@ -44,7 +44,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21)# get the controller input
+us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
 temp_states = zeros(2, nP)
 tic()
 for t=2:N
@@ -53,7 +53,7 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
-  us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21)
+  us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)
 
   if ts[t] in [0.0:2.0:tend]
     Auxiliary.showEstimatedDensity(particles.x .+b, particles.w, temp_states)

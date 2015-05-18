@@ -37,7 +37,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -408.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_var(kfmeans[:, 1], kfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 3000.0, false, 1.0, Q, 13.8155) # get the controller input
+us[1] = MPC.mpc_var(kfmeans[:, 1], kfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 3000.0, false, 1.0, Q, 13.8155, true) # get the controller input
 tic()
 for t=2:N
   xs[:, t] = A*xs[:, t-1] +  B*us[t-1] + rand(state_noise_dist) # actual plant
@@ -45,7 +45,7 @@ for t=2:N
   kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t], kf_cstr)
 
 
-  us[t] = MPC.mpc_var(kfmeans[:, t], kfcovars[:,:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 3000.0, false, 1.0, Q, 13.8155) # get the controller input
+  us[t] = MPC.mpc_var(kfmeans[:, t], kfcovars[:,:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 3000.0, false, 1.0, Q, 13.8155, true) # get the controller input
 end
 toc()
 kfmeans = kfmeans .+ b

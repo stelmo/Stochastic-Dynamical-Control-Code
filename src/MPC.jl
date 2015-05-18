@@ -109,7 +109,7 @@ function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp,
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma=4.605)
+function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar)
   # return the MPC control input using a linear system
 
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -150,12 +150,21 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
   # sigma = 4.605 # 90 % confidence
   # sigma = 9.21 # 99 % confidence
 
-  predvar = Q + A*fcovar*transpose(A)
-  for k=2:horizon # don't do anything about k=1
-    rsquared = [aline, bline]'*predvar*[aline, bline]
-    r = sqrt(sigma*rsquared[1])
-    @addConstraint(m, swapcon*(cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2])) >= r)
-    predvar = Q + A*predvar*transpose(A)
+  if growvar
+    predvar = Q + A*fcovar*transpose(A)
+    for k=2:horizon # don't do anything about k=1
+      rsquared = [aline, bline]'*predvar*[aline, bline]
+      r = sqrt(sigma*rsquared[1])
+      @addConstraint(m, swapcon*(cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2])) >= r)
+      predvar = Q + A*predvar*transpose(A)
+    end
+  else
+    predvar = Q + A*fcovar*transpose(A)
+    for k=2:horizon # don't do anything about k=1
+      rsquared = [aline, bline]'*predvar*[aline, bline]
+      r = sqrt(sigma*rsquared[1])
+      @addConstraint(m, swapcon*(cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2])) >= r)
+    end
   end
 
   for k=2:horizon-1
@@ -168,14 +177,14 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
   status = solve(m)
   if status != :Optimal
     warn("Mosek did not converge. Attempting to use Ipopt...")
-    unow = mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma)
+    unow = mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar)
     return unow
   end
 
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma=4.605)
+function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar)
   # return the MPC control input using a linear system
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -219,14 +228,23 @@ function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, R
   # sigma = 2.2788 # one sigma 68 % confidence
   # sigma = 4.605 # 90 % confidence
   # sigma = 9.21 # 99 % confidence
-
-  predvar = Q + A*fcovar*transpose(A)
-  c = aline*b[1] + bline*b[2] + cline
-  for k=2:horizon # don't do anything about k=1
-    rsquared = [aline, bline]'*predvar*[aline, bline]
-    r = rsquared[1]
-    @addNLConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
-    predvar = Q + A*predvar*transpose(A)
+  if growvar
+    predvar = Q + A*fcovar*transpose(A)
+    c = aline*b[1] + bline*b[2] + cline
+    for k=2:horizon # don't do anything about k=1
+      rsquared = [aline, bline]'*predvar*[aline, bline]
+      r = rsquared[1]
+      @addNLConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
+      predvar = Q + A*predvar*transpose(A)
+    end
+  else
+    predvar = Q + A*fcovar*transpose(A)
+    c = aline*b[1] + bline*b[2] + cline
+    for k=2:horizon # don't do anything about k=1
+      rsquared = [aline, bline]'*predvar*[aline, bline]
+      r = rsquared[1]
+      @addNLConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
+    end
   end
 
   @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
