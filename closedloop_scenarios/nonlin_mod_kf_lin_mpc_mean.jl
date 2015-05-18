@@ -15,13 +15,12 @@ A = linsystems[opoint].A
 B = linsystems[opoint].B
 b = linsystems[opoint].b # offset from the origin
 
-# Set point
-H = [1.0 0.0] # only attempt to control the concentration
-x_off, usp = LQR.offset(A,B,C2,H, ysp) # control offset
-
 # ysp = linsystems[1].op[1] - b[1] # Low concentration
 ysp = linsystems[2].op[1] - b[1] # Medium concentration
 # ysp = 0.55 - b[1]
+# Set point
+H = [1.0 0.0] # only attempt to control the concentration
+x_off, usp = LQR.offset(A,B,C2,H, ysp) # control offset
 
 # Set up the KF
 kf_cstr = LLDS.llds(A, B, C2, Q, R2) # set up the KF object (measuring both states)

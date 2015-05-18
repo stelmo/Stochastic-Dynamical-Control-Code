@@ -14,6 +14,9 @@ ysp = linsystems[1].op[1] # Low concentration
 
 # Setup the RBPF
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
+A = [0.99 0.01 0.00;
+     0.01 0.98 0.01;
+     0.00 0.01 0.99]
 numModels = length(models) # number of linear models (will be 3)
 nP = 1500 # number of particles
 
@@ -49,7 +52,7 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 yspfix = ysp - linsystems[ind].b[1]
-us[1] = MPC.mpc_mean(rbpfmeans[:, 1]-linsystems[ind].b[1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 25000.0, 1000.0, true) # get the controller input
+us[1] = MPC.mpc_mean(rbpfmeans[:, 1]-linsystems[ind].b[1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, 1000.0, true) # get the controller input
 tic()
 #Loop through the rest of time
 for t=2:N
@@ -67,7 +70,7 @@ for t=2:N
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   yspfix = ysp - linsystems[ind].b[1]
-  us[t] = MPC.mpc_mean(rbpfmeans[:, t]-linsystems[ind].b, horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 25000.0, 1000.0, true)# get the controller input
+  us[t] = MPC.mpc_mean(rbpfmeans[:, t]-linsystems[ind].b, horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, 1000.0, true)# get the controller input
 end
 toc()
 # Plot results
