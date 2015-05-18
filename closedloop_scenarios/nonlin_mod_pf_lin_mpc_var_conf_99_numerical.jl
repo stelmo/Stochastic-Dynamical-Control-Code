@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 50
+tend = 20
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -44,8 +44,17 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+Ndiv = length([0:3.0:tend])
+kldiv = zeros(Ndiv) # Kullback-Leibler Divergence as a function of time
+klts = zeros(Ndiv)
+ndivcounter = 1
 temp_states = zeros(2, nP)
+
+us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+kldiv[ndivcounter] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1], temp_states)
+klts[ndivcounter] = 0.0
+ndivcounter += 1
+
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
@@ -55,10 +64,11 @@ for t=2:N
 
   us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)
 
-  if ts[t] in [0.0:2.0:tend]
-    Auxiliary.showEstimatedDensity(particles.x, particles.w, temp_states)
+  if ts[t] in [0.0:3.0:tend]
+    kldiv[ndivcounter] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, t], pfcovars[:,:, t], temp_states)
+    klts[ndivcounter] = ts[t]
+    ndivcounter += 1
   end
-
 end
 toc()
 
@@ -66,3 +76,5 @@ toc()
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
 
 Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 9.21)
+
+Results.plotKLdiv(klts, kldiv)

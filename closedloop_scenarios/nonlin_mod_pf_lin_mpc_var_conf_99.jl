@@ -45,7 +45,6 @@ cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
-temp_states = zeros(2, nP)
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
@@ -54,10 +53,6 @@ for t=2:N
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
   us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)
-
-  if ts[t] in [0.0:2.0:tend]
-    Auxiliary.showEstimatedDensity(particles.x, particles.w, temp_states)
-  end
 
 end
 toc()
