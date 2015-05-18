@@ -1,4 +1,6 @@
-# Controller using the linear reactor model measuring both concentration and temperature.
+# Nonlinear plant model controlled with a linear MPC. The control goal is to steer
+# the system to the unstead operating point. Stochastic contraints. Numerical evaluation
+# of the Gaussian assumption.
 
 tend = 20
 include("closedloop_params.jl") # load all the parameters and modules
@@ -41,7 +43,7 @@ pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -412.0 # negative of the y axis intercept
+cline = -403.0 # negative of the y axis intercept
 bline = 1.0
 
 Ndiv = length([0:3.0:tend])

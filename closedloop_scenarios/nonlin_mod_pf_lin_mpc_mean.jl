@@ -1,6 +1,8 @@
-# Controller using the linear reactor model measuring both concentration and temperature.
+# Nonlinear plant model controlled with a linear MPC. The control goal is to steer
+# the system to the unstead operating point. Deterministic contraints.
 
-include("../params.jl") # load all the parameters and modules
+tend = 50
+include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
@@ -54,11 +56,11 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
-  # ysp = -0.25 - b[1]
   us[t] = MPC.mpc_mean(pfmeans[:, t]-b, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false)
 end
 toc()
 
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
-Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true)
+
+Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052)
