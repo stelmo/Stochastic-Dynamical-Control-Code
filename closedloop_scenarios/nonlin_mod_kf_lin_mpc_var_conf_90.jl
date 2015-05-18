@@ -1,6 +1,7 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-include("../params.jl") # load all the parameters and modules
+tend = 50
+include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
