@@ -17,7 +17,7 @@ Code for M. Eng. in Control Engineering
 
 ## Running the Code:
 
-Please see the folder `openloop_scenarions` or `closedloop_scenarions` to run simulations/demonstrations. The folders `openloop` and `closedloop` are meant as testing ground before scripts move into the scenario folders.
+Please see the folder `openloop_scenarios` or `closedloop_scenarios` to run simulations/demonstrations. The folders `openloop` and `closedloop` are meant as testing ground before scripts move into the scenario folders.
 
 ## Testing:
 
