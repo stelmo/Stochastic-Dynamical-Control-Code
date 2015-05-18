@@ -79,6 +79,6 @@ ys2 = ys2 .+ b
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
 
-Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true)
+Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 9.21)
 
 Results.plotKLdiv(klts, kldiv)
