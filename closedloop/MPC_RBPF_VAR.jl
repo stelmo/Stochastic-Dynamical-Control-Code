@@ -58,8 +58,8 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
-yspfix = setpoint - linsystems[ind].b[1]
-us[1] = MPC.mpc_var(rbpfmeans[:, 1]-linsystems[ind].b[1], rbpfcovars[:,:, 1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, true, -1.0, Q, 4.6052, true) # get the controller input
+yspfix = setpoint[1] - linsystems[ind].b[1]
+us[1] = MPC.mpc_var(rbpfmeans[:, 1]-linsystems[ind].b[1], rbpfcovars[:,:, 1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, true, -1.0, Q, 4.6052, true) #get the controller input
 
 #Loop through the rest of time
 tic()
@@ -77,7 +77,7 @@ for t=2:N
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
-  yspfix = setpoint - linsystems[ind].b[1]
+  yspfix = setpoint[1] - linsystems[ind].b[1]
   us[t] = MPC.mpc_var(rbpfmeans[:, t]-linsystems[ind].b, rbpfcovars[:,:, t], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, true, -1.0, Q, 4.6052, true)# get the controller input
 end
 toc()
