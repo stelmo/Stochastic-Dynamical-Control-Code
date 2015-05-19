@@ -1,6 +1,7 @@
 # Control using multiple linear models and measuring both concentration and temperature
 
-include("../params.jl") # load all the parameters and modules
+tend = 50
+include("params.jl") # load all the parameters and modules
 
 # Get the three linear models about the nominal operating points
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
@@ -9,11 +10,21 @@ opoint = 2 # the specific operating point we are going to use for control
 init_state = [0.5, 450] # random initial point near operating point
 
 # Set point
-ysp = linsystems[1].op[1] # Low concentration
-# ysp = linsystems[2].op[1] # Medium concentration
+setpoint = linsystems[1].op # low concentration
+# setpoint = linsystems[3].op # high concentration
+H = [1.0 0.0] # only attempt to control the concentration
+usps = zeros(length(linsystems))
+for k=1:length(linsystems)
+  sp = setpoint[1] - linsystems[k].b[1]
+  x_off, usp = LQR.offset(linsystems[k].A, linsystems[k].B, C2, H, sp) # control offset
+  usps[k] = usp[1]
+end
 
 # Setup the RBPF
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
+A = [0.99 0.01 0.00;
+     0.01 0.98 0.01;
+     0.00 0.01 0.99] # this works better
 numModels = length(models) # number of linear models (will be 3)
 nP = 1500 # number of particles
 
@@ -47,8 +58,8 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
-yspfix = ysp - linsystems[ind].b[1]
-us[1] = MPC.mpc_var(rbpfmeans[:, 1]-linsystems[ind].b[1], rbpfcovars[:,:, 1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 25000.0, 1000.0, true, -1.0) # get the controller input
+yspfix = setpoint - linsystems[ind].b[1]
+us[1] = MPC.mpc_var(rbpfmeans[:, 1]-linsystems[ind].b[1], rbpfcovars[:,:, 1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, true, -1.0, Q, 4.6052, true) # get the controller input
 
 #Loop through the rest of time
 tic()
@@ -66,8 +77,8 @@ for t=2:N
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
-  yspfix = ysp - linsystems[ind].b[1]
-  us[t] = MPC.mpc_var(rbpfmeans[:, t]-linsystems[ind].b, rbpfcovars[:,:, t], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, 25000.0, 1000.0, true, -1.0)# get the controller input
+  yspfix = setpoint - linsystems[ind].b[1]
+  us[t] = MPC.mpc_var(rbpfmeans[:, t]-linsystems[ind].b, rbpfcovars[:,:, t], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, true, -1.0, Q, 4.6052, true)# get the controller input
 end
 toc()
 # Plot results
@@ -77,6 +88,6 @@ Results.plotSwitchSelection(numModels, maxtrack, ts, false)
 
 Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
-Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, ysp)
+Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, setpoint[1])
 
-Results.plotEllipses(ts, xs, rbpfmeans, rbpfcovars, "MPC", [aline, cline], linsystems[1].op, true)
+Results.plotEllipses(ts, xs, rbpfmeans, rbpfcovars, "MPC", [aline, cline], setpoint, true, 4.6052)

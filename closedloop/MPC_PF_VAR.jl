@@ -1,6 +1,7 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-include("../params.jl") # load all the parameters and modules
+tend = 50
+include("params.jl") # load all the parameters and modules
 
 # Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
@@ -27,7 +28,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 100 # number of particles.
+nP = 500 # number of particles.
 prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
@@ -46,7 +47,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -403.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
+us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
@@ -54,7 +55,7 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
-  us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)
+  us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)
 end
 toc()
 

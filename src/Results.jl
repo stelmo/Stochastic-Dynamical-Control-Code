@@ -199,7 +199,8 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma=4.605)
 
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
-  temp = string("$(fname) ", L"$\sigma$-Ellipse")
+  conf = 1.0 - exp(-sigma/2.0)
+  temp = string("$(fname) ", conf,"\%-Confidence Ellipse")
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 

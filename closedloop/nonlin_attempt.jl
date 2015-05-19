@@ -1,4 +1,6 @@
-include("../params.jl")
+
+tend = 50
+include("params.jl")
 
 using JuMP
 using Ipopt

@@ -1,13 +1,13 @@
 # Control using two nonlinear models and measuring both states
 # NOTE: remember to adjust the model noise parameter
 
-include("../params.jl") # load all the parameters and modules
+tend = 150
+include("params.jl") # load all the parameters and modules
 
 init_state = [0.5; 450] # initial state
 
 # Setup Switching Particle Filter
-A = [0.9 0.1;0.1 0.9]
-# A = [0.5 0.5;0.5 0.5]
+A = [0.99 0.01;0.01 0.99]
 fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
 gs(x) = C2*x
@@ -41,9 +41,10 @@ lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystem
 lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
 
 H = [1.0 0.0]
+setpoint = 0.48
 controllers = Array(LQR.controller, 2)
 for k=1:2
-  ysp = 0.48 - lin_models[k].b[1] # set point is set here
+  ysp = setpoint - lin_models[k].b[1] # set point is set here
   x_off, u_off = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, ysp)
   K = LQR.lqr(lin_models[k].A, lin_models[k].B, QQ, RR)
   controllers[k] = LQR.controller(K, x_off, u_off)
@@ -68,6 +69,7 @@ ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 us[1] = -controllers[ind].K*(spfmeans[:, 1] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
 
 # Loop through the rest of time
+d = zeros(2)
 for t=2:N
 
   random_element = rand(state_noise_dist)
@@ -90,7 +92,8 @@ for t=2:N
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
-  us[t] = -controllers[ind].K*(spfmeans[:, t] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+  # d = xs[:, t] - (lin_models[ind].A*(xs[:, t-1]-lin_models[ind].b) + lin_models[ind].B*us[t-1] + lin_models[ind].b)
+  us[t] = -controllers[ind].K*(spfmeans[:, t] - lin_models[ind].b - controllers[ind].x_off ) + controllers[ind].u_off # controller action
 
 end
 
@@ -99,4 +102,4 @@ Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
 
 Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
-Results.plotTracking(ts, xs, ys2, spfmeans, us, 2)
+Results.plotTracking(ts, xs, ys2, spfmeans, us, 2, setpoint)

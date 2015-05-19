@@ -150,8 +150,7 @@ function getStats(particles::Particles)
 end
 
 function calcA(linsystems::Array{Reactor.LinearReactor,1})
-  # Returns a stochastic HMM matrix based on the Euclidean
-  # distances between the operating points.
+  # Returns a stochastic HMM matrix based on [need a good way to do this!!!]
   N = length(linsystems)
   A = zeros(N, N) #pre-allocate A
 

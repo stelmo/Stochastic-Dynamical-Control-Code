@@ -1,13 +1,13 @@
 # Control using two nonlinear models and measuring both states
 # NOTE: remember to adjust the model noise parameter
 
-include("../params.jl") # load all the parameters and modules
+tend = 150
+include("params.jl") # load all the parameters and modules
 
 init_state = [0.5; 450] # initial state
 
 # Setup Switching Particle Filter
-A = [0.9 0.1;0.1 0.9]
-# A = [0.5 0.5;0.5 0.5]
+A = [0.99 0.01;0.01 0.99]
 fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
 gs(x) = C2*x
@@ -19,6 +19,7 @@ numSwitches = 2
 f(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model) + w # transistion function
 g(x) = C2*x # measurement function
 pf_cstr = PF.Model(f,g) # PF object
+
 # Initialise the PF
 nP = 100 # number of particles.
 prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
@@ -51,9 +52,10 @@ lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystem
 lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
 
 H = [1.0 0.0]
+setpoint = 0.48
 controllers = Array(LQR.controller, 2)
 for k=1:2
-  ysp = 0.48 - lin_models[k].b[1] # set point is set here
+  ysp = setpoint - lin_models[k].b[1] # set point is set here
   x_off, u_off = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, ysp)
   K = LQR.lqr(lin_models[k].A, lin_models[k].B, QQ, RR)
   controllers[k] = LQR.controller(K, x_off, u_off)
@@ -121,4 +123,4 @@ end
 # Plot results
 Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
-Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix, 0.48)
+Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix, setpoint)

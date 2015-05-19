@@ -28,11 +28,13 @@ All the estimated run times are relative to my laptop. The technical specificati
 
 2. `nonlin_mod_kf_lin_mpc_var_conf_x.jl` => Exactly the same system as before but with the additional stochastic constraint. The suffix `_x.jl` indicates the confidence of the constraint based on the Gaussian assumption i.e. it is read off from a Chi Squared Distribution table (with 2 DOF in this case). Takes about 24 seconds to simulate 50 minutes.
 
-3. `lin_mod_pf_lin_mpc_mean.jl` => The same as (1) but using a Particle Filter for state estimation. Using 2000 particles it takes about 34 seconds to simulate 20 minutes.
+3. `lin_mod_pf_lin_mpc_mean.jl` => The same as (1) but using a Particle Filter for state estimation. Using 7000 particles it takes about 63 seconds to simulate 50 minutes.
 
-4. `lin_mod_pf_lin_mpc_var_conf_99_graphical.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The density function of the posterior is estimated from the PF samples and the contours are plotted over time intervals. This allows one to qualitatively inspect the Gaussian nature of the pdfs. Takes about 9 minutes using 70000 particles and simulating 50 min.
+4. `nonlin_mod_pf_lin_mpc_var_conf_x.jl` => Exactly the same system as (3) but with the additional stochastic constraint. The suffix `_x.jl` indicates the confidence of the constraint based on the Gaussian assumption. Takes about 70 seconds to simulate 50 minutes using 7000 particles.
 
-5. `lin_mod_pf_lin_mpc_var_conf_99_numeric.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The Kullback-Leibler Divergence of the sampled posterior is compared to the Gaussian simplification thereof. The baseline for this test can be found in `openloop_scenarios/KL_PF_lin_mod_baseline.jl`. Note that this test takes approximately 19 min to complete if the total simulated time is 20 min and the number of particles is 20000.
+5. `lin_mod_pf_lin_mpc_var_conf_99_graphical.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The density function of the posterior is estimated from the PF samples and the contours are plotted over time intervals. This allows one to qualitatively inspect the Gaussian nature of the pdfs. Takes about 10 minutes using 70000 particles and simulating 50 min.
+
+6. `lin_mod_pf_lin_mpc_var_conf_99_numeric.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The Kullback-Leibler Divergence of the sampled posterior is compared to the Gaussian simplification thereof. The baseline for this test can be found in `openloop_scenarios/KL_PF_lin_mod_baseline.jl`. Note that this test takes approximately 19 min to complete if the total simulated time is 20 min and the number of particles is 20000.
 
 
 ## Switching Model Linear MPC

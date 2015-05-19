@@ -1,6 +1,7 @@
 # Control using multiple linear models and measuring both concentration and temperature
 
-include("../params.jl") # load all the parameters and modules
+tend = 50
+include("params.jl") # load all the parameters and modules
 
 init_state = [0.5; 450] # initial state
 
@@ -23,10 +24,11 @@ switchtrack = zeros(length(linsystems), N) # keep track of the model/switch dist
 smoothedtrack = zeros(length(linsystems), N)
 
 # Setup the controllers
+setpoint = 0.01
 H = [1.0 0.0]
 controllers = Array(LQR.controller, length(models))
 for k=1:length(models)
-  ysp = 0.01 - models[k].b[1] # set point is set here
+  ysp = setpoint - models[k].b[1] # set point is set here
   x_off, u_off = LQR.offset(models[k].A,models[k].B, C2, H, ysp)
   K = LQR.lqr(models[k].A, models[k].B, QQ, RR)
   controllers[k] = LQR.controller(K, x_off, u_off)
@@ -62,7 +64,7 @@ for t=2:N
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
   maxtrack[:, t] = RBPF.getMaxTrack(particles, numModels)
-  smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 20)
+  smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 5)
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
@@ -78,4 +80,4 @@ Results.plotSwitchSelection(numModels, maxtrack, ts, false)
 
 Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 
-Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2)
+Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, setpoint)

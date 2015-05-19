@@ -29,7 +29,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 100 # number of particles.
+nP = 7000 # number of particles.
 prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
