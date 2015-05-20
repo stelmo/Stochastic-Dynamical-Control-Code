@@ -96,6 +96,7 @@ for t=2:N
   maxtrack[:, t] = SPF.getMaxTrack(particles, numSwitches)
   smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 40)
 
+
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
   yspfix = setpoint[1] - lin_models[ind].b[1]

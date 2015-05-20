@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 50
+tend = 150
 include("params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -15,12 +15,12 @@ B = linsystems[opoint].B
 b = linsystems[opoint].b # offset from the origin
 
 # Set point
+# ysp = linsystems[1].op[1] - b[1] # Low concentration
+# ysp = linsystems[2].op[1] - b[1] # Medium concentration
+ysp = 0.65 - b[1]
 H = [1.0 0.0] # only attempt to control the concentration
 x_off, usp = LQR.offset(A,B,C2,H, ysp) # control offset
 
-# ysp = linsystems[1].op[1] - b[1] # Low concentration
-# ysp = linsystems[2].op[1] - b[1] # Medium concentration
-ysp = 0.4 - b[1]
 
 # First time step of the simulation
 xs[:,1] = init_state - b # set simulation starting point to the random initial state
