@@ -1,17 +1,18 @@
 # Control using two nonlinear models and measuring both states
 # NOTE: remember to adjust the model noise parameter
 
-tend = 50
+tend = 150
 include("params.jl") # load all the parameters and modules
 
 init_state = [0.5; 450] # initial state
 
 # Setup Switching Particle Filter
-A = [0.9 0.1;0.1 0.9]
-# A = [0.5 0.5;0.5 0.5]
+A = [0.999 0.001;0.001 0.999]
+
 fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
 gs(x) = C2*x
+
 F = [fun1, fun2]
 G = [gs, gs]
 numSwitches = 2
@@ -51,14 +52,20 @@ lin_models = Array(RBPF.Model, 2)
 lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystems[opoint].b, C2, Q, R2)
 lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
 
-ysp = linsystems[opoint].op[1]
+setpoint = linsystems[opoint].op
+H = [1.0 0.0] # only attempt to control the concentration
+usps = zeros(length(lin_models))
+for k=1:length(lin_models)
+  sp = setpoint[1] - lin_models[k].b[1]
+  x_off, usp = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, sp) # control offset
+  usps[k] = usp[1]
+end
 
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
 cline = -403.0 # negative of the y axis intercept
 bline = 1.0
-
 
 # Setup simulation
 xs[:, 1] = init_state
@@ -81,16 +88,15 @@ spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
-yspfix = ysp - lin_models[ind].b[1]
-us[1] = MPC.mpc_var(spfmeans[:, 1] - lin_models[ind].b, spfcovars[:,:,1], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, 1000.0, false, 1.0)# get the controller input
+yspfix = setpoint[1] - lin_models[ind].b[1]
+us[1] = MPC.mpc_var(spfmeans[:, 1] - lin_models[ind].b, spfcovars[:,:, 1], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
 
 
-usnofix[1] = MPC.mpc_var(pfmeans[:, 1] - lin_models[1].b, pfcovars[:,:,1], horizon, lin_models[1].A, lin_models[1].B, lin_models[1].b, aline, bline, cline, QQ, RR, ysp-lin_models[1].b[1], 15000.0, 1000.0, false, 1.0)# get the controller input
+usnofix[1] = MPC.mpc_var(pfmeans[:, 1] - lin_models[1].b, pfcovars[:,:,1], horizon, lin_models[1].A, lin_models[1].B, lin_models[1].b, aline, bline, cline, QQ, RR, setpoint[1]-lin_models[1].b[1], usps[1], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true) # get the controller input
 
 # Loop through the rest of time
 tic()
 for t=2:N
-
   random_element = rand(state_noise_dist)
   if ts[t] < 50 # break here
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
@@ -118,16 +124,16 @@ for t=2:N
 
   # Controller Input
   ind = indmax(smoothedtrack[:, t]) # use this model and controller
-  yspfix = ysp - lin_models[ind].b[1]
-  us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, 15000.0, 1000.0, false, 1.0)# get the controller input
+  yspfix = setpoint[1] - lin_models[ind].b[1]
+  us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
 
-  usnofix[t] = MPC.mpc_var(pfmeans[:, t] - lin_models[1].b, pfcovars[:,:, t], horizon, lin_models[1].A, lin_models[1].B, lin_models[1].b, aline, bline, cline, QQ, RR, ysp-lin_models[1].b[1], 15000.0, 1000.0, false, 1.0)# get the controller input
+  usnofix[t] = MPC.mpc_var(pfmeans[:, t] - lin_models[1].b, pfcovars[:,:, t], horizon, lin_models[1].A, lin_models[1].B, lin_models[1].b, aline, bline, cline, QQ, RR, setpoint[1]-lin_models[1].b[1], usps[1], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true) # get the controller input
 
 end
 toc()
 # Plot results
 Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
 
-Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix, ysp)
+Results.plotTrackingComparison(ts, xs, us, xsnofix, usnofix, setpoint[1])
 
-Results.plotEllipseComp(spfmeans, spfcovars, "SPF", pfmeans, pfcovars, "PF", xs, ts, [aline, cline], linsystems[opoint].op)
+Results.plotEllipseComp(spfmeans, spfcovars, "SPF", pfmeans, pfcovars, "PF", xs, ts, [aline, cline], setpoint, 4.6052)

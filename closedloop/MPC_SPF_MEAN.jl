@@ -1,6 +1,6 @@
 # Control using two nonlinear models and measuring both states
 # NOTE: remember to adjust the model noise parameter
-tend = 50
+tend = 150
 include("params.jl") # load all the parameters and modules
 
 init_state = [0.5; 450] # initial state

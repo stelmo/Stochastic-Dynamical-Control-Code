@@ -231,10 +231,10 @@ function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip::Int64)
   legend([b1, b2],["Prediction", "Filter"], loc="best")
 end
 
-function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts, line, sp)
+function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts, line, sp, sigma=4.605)
 
   N = length(ts)
-  skip = int(length(ts)/20)
+  skip = 1 # int(length(ts)/20)
   figure()
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
@@ -243,10 +243,10 @@ function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, x
   b1 = 0.0
   b2 = 0.0
   for k=1:skip:N
-    p1, p2 = Ellipse.ellipse(f1means[:,k], f1covars[:,:, k])
+    p1, p2 = Ellipse.ellipse(f1means[:,k], f1covars[:,:, k], sigma)
     b1, = plot(p1, p2, "r")
 
-    p3, p4 = Ellipse.ellipse(f2means[:,k], f2covars[:,:, k])
+    p3, p4 = Ellipse.ellipse(f2means[:,k], f2covars[:,:, k], sigma)
     b2, = plot(p3, p4, "b")
   end
 

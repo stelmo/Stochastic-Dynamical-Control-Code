@@ -15,7 +15,9 @@ using MPC
 using JuMP
 using Ipopt
 using Mosek
-
+using Auxiliary
+using KernelDensity
+using PMPC
 
 # Extend the Base Library
 function Base.convert(::Type{Float64}, x::Array{Float64, 1})
