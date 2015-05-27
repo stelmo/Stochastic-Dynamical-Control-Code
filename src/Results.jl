@@ -65,8 +65,8 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   end
   rc("font", family="serif", size=24)
 
-  skipmeas = int(length(ts)/20)
-  skipmean = int(length(ts)/20)
+  skipmeas = int(length(ts)/40)
+  skipmean = int(length(ts)/40)
   figure()
   subplot(subplt,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -163,7 +163,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
-  temp = string("$(fname) ", L"$\sigma$-Ellipse")
+  temp = string("$(fname) ", "90\% Confidence Ellipse")
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
@@ -199,7 +199,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma=4.605)
 
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
-  conf = int((1.0 - exp(-sigma/2.0))*100.0)
+  conf = round((1.0 - exp(-sigma/2.0))*100.0, 3)
   temp = string("$(fname) ", conf,"\% Confidence Ellipse")
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end

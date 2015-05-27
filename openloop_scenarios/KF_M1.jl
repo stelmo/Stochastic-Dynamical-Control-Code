@@ -1,6 +1,7 @@
 # Inference using one linear model measuring only temperature
 
-include("../params.jl") # load all the parameters and modules
+tend = 20
+include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.50, 400]
 
@@ -42,6 +43,6 @@ kfmeans = kfmeans .+ b
 
 # Plot results
 
-Results.plotEllipses(ts, xs, ys1, kfmeans, kfcovars)
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "Kalman Filter")
 
 Results.plotTracking(ts, xs, ys1, kfmeans, us, 1)
