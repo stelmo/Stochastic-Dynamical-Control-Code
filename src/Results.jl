@@ -424,21 +424,25 @@ function checkConstraint(ts, xs, line)
   # line => y = - bx - c
   r, N = size(xs)
   conmargin = zeros(N)
-  totalneg = 0.0
-  totalpos = 0.0
+  minneg = 0.0
+  minpos = 0.0
   for k=1:N
     temp = xs[2, k] + xs[1, k]*line[1] + line[2]
     if temp < 0.0
       conmargin[k] = -abs(temp)/sqrt(line[1]^2 + 1.0)
-      totalneg += abs(temp)/sqrt(line[1]^2 + 1.0)
+      if minneg > abs(temp)/sqrt(line[1]^2 + 1.0)
+        minneg = abs(temp)/sqrt(line[1]^2 + 1.0)
+      end
     else
       conmargin[k] = abs(temp)/sqrt(line[1]^2 + 1.0)
-      totalpos += abs(temp)/sqrt(line[1]^2 + 1.0)
+      if minpos > abs(temp)/sqrt(line[1]^2 + 1.0)
+        minpos += abs(temp)/sqrt(line[1]^2 + 1.0)
+      end
     end
   end
 
-  println("Total Positive Clearance: ", totalpos)
-  println("Total Negative Clearance: ", totalneg)
+  println("Minimum Positive Clearance: ", minpos)
+  println("Minimum Negative Clearance: ", minneg)
 
   rc("font", family="serif", size=24)
 
