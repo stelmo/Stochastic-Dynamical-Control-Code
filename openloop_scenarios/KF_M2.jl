@@ -46,3 +46,6 @@ kfmeans = kfmeans .+ b
 Results.plotEllipses(ts, xs, kfmeans, kfcovars, "Kalman Filter")
 
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2)
+
+avediff = Results.calcError(xs, kfmeans)
+avecost = Results.calcEnergy(us, 0.0)

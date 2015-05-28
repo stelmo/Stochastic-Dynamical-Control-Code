@@ -1,6 +1,7 @@
 # PF Inference using the full nonlinear model
 
-include("../params.jl") # load all the parameters and modules
+tend = 20
+include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.5; 400] # initial state
 
@@ -34,3 +35,6 @@ end
 Results.plotEllipses(ts, xs, pfmeans, pfcovars, "Particle Filter")
 
 Results.plotTracking(ts, xs, ys1, pfmeans, us, 1)
+
+avediff = Results.calcError(xs, pfmeans)
+avecost = Results.calcEnergy(us, 0.0)

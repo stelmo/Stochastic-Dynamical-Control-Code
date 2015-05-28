@@ -151,19 +151,19 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   N = length(ts)
   skip = int(length(ts)/20)
   figure()
-  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-  f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
   b1 = 0.0
-  for k=1:skip:N
+  for k=1:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
-    b1, = plot(p1, p2, "b")
+    # b1, = plot(p1, p2, "b")
+    b1, = fill(p1, p2, "b", edgecolor="none")
   end
-  plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+  f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "mx", markersize=5, markeredgewidth = 2)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
-  temp = string("$(fname) ", "90\% Confidence Ellipse")
+  temp = string("$(fname) ", "90\% Confidence Region")
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
@@ -171,18 +171,18 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma=4.605)
 
   rc("font", family="serif", size=24)
   N = length(ts)
-  skip = 1
+  skip = int(length(ts)/20)
 
   nf && figure() # only create a new figure if required
-
-  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-  f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
   b1 = 0.0
-  for k=1:skip:N
+  for k=1:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k], sigma)
-    b1, = plot(p1, p2, "b")
+    # b1, = plot(p1, p2, "b")
+    b1, = fill(p1, p2, "b", edgecolor="none")
   end
-  plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+  f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "mx", markersize=5, markeredgewidth = 2)
+  #plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
 
@@ -200,7 +200,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma=4.605)
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
   conf = round((1.0 - exp(-sigma/2.0))*100.0, 3)
-  temp = string("$(fname) ", conf,"\% Confidence Ellipse")
+  temp = string("$(fname) ", conf,"\% Confidence Region")
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
@@ -208,7 +208,19 @@ function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip::Int64)
 
   rc("font", family="serif", size=24)
   figure() # dont create a new figure
+  b1 = 0.0
+  b2 = 0.0
   N = size(pmeans)
+  for k=1:pskip:N[2]
+    p1, p2 = Ellipse.ellipse(pmeans[:,k], pcovars[:,:, k])
+    # b1, = plot(p1, p2, "b")
+    b1, = fill(p1, p2, "r", edgecolor="none")
+
+    p1, p2 = Ellipse.ellipse(fmeans[:,fstart+k], fcovars[:,:, fstart+k])
+    # b1, = plot(p1, p2, "b")
+    b2, = fill(p1, p2, "b", edgecolor="none")
+  end
+
   f1, = plot(pmeans[1, 1], pmeans[2, 1], "ro", markersize=5, markeredgewidth = 2)
   f1, = plot(pmeans[1, end], pmeans[2, end], "rx", markersize=5, markeredgewidth = 2)
   f1, = plot(pmeans[1, 2:pskip:end][:], pmeans[2, 2:pskip:end][:], "rx", markersize=5, markeredgewidth = 2)
@@ -217,15 +229,6 @@ function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip::Int64)
   # f2, = plot(fmeans[1, end], fmeans[2, end], "bx", markersize=5, markeredgewidth = 2)
   f2, = plot(fmeans[1, fstart+1:pskip:fstart+N[2]][:], fmeans[2, fstart+1:pskip:fstart+N[2]][:], "bx", markersize=5, markeredgewidth = 2)
 
-  b1 = 0.0
-  b2 = 0.0
-  for k=1:pskip:N[2]
-    p1, p2 = Ellipse.ellipse(pmeans[:,k], pcovars[:,:, k])
-    b1, = plot(p1, p2, "r")
-
-    p1, p2 = Ellipse.ellipse(fmeans[:,fstart+k], fcovars[:,:, fstart+k])
-    b2, = plot(p1, p2, "b")
-  end
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
   legend([b1, b2],["Prediction", "Filter"], loc="best")
@@ -264,8 +267,39 @@ function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, x
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel("Temperature [K]")
   xlabel(L"Concentration [kmol.m$^{-3}$]")
-  temp1 = string("$(f1name) ", L"$\sigma$-Ellipse")
-  temp2 = string("$(f2name) ", L"$\sigma$-Ellipse")
+  conf = round((1.0 - exp(-sigma/2.0))*100.0, 3)
+  temp1 = string("$(f1name) ", conf,"\% Confidence Ellipse")
+  temp2 = string("$(f2name) ", conf,"\% Confidence Ellipse")
+  legend([x1,f1,f2, b1, b2],["Nonlinear Model","$(f1name) Mean","$(f2name) Mean", temp1, temp2], loc="best")
+end
+
+function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts, sigma=4.605)
+
+  N = length(ts)
+  skip = int(length(ts)/20)
+  figure()
+  x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
+  x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
+  f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
+  f2, = plot(f2means[1, 1:skip:end][:], f2means[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
+  b1 = 0.0
+  b2 = 0.0
+  for k=1:skip:N
+    p1, p2 = Ellipse.ellipse(f1means[:,k], f1covars[:,:, k], sigma)
+    b1, = plot(p1, p2, "r")
+
+    p3, p4 = Ellipse.ellipse(f2means[:,k], f2covars[:,:, k], sigma)
+    b2, = plot(p3, p4, "b")
+  end
+
+  plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
+  plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
+  plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
+  ylabel("Temperature [K]")
+  xlabel(L"Concentration [kmol.m$^{-3}$]")
+  conf = round((1.0 - exp(-sigma/2.0))*100.0, 2)
+  temp1 = string("$(f1name) ", conf,"\% Confidence Ellipse")
+  temp2 = string("$(f2name) ", conf,"\% Confidence Ellipse")
   legend([x1,f1,f2, b1, b2],["Nonlinear Model","$(f1name) Mean","$(f2name) Mean", temp1, temp2], loc="best")
 end
 
@@ -365,6 +399,54 @@ function plotKLdiv(ts, kldiv)
   plot(ts, kldiv, "r", linewidth=3)
   xlabel("time [min]")
   ylabel("Divergence [Nats]")
+end
+
+function calcError(x, y)
+
+  r, N = size(x)
+  avediff1 = (1.0/N)*sum(abs((x[1, :].-y[1, :])./x[1,:]))*100.0
+  avediff2 = (1.0/N)*sum(abs((x[2, :].-y[2, :])./x[2,:]))*100.0
+
+  println("Average Concentration Error: ", round(avediff1, 4),  "%")
+  println("Average Temperature Error: ", round(avediff2, 4), "%")
+  return avediff1, avediff2
+end
+
+function calcEnergy(us, uss)
+  N = length(us)
+  avecost = (1.0/N)*sum(abs(us-uss))
+  println("Average Input: ", avecost)
+  return avecost
+end
+
+function checkConstraint(ts, xs, line)
+  # line = [b,c] => y + bx + c = 0
+  # line => y = - bx - c
+  r, N = size(xs)
+  conmargin = zeros(N)
+  totalneg = 0.0
+  totalpos = 0.0
+  for k=1:N
+    temp = xs[2, k] + xs[1, k]*line[1] + line[2]
+    if temp < 0.0
+      conmargin[k] = -abs(temp)/sqrt(line[1]^2 + 1.0)
+      totalneg += abs(temp)/sqrt(line[1]^2 + 1.0)
+    else
+      conmargin[k] = abs(temp)/sqrt(line[1]^2 + 1.0)
+      totalpos += abs(temp)/sqrt(line[1]^2 + 1.0)
+    end
+  end
+
+  println("Total Positive Clearance: ", totalpos)
+  println("Total Negative Clearance: ", totalneg)
+
+  rc("font", family="serif", size=24)
+
+  figure()
+  plot(ts, zeros(N), "r", linewidth=1)
+  plot(ts, conmargin, "k", linewidth=3)
+  xlabel("Time [min]")
+  ylabel("Clearance")
 end
 
 end #module

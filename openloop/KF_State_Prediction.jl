@@ -20,7 +20,7 @@ meas_noise_dist = MvNormal(R2)
 
 # Setup the prediction
 pskip = 1
-pnum = 10
+pnum = 150
 pstart = 5
 pmeans = zeros(2, pnum)
 pcovars = zeros(2,2, pnum)
