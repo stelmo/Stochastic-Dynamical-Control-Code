@@ -1,7 +1,7 @@
 # Linear plant controlled with a linear MPC using a KF to estimate the state.
 # Conventional deterministic constraints.
 
-tend = 100 # end time of simulation
+tend = 40 # end time of simulation
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -34,7 +34,7 @@ kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_cova
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -412.0 # negative of the y axis intercept
+cline = -411.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_mean(kfmeans[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false)# get the controller input
@@ -58,3 +58,5 @@ ys2 = ys2 .+ b
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2, ysp+b[1])
 Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, -2.0*log(1-0.9), 1)
 Results.checkConstraint(ts, xs, [aline, cline])
+Results.calcError(xs, ysp+b[1])
+Results.calcEnergy(us, 0.0, h)

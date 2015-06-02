@@ -210,13 +210,13 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick)
   # temp = latexstring(conf,"\%", "Confidence~Region")
   # legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", temp], loc="best")
   if pick==1
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"90\%~Confidence~Region"], loc="best")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"90\%~Confidence~Region"], loc="upper left")
   elseif pick == 2
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99\%~Confidence~Region"], loc="best")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99\%~Confidence~Region"], loc="upper left")
   elseif pick == 3
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.9\%~Confidence~Region"], loc="best")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.9\%~Confidence~Region"], loc="upper left")
   else
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.99\%~Confidence~Region"], loc="best")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.99\%~Confidence~Region"], loc="upper left")
   end
 end
 
@@ -419,17 +419,19 @@ function plotTrackingComparison(ts, xs1, us1, xs2, us2, setpoint)
     xlabel("Time [min]")
 end
 
-function plotKLdiv(ts, kldiv)
-  # rc("text", usetex=true)
+function plotKLdiv(ts, kldiv, basediv)
+  rc("text", usetex=true)
   rc("font", family="serif", size=24)
 
   figure()
-  plot(ts, kldiv, "r", linewidth=3)
-  xlabel("time [min]")
-  ylabel("Divergence [Nats]")
+  kl, = plot(ts, kldiv, "r", linewidth=3)
+  gd, = plot(ts, basediv, "b", linewidth=3)
+  xlabel(L"Time~[min]")
+  ylabel(L"Divergence~[Nats]")
+  legend([kl, gd],[L"Approximation",L"Baseline"], loc="upper left")
 end
 
-function calcError(x, y)
+function calcError(x, y::Array{Float64, 2})
 
   r, N = size(x)
   avediff1 = (1.0/N)*sum(abs((x[1, :].-y[1, :])./x[1,:]))*100.0
@@ -440,9 +442,18 @@ function calcError(x, y)
   return avediff1, avediff2
 end
 
-function calcEnergy(us, uss)
+function calcError(x, y::Float64)
+
+  r, N = size(x)
+  avediff1 = (1.0/N)*sum(abs((x[1, :] - y)./y))*100.0
+
+  println("Average Concentration Error: ", round(avediff1, 4),  "%")
+  return avediff1
+end
+
+function calcEnergy(us, uss, h)
   N = length(us)
-  avecost = (1.0/N)*sum(abs(us-uss))
+  avecost = (h/N)*sum(abs(us-uss))
   println("Average Input: ", avecost)
   return avecost
 end

@@ -18,9 +18,9 @@ All the estimated run times are relative to my laptop. The technical specificati
 
 3. `lin_mod_pf_lin_mpc_mean.jl` => The same as (1) but using a Particle Filter for state estimation. Using 2000 particles it takes about 34 seconds to simulate 20 minutes.
 
-4. `lin_mod_pf_lin_mpc_var_conf_99_graphical.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The density function of the posterior is estimated from the PF samples and the contours are plotted over time intervals. This allows one to qualitatively inspect the Gaussian nature of the pdfs. Takes about 9 minutes using 70000 particles and simulating 50 min.
+4. `lin_mod_pf_lin_mpc_var_conf_99_graphical.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The density function of the posterior is estimated from the PF samples and the contours are plotted over time intervals. This allows one to qualitatively inspect the Gaussian nature of the pdfs. Takes about 12 minutes using 5000 particles and simulating 50 min.
 
-5. `lin_mod_pf_lin_mpc_var_conf_99_numeric.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The Kullback-Leibler Divergence of the sampled posterior is compared to the Gaussian simplification thereof. The baseline for this test can be found in `openloop_scenarios/KL_PF_lin_mod_baseline.jl`. Note that this test takes approximately 19 min to complete if the total simulated time is 20 min and the number of particles is 20000.
+5. `lin_mod_pf_lin_mpc_var_conf_99_numeric.jl` => Similar to (2) but we additionally test the assumption that the posterior distributions are Gaussian. The Kullback-Leibler Divergence of the sampled posterior is compared to the Gaussian simplification thereof. The baseline for this test can be found in `openloop_scenarios/KL_PF_lin_mod_baseline.jl`. Note that this test takes approximately 12 min to complete if the total simulated time is 40 min and the number of particles is 5000.
 
 ## Nonlinear system model controlled with a linear MPC
 

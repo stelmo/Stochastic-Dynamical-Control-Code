@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 100
+tend = 40
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -51,3 +51,5 @@ kfmeans = kfmeans .+ b
 
 # Plot the results
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2, ysp+b[1])
+Results.calcError(xs, ysp+b[1])
+Results.calcEnergy(us, 0.0, h)

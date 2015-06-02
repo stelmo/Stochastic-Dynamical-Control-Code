@@ -38,6 +38,25 @@ function KL(part_states, part_weights, m, S, temp_states)
   return (1.0/N)*kldiv
 end
 
+function KLbase(m, S, temp_states, N)
+
+
+    dnorm = MvNormal(m, S)
+
+    for k=1:N
+      temp_states[:, k] = rand(dnorm)
+    end
+    estden = kde(temp_states')
+
+    kldiv = 0.0
+    for k=1:N
+      #draw from samplesw
+      kldiv += -log(pdf(dnorm, temp_states[:, k])) + log(pdf(estden, temp_states[1, k], temp_states[2, k]))
+    end
+
+    return (1.0/N)*kldiv
+end
+
 function showEstimatedDensity(part_states, part_weights, temp_states)
   # Discrete Kullback-Leibler divergence test wrt a multivariate normal model.
 
@@ -60,9 +79,13 @@ function showEstimatedDensity(part_states, part_weights, temp_states)
     temp_states[:, k] = part_states[:, i]
   end
   estden = kde(temp_states')
+  rc("text", usetex=true)
   rc("font", family="serif", size=24)
+
   figure() # new figure otherwise very cluttered
   contour(estden)
+  xlabel(L"C_A [kmol.m^{-3}]")
+  ylabel(L"T_R [K]")
 end
 
 end # module
