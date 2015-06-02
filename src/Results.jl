@@ -3,6 +3,7 @@ module Results
 
 using PyPlot
 using Ellipse
+using LaTeXStrings
 
 function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
 
@@ -16,7 +17,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
     subplt = 3
   end
   rc("font", family="serif", size=24)
-
+  rc("text", usetex=true)
   skipmeas = int(length(ts)/20)
   skipmean = int(length(ts)/20)
   figure()
@@ -27,10 +28,10 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   end
   k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ksp = plot(ts, setpoints, "g-", linewidth=3)
-  ylabel(L"Concentration [kmol.m$^{-3}$]")
-  legend([x1],["Nonlinear Model"], loc="best")
+  ylabel(L"C_A~[kmol.m^{-3}]")
+  legend([x1, ksp],[L"Underlying~Model", L"Set~Point"], loc="upper right", ncol=2)
   xlim([0, tend])
-  ylim([0, 1])
+  # ylim([0, 1])
 
   subplot(subplt,1,2)
   x2, = plot(ts, xs[2,:]', "k", linewidth=3)
@@ -40,17 +41,17 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
     y2, = plot(ts[1:skipmeas:end], ys[2, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
   end
   k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
-  ylabel("Temperature [K]")
-  legend([k2, y2],["Filtered Mean Estimate", "Nonlinear Model Measured"], loc="best")
+  ylabel(L"T_R~[K]")
+  legend([k2, y2],[L"Filtered~Mean", L"Observation"], loc="upper right", ncol=2)
   xlim([0, tend])
-  ylim([minimum(xs[2,:]), maximum(xs[2,:])])
+  # ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
     subplot(subplt,1,3)
     plot(ts, us)
     xlim([0, tend])
-    ylabel("Controller Input")
+    ylabel(L"Q~[kJ.min^{-1}]")
   end
-  xlabel("Time [min]")
+  xlabel(L"Time~[min]")
 end
 
 function plotTracking(ts, xs, ys, fmeans, us, obs)
@@ -64,6 +65,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
     subplt = 3
   end
   rc("font", family="serif", size=24)
+  # rc("text", usetex=true)
 
   skipmeas = int(length(ts)/40)
   skipmean = int(length(ts)/40)
@@ -74,8 +76,8 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
     y2, = plot(ts[1:skipmeas:end], ys[1, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
   end
   k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
-  ylabel(L"Concentration [kmol.m$^{-3}$]")
-  legend([x1],["Nonlinear Model"], loc="best")
+  ylabel(L"\begin{center}Concentration\\[kmol.m$^{-3}$\end{center}]")
+  legend([x1],["Underlying Model"], loc="best")
   xlim([0, tend])
   ylim([0, 1])
 
@@ -88,14 +90,14 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   end
   k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ylabel("Temperature [K]")
-  legend([k2, y2],["Filtered Mean Estimate", "Nonlinear Model Measured"], loc="best")
+  legend([k2, y2],["Filtered Mean Estimate", "Observation"], loc="best")
   xlim([0, tend])
   ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
     subplot(subplt,1,3)
     plot(ts, us)
     xlim([0, tend])
-    ylabel("Controller Input")
+    ylabel("Heat Input [kJ/min]")
   end
   xlabel("Time [min]")
 end
@@ -103,7 +105,7 @@ end
 function plotStateSpaceSwitch(linsystems, xs)
 
   rc("font", family="serif", size=24)
-
+  # rc("text", usetex=true)
   figure() # Model and state space
   for k=1:length(linsystems)
     plot(linsystems[k].op[1],linsystems[k].op[2],"kx",markersize=5, markeredgewidth=1)
@@ -123,7 +125,10 @@ function plotStateSpaceSwitch(linsystems, xs)
 end
 
 function plotSwitchSelection(numSwitches, strack, ts, cbaron)
+
   figure() # Model selection
+  rc("font", family="serif", size=24)
+  # rc("text", usetex=true)
   axes = Array(Any, numSwitches)
   im = 0
   width = 500
@@ -148,6 +153,7 @@ end
 function plotEllipses(ts, xs, fmeans, fcovars, fname)
 
   rc("font", family="serif", size=24)
+  # rc("text", usetex=true)
   N = length(ts)
   skip = int(length(ts)/20)
   figure()
@@ -167,11 +173,12 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
-function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma=4.605)
+function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick)
 
   rc("font", family="serif", size=24)
+  rc("text", usetex=true)
   N = length(ts)
-  skip = int(length(ts)/20)
+  skip = int(length(ts)/30)
 
   nf && figure() # only create a new figure if required
   b1 = 0.0
@@ -197,16 +204,26 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma=4.605)
 
   plot(sp[1], sp[2], "gx",markersize=8, markeredgewidth = 4)
 
-  ylabel("Temperature [K]")
-  xlabel(L"Concentration [kmol.m$^{-3}$]")
-  conf = round((1.0 - exp(-sigma/2.0))*100.0, 3)
-  temp = string("$(fname) ", conf,"\% Confidence Region")
-  legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
+  ylabel(L"T_R~[K]")
+  xlabel(L"C_A~[kmol.m^{-3}]")
+  # conf = round((1.0 - exp(-sigma/2.0))*100.0, 3)
+  # temp = latexstring(conf,"\%", "Confidence~Region")
+  # legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", temp], loc="best")
+  if pick==1
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"90\%~Confidence~Region"], loc="best")
+  elseif pick == 2
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99\%~Confidence~Region"], loc="best")
+  elseif pick == 3
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.9\%~Confidence~Region"], loc="best")
+  else
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.99\%~Confidence~Region"], loc="best")
+  end
 end
 
 function plotEllipses(fmeans, fcovars, fstart, pmeans, pcovars, pskip::Int64)
 
   rc("font", family="serif", size=24)
+  # rc("text", usetex=true)
   figure() # dont create a new figure
   b1 = 0.0
   b2 = 0.0
@@ -239,6 +256,8 @@ function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, x
   N = length(ts)
   skip = 1 # int(length(ts)/20)
   figure()
+  # rc("text", usetex=true)
+  rc("font", family="serif", size=24)
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
   f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
@@ -278,6 +297,8 @@ function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, x
   N = length(ts)
   skip = int(length(ts)/20)
   figure()
+  # rc("text", usetex=true)
+  rc("font", family="serif", size=24)
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
   f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
@@ -309,6 +330,8 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   tend = ts[end]
   skipm = int(length(ts)/20)
   figure() # Plot filtered results
+  # rc("text", usetex=true)
+  rc("font", family="serif", size=24)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
   x1nf, = plot(ts, xsb[1,:]', "g--", linewidth=3)
@@ -340,6 +363,8 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means, f1name, f2name)
   skip = int(length(ts)/20)
   tend = ts[end]
   figure() # Plot filtered results
+  # rc("text", usetex=true)
+  rc("font", family="serif", size=24)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
   k1, = plot(ts[1:skip:end], f1means[1,1:skip:end]', "rx", markersize=5, markeredgewidth=2)
@@ -366,6 +391,7 @@ function plotTrackingComparison(ts, xs1, us1, xs2, us2, setpoint)
     setpoints = ones(length(ts))*setpoint
 
     rc("font", family="serif", size=24)
+    # rc("text", usetex=true)
 
     figure()
     subplot(3,1,1)
@@ -394,7 +420,9 @@ function plotTrackingComparison(ts, xs1, us1, xs2, us2, setpoint)
 end
 
 function plotKLdiv(ts, kldiv)
+  # rc("text", usetex=true)
   rc("font", family="serif", size=24)
+
   figure()
   plot(ts, kldiv, "r", linewidth=3)
   xlabel("time [min]")
@@ -424,8 +452,8 @@ function checkConstraint(ts, xs, line)
   # line => y = - bx - c
   r, N = size(xs)
   conmargin = zeros(N)
-  minneg = 0.0
-  minpos = 0.0
+  minneg = Inf
+  minpos = Inf
   for k=1:N
     temp = xs[2, k] + xs[1, k]*line[1] + line[2]
     if temp < 0.0
@@ -436,21 +464,23 @@ function checkConstraint(ts, xs, line)
     else
       conmargin[k] = abs(temp)/sqrt(line[1]^2 + 1.0)
       if minpos > abs(temp)/sqrt(line[1]^2 + 1.0)
-        minpos += abs(temp)/sqrt(line[1]^2 + 1.0)
+        minpos = abs(temp)/sqrt(line[1]^2 + 1.0)
       end
     end
   end
 
+
   println("Minimum Positive Clearance: ", minpos)
   println("Minimum Negative Clearance: ", minneg)
 
-  rc("font", family="serif", size=24)
-
   figure()
+  rc("font", family="serif", size=24)
+  rc("text", usetex=true)
+
   plot(ts, zeros(N), "r", linewidth=1)
   plot(ts, conmargin, "k", linewidth=3)
-  xlabel("Time [min]")
-  ylabel("Clearance")
+  xlabel(L"Time [min]")
+  ylabel(L"Clearance")
 end
 
 end #module

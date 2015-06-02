@@ -6,6 +6,7 @@ using Distributions
 using JuMP
 using Ipopt
 using KernelDensity
+using LaTeXStrings
 
 for func in ["Ellipse.jl",
             "HMM.jl",

@@ -8,7 +8,7 @@ include("closedloop_params.jl") # load all the parameters and modules
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
 opoint = 2 # the specific operating point we are going to use for control
 
-init_state = [0.5, 450] # random initial point near operating point
+init_state = [0.55, 450] # random initial point near operating point
 
 # Set the state space model
 A = linsystems[opoint].A

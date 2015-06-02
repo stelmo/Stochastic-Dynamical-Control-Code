@@ -7,7 +7,7 @@ include("params.jl") # load all the parameters and modules
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
 opoint = 2 # the specific operating point we are going to use for control
 
-init_state = [0.5, 450] # random initial point near operating point
+init_state = [0.55, 450] # random initial point near operating point
 
 # Set the state space model
 A = linsystems[opoint].A
@@ -15,8 +15,8 @@ B = linsystems[opoint].B
 b = linsystems[opoint].b # offset from the origin
 
 # Set point
-ysp = linsystems[1].op[1] - b[1] # Low concentration
-# ysp = linsystems[2].op[1] - b[1] # Medium concentration
+# ysp = linsystems[1].op[1] - b[1] # Low concentration
+ysp = linsystems[2].op[1] - b[1] # Medium concentration
 # ysp = linsystems[3].op[1] - b[1] # High concentration
 # ysp = 0.1 - b[1]
 
@@ -38,7 +38,9 @@ kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_cova
 us[1] = -K*(kfmeans[:, 1] - x_off) + u_off # controller action
 
 for t=2:N
-  xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
+  # xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
+  xs[:, t] = A*(xs[:, t-1]-b) + B*us[t-1] + b + rand(state_noise_dist) # actual plant
+
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measure from actual plant
   kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t]-b, kf_cstr)
 

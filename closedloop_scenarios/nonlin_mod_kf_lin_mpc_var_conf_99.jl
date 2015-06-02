@@ -54,5 +54,5 @@ kfmeans = kfmeans .+ b
 
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2, ysp+b[1])
-Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 9.21)
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 9.21, 2)
 Results.checkConstraint(ts, xs, [aline, cline])

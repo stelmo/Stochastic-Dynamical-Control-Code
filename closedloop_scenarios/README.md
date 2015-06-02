@@ -12,9 +12,9 @@ All the estimated run times are relative to my laptop. The technical specificati
 
 ## Linear system model controlled with a linear MPC
 
-1. `lin_mod_kf_lin_mpc_mean.jl` => Linear plant model controlled with a linear MPC. Plant and measurement noise is Gaussian with known distributions. A Kalman Filter is used for state estimation. The control objective is to keep the system at the unsteady operating point using the minimum controller effort (standard QP MPC objective function). Standard deterministic constraints. Takes about 9 seconds to simulate 20 minutes.
+1. `lin_mod_kf_lin_mpc_mean.jl` => Linear plant model controlled with a linear MPC. Plant and measurement noise is Gaussian with known distributions. A Kalman Filter is used for state estimation. The control objective is to keep the system at the unsteady operating point using the minimum controller effort (standard QP MPC objective function). Standard deterministic constraints. Takes about 2 seconds to simulate 50 minutes.
 
-2. `lin_mod_kf_lin_mpc_var_conf_x.jl` => exactly the same system as before but with the additional stochastic constraint. The suffix `_x.jl` indicates the confidence of the constraint based on the Gaussian assumption i.e. it is read off from a Chi Squared Distribution table (with 2 DOF in this case). Takes about 10 seconds to simulate 20 minutes.
+2. `lin_mod_kf_lin_mpc_var_conf_x.jl` => exactly the same system as before but with the additional stochastic constraint. The suffix `_x.jl` indicates the confidence of the constraint based on the Gaussian assumption i.e. it is read off from a Chi Squared Distribution table (with 2 DOF in this case). Takes about 3 seconds to simulate 50 minutes.
 
 3. `lin_mod_pf_lin_mpc_mean.jl` => The same as (1) but using a Particle Filter for state estimation. Using 2000 particles it takes about 34 seconds to simulate 20 minutes.
 

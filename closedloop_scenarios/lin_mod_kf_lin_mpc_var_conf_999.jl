@@ -1,14 +1,14 @@
 # Linear Plant controlled with a linear MPC using a KF to estimate the state.
 # Stochastic constraints.
 
-tend = 20 # end time of simulation
+tend = 60 # end time of simulation
 include("closedloop_params.jl") # load all the parameters and modules
 
 #Get the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
 opoint = 2 # the specific operating point we are going to use for control
 
-init_state = [0.5, 450] # random initial point near operating point
+init_state = [0.55, 450] # random initial point near operating point
 
 # Set the state space model
 A = linsystems[opoint].A
@@ -44,8 +44,11 @@ for t=2:N
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measure from actual plant
   kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t], kf_cstr)
 
-
-  us[t] = MPC.mpc_var(kfmeans[:, t], kfcovars[:,:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 3000.0, false, 1.0, Q, 13.8155, true) # get the controller input
+  if t%10 == 0
+    us[t] = MPC.mpc_var(kfmeans[:, t], kfcovars[:,:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 3000.0, false, 1.0, Q, 13.8155, true) # get the controller input
+  else
+    us[t] = us[t-1]
+  end
 end
 toc()
 kfmeans = kfmeans .+ b
@@ -54,5 +57,5 @@ ys2 = ys2 .+ b
 
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2, ysp+b[1])
-Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 13.8155)
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 13.8155, 3)
 Results.checkConstraint(ts, xs, [aline, cline])

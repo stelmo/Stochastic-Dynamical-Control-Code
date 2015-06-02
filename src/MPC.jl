@@ -6,7 +6,7 @@ using JuMP
 using Ipopt # the back up optimisation routine
 using Mosek # can't handle the nonconvex constraint
 
-function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
+function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, ustart)
   # return the MPC control input using a linear system
 
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -41,6 +41,9 @@ function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, u
     end
   end
 
+  if ustart!= 0.0
+  @addConstraint(m, -limstepu <= u[1]-ustart <= limstepu)
+  end
   for k=2:horizon-1
     @addConstraint(m, u[k]-u[k-1] <= limstepu)
     @addConstraint(m, u[k]-u[k-1] >= -limstepu)
@@ -52,14 +55,14 @@ function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, u
 
   if status != :Optimal
     warn("Mosek did not converge. Attempting to use Ipopt...")
-    unow = mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
+    unow = mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, ustart)
     return unow
   end
 
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
+function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, ustart)
   # Back up optimiser.
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -91,6 +94,11 @@ function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp,
     for k=2:horizon # can't do anything about k=1
       @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
     end
+  end
+
+
+  if ustart!= 0.0
+  @addConstraint(m, -limstepu <= u[1]-ustart <= limstepu)
   end
 
   for k=2:horizon-1
