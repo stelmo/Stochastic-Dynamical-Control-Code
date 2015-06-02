@@ -44,7 +44,7 @@ for t=2:N
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measure from actual plant
   kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t], kf_cstr)
 
-  if t%10
+  if t%10 == 0
     us[t] = MPC.mpc_var(kfmeans[:, t], kfcovars[:,:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 3000.0, false, 1.0, Q, 18.4207, true) # get the controller input
   else
     us[t] = us[t-1]

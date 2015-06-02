@@ -37,14 +37,12 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_mean(kfmeans[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 11000.0, 1000.0, false, 0.0)# get the controller input
 tic()
 for t=2:N
   xs[:, t] = A*xs[:, t-1] + B*us[t-1] + rand(state_noise_dist) # actual plant
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measure from actual plant
   kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t], kf_cstr)
   if t%10 == 0
-    us[t] = MPC.mpc_mean(kfmeans[:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 11000.0, 1000.0, false, us[t-1])
   else
     us[t] = us[t-1]
   end
