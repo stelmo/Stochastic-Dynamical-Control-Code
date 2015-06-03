@@ -2,7 +2,7 @@
 # the system to the unstead operating point. Stochastic contraints. Graphical evaluation
 # of the Gaussian assumption.
 
-tend = 50
+tend = 40
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -60,7 +60,7 @@ for t=2:N
   else
     us[t] = us[t-1]
   end
-  
+
   if ts[t] in [0.0:2.0:tend]
     Auxiliary.showEstimatedDensity(particles.x, particles.w, temp_states)
   end
