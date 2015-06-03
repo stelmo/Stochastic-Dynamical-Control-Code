@@ -52,6 +52,7 @@ ndivcounter = 1
 temp_states = zeros(2, nP)
 
 us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false, 1.0, Q, 13.8155, true)# get the controller input
+
 kldiv[ndivcounter] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1], temp_states)
 basediv[ndivcounter] = Auxiliary.KLbase(pfmeans[:, 1], pfcovars[:,:, 1], temp_states, nP)
 klts[ndivcounter] = 0.0

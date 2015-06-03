@@ -47,7 +47,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -400.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_mean(pfmeans[:, 1]-b, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false)# get the controller input
+us[1] = MPC.mpc_mean(pfmeans[:, 1]-b, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false)# get the controller input
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
@@ -55,7 +55,7 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
   if t%10 == 0
-    us[t] = MPC.mpc_mean(pfmeans[:, t]-b, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false)
+    us[t] = MPC.mpc_mean(pfmeans[:, t]-b, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false)
   else
     us[t] = us[t-1]
   end
