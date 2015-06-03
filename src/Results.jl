@@ -173,7 +173,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
 end
 
-function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick)
+function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick, legloc)
 
   rc("font", family="serif", size=24)
   rc("text", usetex=true)
@@ -210,13 +210,13 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick)
   # temp = latexstring(conf,"\%", "Confidence~Region")
   # legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", temp], loc="best")
   if pick==1
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"90\%~Confidence~Region"], loc="upper left")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"90\%~Confidence~Region"], loc=legloc)
   elseif pick == 2
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99\%~Confidence~Region"], loc="upper left")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99\%~Confidence~Region"], loc=legloc)
   elseif pick == 3
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.9\%~Confidence~Region"], loc="upper left")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.9\%~Confidence~Region"], loc=legloc)
   else
-    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.99\%~Confidence~Region"], loc="upper left")
+    legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"99.99\%~Confidence~Region"], loc=legloc)
   end
 end
 

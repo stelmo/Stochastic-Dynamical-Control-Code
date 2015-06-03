@@ -57,7 +57,7 @@ ys2 = ys2 .+ b
 
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2, ysp+b[1])
-Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1)
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1, "upper left")
 Results.checkConstraint(ts, xs, [aline, cline])
 Results.calcError(xs, ysp+b[1])
 Results.calcEnergy(us, 0.0, h)

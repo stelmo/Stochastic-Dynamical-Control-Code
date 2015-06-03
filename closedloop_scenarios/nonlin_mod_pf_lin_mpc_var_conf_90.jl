@@ -1,7 +1,7 @@
 # Nonlinear plant model controlled with a linear MPC. The control goal is to steer
 # the system to the unstead operating point. Stochastic contraints.
 
-tend = 50
+tend = 80
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -17,6 +17,7 @@ b = linsystems[opoint].b # offset from the origin
 
 # Set point
 ysp = linsystems[2].op[1] - b[1] # Medium concentration
+
 H = [1.0 0.0] # only attempt to control the concentration
 x_off, usp = LQR.offset(A,B,C2,H, ysp) # control offset
 
@@ -26,7 +27,7 @@ g(x) = C2*x # state observation
 cstr_pf = PF.Model(f,g)
 
 # Initialise the PF
-nP = 7000 # number of particles.
+nP = 200 # number of particles.
 prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 state_noise_dist = MvNormal(Q) # state distribution
@@ -42,7 +43,7 @@ pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -403.0 # negative of the y axis intercept
+cline = -400.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_var(pfmeans[:, 1]-b, pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
@@ -53,12 +54,17 @@ for t=2:N
   PF.filter!(particles, us[t-1], ys2[:, t], state_noise_dist, meas_noise_dist, cstr_pf)
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
-  us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)
-
+  if t%10 == 0
+    us[t] = MPC.mpc_var(pfmeans[:, t]-b, pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)
+  else
+    us[t] = us[t-1]
+  end
 end
 toc()
 
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
-Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1)
+Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1, "upper right")
 Results.checkConstraint(ts, xs, [aline, cline])
+Results.calcError(xs, ysp+b[1])
+Results.calcEnergy(us, 0.0, h)

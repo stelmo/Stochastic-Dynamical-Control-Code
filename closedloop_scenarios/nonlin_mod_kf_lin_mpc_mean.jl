@@ -1,7 +1,7 @@
 # Nonlinear plant controlled with a linear MPC using a KF to estimate the state.
 # Conventional deterministic constraints.
 
-tend = 40
+tend = 80
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -35,28 +35,27 @@ kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_cova
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -403.0 # negative of the y axis intercept
+cline = -400.0 # negative of the y axis intercept
 bline = 1.0
 
-us[1] = MPC.mpc_mean(kfmeans[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false)# get the controller input
+us[1] = MPC.mpc_mean(kfmeans[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false)# get the controller input
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measure from actual plant
   kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t]-b, kf_cstr)
   if t%10==0
-    us[t] = MPC.mpc_mean(kfmeans[:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false)
+    us[t] = MPC.mpc_mean(kfmeans[:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false)
   else
     us[t] = us[t-1]
   end
 end
-
 toc()
 kfmeans = kfmeans .+ b
 
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2, ysp+b[1])
-Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1)
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1, "upper right")
 Results.checkConstraint(ts, xs, [aline, cline])
 Results.calcError(xs, ysp+b[1])
 Results.calcEnergy(us, 0.0, h)
