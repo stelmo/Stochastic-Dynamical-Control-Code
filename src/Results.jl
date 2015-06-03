@@ -29,7 +29,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ksp = plot(ts, setpoints, "g-", linewidth=3)
   ylabel(L"C_A~[kmol.m^{-3}]")
-  legend([x1, ksp],[L"Underlying~Model", L"Set~Point"], loc="upper right", ncol=2)
+  legend([x1, ksp],[L"Underlying~Model", L"Set~Point"], loc="lower right", ncol=2)
   xlim([0, tend])
   # ylim([0, 1])
 
