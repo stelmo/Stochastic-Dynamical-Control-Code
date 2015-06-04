@@ -1,6 +1,6 @@
 # PF Inference using the full nonlinear model
 
-tend = 20
+tend = 50
 include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.5; 400] # initial state
@@ -11,7 +11,7 @@ g(x) = C1*x # state observation
 cstr_pf = PF.Model(f,g) # PF object
 
 # Initialise the PF
-nP = 100 # number of particles.
+nP = 200 # number of particles.
 prior_dist = MvNormal(init_state, init_state_covar) # prior distribution
 particles = PF.init_PF(prior_dist, nP, 2) # initialise the particles
 
@@ -32,9 +32,8 @@ for t=2:N
 end
 
 # Plot results
-Results.plotEllipses(ts, xs, pfmeans, pfcovars, "Particle Filter")
+Results.plotEllipses(ts, xs, pfmeans, pfcovars, "Particle Filter", "upper right")
 
 Results.plotTracking(ts, xs, ys1, pfmeans, us, 1)
 
 avediff = Results.calcError(xs, pfmeans)
-avecost = Results.calcEnergy(us, 0.0)

@@ -1,6 +1,6 @@
 # Inference using the linear reactor model measuring both concentration and temperature
 
-tend = 20
+tend = 50
 include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.50, 400]
@@ -43,9 +43,8 @@ linxs = linxs .+ b
 kfmeans = kfmeans .+ b
 
 # Plot results
-Results.plotEllipses(ts, xs, kfmeans, kfcovars, "Kalman Filter")
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "Kalman Filter", "lower left")
 
 Results.plotTracking(ts, xs, ys2, kfmeans, us, 2)
 
 avediff = Results.calcError(xs, kfmeans)
-avecost = Results.calcEnergy(us, 0.0)

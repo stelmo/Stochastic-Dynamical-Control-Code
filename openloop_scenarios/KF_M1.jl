@@ -1,9 +1,9 @@
 # Inference using one linear model measuring only temperature
 
-tend = 20
+tend = 50
 include("openloop_params.jl") # load all the parameters and modules
 
-init_state = [0.50, 400]
+init_state = [0.5, 400]
 
 # Specify the linear model
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
@@ -43,9 +43,8 @@ kfmeans = kfmeans .+ b
 
 # Plot results
 
-Results.plotEllipses(ts, xs, kfmeans, kfcovars, "Kalman Filter")
+Results.plotEllipses(ts, xs, kfmeans, kfcovars, "Kalman Filter", "upper right")
 
 Results.plotTracking(ts, xs, ys1, kfmeans, us, 1)
 
 avediff = Results.calcError(xs, kfmeans)
-avecost = Results.calcEnergy(us, 0.0)

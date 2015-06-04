@@ -65,7 +65,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
     subplt = 3
   end
   rc("font", family="serif", size=24)
-  # rc("text", usetex=true)
+  rc("text", usetex=true)
 
   skipmeas = int(length(ts)/40)
   skipmean = int(length(ts)/40)
@@ -76,8 +76,8 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
     y2, = plot(ts[1:skipmeas:end], ys[1, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
   end
   k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
-  ylabel(L"\begin{center}Concentration\\[kmol.m$^{-3}$\end{center}]")
-  legend([x1],["Underlying Model"], loc="best")
+  ylabel(L"C_A~[kmol.m^{-3}]")
+  legend([x1],[L"Underlying~Model"], loc="best")
   xlim([0, tend])
   ylim([0, 1])
 
@@ -89,8 +89,8 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
     y2, = plot(ts[1:skipmeas:end], ys[2, 1:skipmeas:end][:], "kx", markersize=5, markeredgewidth=1)
   end
   k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
-  ylabel("Temperature [K]")
-  legend([k2, y2],["Filtered Mean Estimate", "Observation"], loc="best")
+  ylabel(L"T_R~[K]")
+  legend([k2, y2],[L"Filtered~Mean", L"Observation"], loc="best")
   xlim([0, tend])
   ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
@@ -99,7 +99,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
     xlim([0, tend])
     ylabel("Heat Input [kJ/min]")
   end
-  xlabel("Time [min]")
+  xlabel(L"Time~[min]")
 end
 
 function plotStateSpaceSwitch(linsystems, xs)
@@ -150,10 +150,10 @@ function plotSwitchSelection(numSwitches, strack, ts, cbaron)
   xlabel("Time [min]")
 end
 
-function plotEllipses(ts, xs, fmeans, fcovars, fname)
+function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)
 
   rc("font", family="serif", size=24)
-  # rc("text", usetex=true)
+  rc("text", usetex=true)
   N = length(ts)
   skip = int(length(ts)/20)
   figure()
@@ -167,10 +167,9 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "mx", markersize=5, markeredgewidth = 2)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-  ylabel("Temperature [K]")
-  xlabel(L"Concentration [kmol.m$^{-3}$]")
-  temp = string("$(fname) ", "90\% Confidence Region")
-  legend([x1,f1, b1],["Nonlinear Model","$(fname) Mean", temp], loc="best")
+  ylabel(L"T_R~[K]")
+  xlabel(L"C_A~[kmol.m^{-3}]")
+  legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", L"90\%~Confidence~Region"], loc=legloc)
 end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick, legloc)
