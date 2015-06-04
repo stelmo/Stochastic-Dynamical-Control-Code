@@ -1,7 +1,7 @@
 # Inference using a linear model in the PF compared to the KF (which implicitly uses a linear model)
 # NOTE: don't run for too long because the linear model is unstable!
 
-tend = 30
+tend = 20
 include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.50, 400]
@@ -53,13 +53,11 @@ pfmeans = pfmeans .+ b
 kfmeans = kfmeans .+ b
 
 # Plot Results
-Results.plotEllipseComp(pfmeans, pfcovars, "Particle Filter", kfmeans, kfcovars, "Kalman Filter", xs, ts)
+Results.plotEllipseComp(pfmeans, pfcovars, kfmeans, kfcovars, xs, ts)
 
-Results.plotTrackingTwoFilters(ts, xs, ys2, pfmeans, kfmeans, "Particle Filter", "Kalman Filter")
+Results.plotTrackingTwoFilters(ts, xs, ys2, pfmeans, kfmeans)
 
 println("For the Kalman Filter:")
 avediff = Results.calcError(xs, kfmeans)
-avecost = Results.calcEnergy(us, 0.0)
 println("For the Particle Filter:")
 avediff = Results.calcError(xs, pfmeans)
-avecost = Results.calcEnergy(us, 0.0)

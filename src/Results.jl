@@ -291,36 +291,33 @@ function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, x
   legend([x1,f1,f2, b1, b2],["Nonlinear Model","$(f1name) Mean","$(f2name) Mean", temp1, temp2], loc="best")
 end
 
-function plotEllipseComp(f1means, f1covars, f1name, f2means, f2covars, f2name, xs, ts, sigma=4.605)
+function plotEllipseComp(f1means, f1covars, f2means, f2covars, xs, ts, sigma=4.605)
 
   N = length(ts)
-  skip = int(length(ts)/20)
+  skip = int(length(ts)/30)
   figure()
-  # rc("text", usetex=true)
+  rc("text", usetex=true)
   rc("font", family="serif", size=24)
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
-  x11, = plot(xs[1, 1:skip:end][:], xs[2, 1:skip:end][:], "kx", markersize=5, markeredgewidth = 2)
-  f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "rx", markersize=5, markeredgewidth = 2)
-  f2, = plot(f2means[1, 1:skip:end][:], f2means[2, 1:skip:end][:], "bx", markersize=5, markeredgewidth = 2)
+  f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "yx", markersize=5, markeredgewidth = 2)
+  f2, = plot(f2means[1, 1:skip:end][:], f2means[2, 1:skip:end][:], "gx", markersize=5, markeredgewidth = 2)
   b1 = 0.0
   b2 = 0.0
-  for k=1:skip:N
+  for k=1:N
     p1, p2 = Ellipse.ellipse(f1means[:,k], f1covars[:,:, k], sigma)
-    b1, = plot(p1, p2, "r")
+    # b1, = plot(p1, p2, "r")
+    b1, = fill(p1, p2, "r", edgecolor="none")
 
     p3, p4 = Ellipse.ellipse(f2means[:,k], f2covars[:,:, k], sigma)
-    b2, = plot(p3, p4, "b")
+    # b2, = plot(p3, p4, "b")
+    b2, = fill(p3, p4, "b", edgecolor="none")
   end
 
-  plot(xs[1,:][:], xs[2,:][:], "k", linewidth=3)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
-  ylabel("Temperature [K]")
-  xlabel(L"Concentration [kmol.m$^{-3}$]")
-  conf = round((1.0 - exp(-sigma/2.0))*100.0, 2)
-  temp1 = string("$(f1name) ", conf,"\% Confidence Ellipse")
-  temp2 = string("$(f2name) ", conf,"\% Confidence Ellipse")
-  legend([x1,f1,f2, b1, b2],["Nonlinear Model","$(f1name) Mean","$(f2name) Mean", temp1, temp2], loc="best")
+  ylabel(L"T_R~[K]")
+  xlabel(L"C_A~[kmol.m^{-3}]")
+  legend([x1,f1,f2, b1, b2],[L"Underlying~Model",L"Particle~Filter",L"Kalman~Filter", L"PF~90\%~Confidence~Region", L"KF~90\%~Confidence~Region"], loc="best")
 end
 
 function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
@@ -356,30 +353,30 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   xlim([0, tend])
 end
 
-function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means, f1name, f2name)
+function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
 
-  skipm = int(length(ts)/20)
-  skip = int(length(ts)/20)
+  skipm = int(length(ts)/30)
+  skip = int(length(ts)/30)
   tend = ts[end]
   figure() # Plot filtered results
-  # rc("text", usetex=true)
   rc("font", family="serif", size=24)
+  rc("text", usetex=true)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
   k1, = plot(ts[1:skip:end], f1means[1,1:skip:end]', "rx", markersize=5, markeredgewidth=2)
   y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
   k12, = plot(ts[1:skip:end], f2means[1, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
-  ylabel(L"Concentration [kmol.m$^{-3}$]")
-  legend([x1, k1],["Nonlinear Model","$(f1name)"], loc="best")
+  ylabel(L"C_A~[kmol.m^{-3}]")
+  legend([x1, k1],[L"Underlying~Model",L"Particle~Filter"], loc="best", ncol=2)
   xlim([0, tend])
   subplot(2,1,2)
   x2, = plot(ts, xs[2,:]', "k", linewidth=3)
   y2, = plot(ts[1:skipm:end], ys[2, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
   k2, = plot(ts[1:skip:end], f1means[2,1:skip:end]', "rx", markersize=5, markeredgewidth=2)
   k22, = plot(ts[1:skip:end], f2means[2, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
-  ylabel("Temperature [K]")
-  xlabel("Time [min]")
-  legend([y2, k22],["Nonlinear Model Measured", "$(f2name)"], loc="best")
+  ylabel(L"T_R~[K]")
+  xlabel(L"Time~[min]")
+  legend([y2, k22],[L"Observation", L"Kalman~Filter"], loc="best", ncol=2)
   xlim([0, tend])
 end
 
