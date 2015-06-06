@@ -4,7 +4,7 @@
 tend = 150
 include("params.jl") # load all the parameters and modules
 
-init_state = [0.5; 450] # initial state
+init_state = [0.55; 450] # initial state
 
 # Setup Switching Particle Filter
 A = [0.999 0.001;0.001 0.999]
@@ -99,18 +99,21 @@ for t=2:N
   smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 20)
 
   # Controller Input
-  ind = indmax(smoothedtrack[:, t]) # use this model and controller
-  yspfix = setpoint[1] - lin_models[ind].b[1]
-  us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
-
+  if t%10 == 0
+    ind = indmax(smoothedtrack[:, t]) # use this model and controller
+    yspfix = setpoint[1] - lin_models[ind].b[1]
+    us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 4.6052*3, true)# get the controller input
+  else
+    us[t] = us[t-1]
+  end
 end
 toc()
 
 # Plot results
 Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
-
 Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
-
 Results.plotTracking(ts, xs, ys2, spfmeans, us, 2, setpoint[1])
-
-Results.plotEllipses(ts, xs, spfmeans, spfcovars, "MPC", [aline, cline], linsystems[opoint].op, true, 4.6052)
+Results.plotEllipses(ts, xs, spfmeans, spfcovars, "MPC", [aline, cline], linsystems[opoint].op, true, 4.6052, 1, "upper left")
+Results.calcError(xs, ysp+b[1])
+Results.calcEnergy(us, 0.0, h)
+Results.checkConstraint(ts, xs, [aline, cline])

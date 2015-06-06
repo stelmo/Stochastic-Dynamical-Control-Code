@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 50
+tend = 150
 include("params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -16,8 +16,8 @@ b = linsystems[opoint].b # offset from the origin
 
 # Set point
 # ysp = linsystems[1].op[1] - b[1] # Low concentration
-ysp = linsystems[2].op[1] - b[1] # Medium concentration
-# ysp = 0.01 - b[1]
+# ysp = linsystems[2].op[1] - b[1] # Medium concentration
+ysp = 0.65 - b[1]
 # Set point
 H = [1.0 0.0] # only attempt to control the concentration
 x_off, usp = LQR.offset(A,B,C2,H, ysp) # control offset
@@ -62,4 +62,4 @@ toc()
 
 # # Plot the results
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
-Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true)
+# Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true)

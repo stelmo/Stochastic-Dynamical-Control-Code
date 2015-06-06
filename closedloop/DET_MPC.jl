@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 150
+tend = 80
 include("params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -32,7 +32,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -300.0 # negative of the y axis intercept
 bline = 1.0
 
-# d = x_off - xs[:, 1]
+d = x_off - xs[:, 1]
 # res = MPC.mpc_targets(ysp, d, A, B)
 usp = 0.0
 us[1] = MPC.mpc_mean(xs[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false)# get the controller input
@@ -42,7 +42,7 @@ for t=2:N
   # xs[:, t] = A*xs[:, t-1] + B*us[t-1]
   d = xs[:, t] - (A*xs[:, t-1] + B*us[t-1])
   # println(d)
-  us[t] = MPC.mpc_mean(xs[:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false)
+  us[t] = MPC.mpc_mean(xs[:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp+0.002, usp[1], 15000.0, 1000.0, false)
 end
 toc()
 xs = xs .+ b
