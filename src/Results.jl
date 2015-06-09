@@ -415,16 +415,21 @@ function plotTrackingComparison(ts, xs1, us1, xs2, us2, setpoint)
     xlabel("Time [min]")
 end
 
-function plotKLdiv(ts, kldiv, basediv)
+function plotKLdiv(ts, kldiv, basediv, unidiv, logged)
   rc("text", usetex=true)
   rc("font", family="serif", size=24)
 
   figure()
   kl, = plot(ts, kldiv, "r", linewidth=3)
   gd, = plot(ts, basediv, "b", linewidth=3)
+  ud, = plot(ts, unidiv, "g", linewidth=3)
   xlabel(L"Time~[min]")
-  ylabel(L"Divergence~[Nats]")
-  legend([kl, gd],[L"Approximation",L"Baseline"], loc="upper left")
+  if logged
+    ylabel(L"Divergence~[ln(Nats)]")
+  else
+    ylabel(L"Divergence~[Nats]")
+  end
+  legend([kl, gd, ud],[L"Approximation",L"Baseline", L"Uniform"], loc="upper right")
 end
 
 function calcError(x, y::Array{Float64, 2})

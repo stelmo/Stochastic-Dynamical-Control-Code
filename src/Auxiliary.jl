@@ -57,6 +57,34 @@ function KLbase(m, S, temp_states, N)
     return (1.0/N)*kldiv
 end
 
+function KLuniform(m, S, temp_states, N)
+
+    s11 = S[1]
+    s22 = S[4]
+
+    dnorm = MvNormal(m, S)
+
+    m1 = [m[1]-sqrt(s11), m[1]+sqrt(s11)]
+    m2 = [m[2]-sqrt(s22), m[2]+sqrt(s22)]
+
+    dnorm1 = Uniform(minimum(m1)*2, maximum(m1)*2)
+    dnorm2 = Uniform(minimum(m2)*2, maximum(m2)*2)
+
+    for k=1:N
+      temp_states[1, k] = rand(dnorm1)
+      temp_states[2, k] = rand(dnorm2)
+    end
+    estden = kde(temp_states')
+
+    kldiv = 0.0
+    for k=1:N
+      #draw from samplesw
+      kldiv += -log(pdf(dnorm, temp_states[:, k])) + log(pdf(estden, temp_states[1, k], temp_states[2, k]))
+    end
+
+    return (1.0/N)*kldiv
+end
+
 function showEstimatedDensity(part_states, part_weights, temp_states)
   # Discrete Kullback-Leibler divergence test wrt a multivariate normal model.
 

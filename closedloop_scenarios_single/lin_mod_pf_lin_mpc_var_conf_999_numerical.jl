@@ -47,6 +47,7 @@ bline = 1.0
 Ndiv = length([0:3.0:tend])
 kldiv = zeros(Ndiv) # Kullback-Leibler Divergence as a function of time
 basediv = zeros(Ndiv) # Baseline
+unidiv = zeros(Ndiv) # Uniform comparison
 klts = zeros(Ndiv)
 ndivcounter = 1
 temp_states = zeros(2, nP)
@@ -55,6 +56,7 @@ us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bl
 
 kldiv[ndivcounter] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1], temp_states)
 basediv[ndivcounter] = Auxiliary.KLbase(pfmeans[:, 1], pfcovars[:,:, 1], temp_states, nP)
+unidiv[ndivcounter] = Auxiliary.KLuniform(pfmeans[:, 1], pfcovars[:,:, 1], temp_states, nP)
 klts[ndivcounter] = 0.0
 ndivcounter += 1
 
@@ -73,12 +75,13 @@ for t=2:N
   if ts[t] in [0.0:3.0:tend]
     kldiv[ndivcounter] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, t], pfcovars[:,:, t], temp_states)
     basediv[ndivcounter] = Auxiliary.KLbase(pfmeans[:, t], pfcovars[:,:, t], temp_states, nP)
+    unidiv[ndivcounter] = Auxiliary.KLuniform(pfmeans[:, t], pfcovars[:,:, t], temp_states, nP)
     klts[ndivcounter] = ts[t]
     ndivcounter += 1
   end
 end
 toc()
-pfmeans =pfmeans .+ b
+pfmeans = pfmeans .+ b
 xs = xs .+ b
 ys2 = ys2 .+ b
 
@@ -88,4 +91,8 @@ Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
 
 Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1, "upper left")
 
-Results.plotKLdiv(klts, kldiv, basediv)
+Results.plotKLdiv(klts, kldiv, basediv, unidiv, false)
+Results.plotKLdiv(klts, log(kldiv), log(basediv), log(unidiv), true)
+println("The average divergence for the baseline is: ",1.0/length(klts)*sum(basediv))
+println("The average divergence for the approximation is: ",1.0/length(klts)*sum(kldiv))
+println("The average divergence for the uniform is: ",1.0/length(klts)*sum(unidiv))
