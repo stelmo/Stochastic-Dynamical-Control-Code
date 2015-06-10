@@ -79,7 +79,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   ylabel(L"C_A~[kmol.m^{-3}]")
   legend([x1],[L"Underlying~Model"], loc="best")
   xlim([0, tend])
-  ylim([0, 1])
+  # ylim([0, 1])
 
   subplot(subplt,1,2)
   x2, = plot(ts, xs[2,:]', "k", linewidth=3)
@@ -92,7 +92,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   ylabel(L"T_R~[K]")
   legend([k2, y2],[L"Filtered~Mean", L"Observation"], loc="best")
   xlim([0, tend])
-  ylim([minimum(xs[2,:]), maximum(xs[2,:])])
+  # ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
     subplot(subplt,1,3)
     plot(ts, us)
@@ -105,11 +105,11 @@ end
 function plotStateSpaceSwitch(linsystems, xs)
 
   rc("font", family="serif", size=24)
-  # rc("text", usetex=true)
+  rc("text", usetex=true)
   figure() # Model and state space
   for k=1:length(linsystems)
     plot(linsystems[k].op[1],linsystems[k].op[2],"kx",markersize=5, markeredgewidth=1)
-  annotate(string("Switch: ", k),
+  annotate(latexstring("Switch:", k),
         xy=[linsystems[k].op[1],linsystems[k].op[2]],
         xytext=[linsystems[k].op[1],linsystems[k].op[2]],
         fontsize=22.0,
@@ -120,15 +120,15 @@ function plotStateSpaceSwitch(linsystems, xs)
   plot(xs[1,1], xs[2,1], "ko", markersize=10, markeredgewidth = 4)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   xlim([-0.1, 1.1])
-  xlabel(L"Concentration [kmol.m$^{-3}$]")
-  ylabel("Temperature [K]")
+  xlabel(L"C_A~[kmol.m^{-3}]")
+  ylabel(L"T_R~[K]")
 end
 
 function plotSwitchSelection(numSwitches, strack, ts, cbaron)
 
   figure() # Model selection
   rc("font", family="serif", size=24)
-  # rc("text", usetex=true)
+  rc("text", usetex=true)
   axes = Array(Any, numSwitches)
   im = 0
   width = 500
@@ -138,16 +138,22 @@ function plotSwitchSelection(numSwitches, strack, ts, cbaron)
     im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
     tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
     tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-    ylabel(string("S::",k))
+    ylabel(latexstring("S::",k))
   end
 
   tick_params(axis="x", labelbottom = "on")
-  xticks([1:int(length(ts)/10.0):length(ts)], ts[1:int(length(ts)/10.0):end])
+  tempts = [1:int(length(ts)/10.0):length(ts)]
+  temp = Array(String, length(tempts))
+  for lat=1:length(tempts)
+    temp[lat] = latexstring(ts[tempts[lat]])
+  end
+
+  xticks(tempts, temp)
 
   if cbaron == true
     colorbar(im, ax=axes)
   end
-  xlabel("Time [min]")
+  xlabel(L"Time~[min]")
 end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)

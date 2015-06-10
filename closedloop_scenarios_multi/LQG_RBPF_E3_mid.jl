@@ -1,32 +1,20 @@
 # Control using multiple linear models and measuring both concentration and temperature
 
-tend = 50
-include("params.jl") # load all the parameters and modules
+tend = 200
+include("closedloop_params.jl") # load all the parameters and modules
+
+init_state = [0.5; 400] # initial state
 
 # Get the three linear models about the nominal operating points
-linsystems = Reactor.getNominalLinearSystems(h, cstr_model) # cstr_model comes from params.jl
-opoint = 2 # the specific operating point we are going to use for control
-
-init_state = [0.5, 450] # random initial point near operating point
-
-# Set point
-setpoint = linsystems[1].op # low concentration
-# setpoint = linsystems[3].op # high concentration
-H = [1.0 0.0] # only attempt to control the concentration
-usps = zeros(length(linsystems))
-for k=1:length(linsystems)
-  sp = setpoint[1] - linsystems[k].b[1]
-  x_off, usp = LQR.offset(linsystems[k].A, linsystems[k].B, C2, H, sp) # control offset
-  usps[k] = usp[1]
-end
+linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 
 # Setup the RBPF
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
 A = [0.99 0.01 0.00;
      0.01 0.98 0.01;
-     0.00 0.01 0.99] # this works better
+     0.00 0.01 0.99]
 numModels = length(models) # number of linear models (will be 3)
-nP = 1500 # number of particles
+nP = 500 # number of particles
 
 sguess =  RBPF.getInitialSwitches(init_state, linsystems) # prior switch distribution
 particles = RBPF.init_RBPF(Categorical(sguess), init_state, init_state_covar, 2, nP)
@@ -35,12 +23,16 @@ maxtrack = zeros(length(linsystems), N) # keep track of the most likely model
 switchtrack = zeros(length(linsystems), N) # keep track of the model/switch distribution
 smoothedtrack = zeros(length(linsystems), N)
 
-# Setup MPC
-horizon = 150
-# add state constraints
-aline = 80.0 # slope of constraint line ax + by + c = 0
-cline = -550.0 # negative of the y axis intercept
-bline = 1.0
+# Setup the controllers
+setpoint = 0.95
+H = [1.0 0.0]
+controllers = Array(LQR.controller, length(models))
+for k=1:length(models)
+  ysp = setpoint - models[k].b[1] # set point is set here
+  x_off, u_off = LQR.offset(models[k].A,models[k].B, C2, H, ysp)
+  K = LQR.lqr(models[k].A, models[k].B, QQ, RR)
+  controllers[k] = LQR.controller(K, x_off, u_off)
+end
 
 state_noise_dist = MvNormal(Q)
 meas_noise_dist = MvNormal(R2)
@@ -58,8 +50,8 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
 ind = indmax(smoothedtrack[:, 1]) # use this model and controller
-yspfix = setpoint[1] - linsystems[ind].b[1]
-us[1] = MPC.mpc_var(rbpfmeans[:, 1]-linsystems[ind].b[1], rbpfcovars[:,:, 1], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, true, -1.0, Q, 4.6052*3.0, true) #get the controller input
+# ind = indmax(maxtrack[:, 1]) # use this model and controller
+us[1] = -controllers[ind].K*(rbpfmeans[:, 1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
 
 #Loop through the rest of time
 tic()
@@ -76,18 +68,18 @@ for t=2:N
   smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 20)
 
   # Controller Input
-  ind = indmax(smoothedtrack[:, t]) # use this model and controller
-  yspfix = setpoint[1] - linsystems[ind].b[1]
-  us[t] = MPC.mpc_var(rbpfmeans[:, t]-linsystems[ind].b, rbpfcovars[:,:, t], horizon, linsystems[ind].A, linsystems[ind].B, linsystems[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, true, -1.0, Q, 4.6052*3.0, true)# get the controller input
+  if t%10 == 0
+    ind = indmax(smoothedtrack[:, t]) # use this model and controller
+    # ind = indmax(maxtrack[:, t]) # use this model and controller
+    us[t] = -controllers[ind].K*(rbpfmeans[:, t] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+  else
+    us[t] = us[t-1]
+  end
 end
 toc()
+
 # Plot results
 Results.plotStateSpaceSwitch(linsystems, xs)
-
 Results.plotSwitchSelection(numModels, maxtrack, ts, false)
-
 Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
-
-Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, setpoint[1])
-
-Results.plotEllipses(ts, xs, rbpfmeans, rbpfcovars, "MPC", [aline, cline], setpoint, true, 4.6052)
+Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, setpoint)
