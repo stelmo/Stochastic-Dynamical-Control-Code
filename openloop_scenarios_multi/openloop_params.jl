@@ -45,7 +45,7 @@ cstr_model_broken = begin
   CA0 = 1.0 #kmol/m3
   TA0 = 310.0 #K
   dH = -4.78e4 #kJ/kmol
-  k0 = 0.5*72.0e7 #1/min <= the catalyst has denatured
+  k0 = 0.1*72.0e7 #1/min <= the catalyst has denatured
   E = 8.314e4 #kJ/kmol
   Cp = 0.239 #kJ/kgK
   rho = 1000.0 #kg/m3

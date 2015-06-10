@@ -1,12 +1,12 @@
 # Inference using two nonlinear models measuring only temperature
 
-tend = 150
+tend = 200
 include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.55, 450]
 
-A = [0.9 0.1;
-     0.1 0.9]
+A = [0.99 0.01;
+     0.01 0.99]
 # A = [0.5 0.5;0.5 0.5]
 fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
@@ -20,7 +20,7 @@ cstr_filter = SPF.Model(F, G, A, xdists, ydists)
 
 nP = 500
 xdist = MvNormal(init_state, init_state_covar)
-sdist = Categorical([0.5, 0.5])
+sdist = Categorical([0.9, 0.1])
 particles = SPF.init_SPF(xdist, sdist, nP, 2)
 
 switchtrack = zeros(2, N)
@@ -44,6 +44,7 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numSwitches, switchtrack, 1, 10)
 
 spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 # Loop through the rest of time
+tic()
 for t=2:N
   random_element = rand(state_noise_dist)
   if ts[t] < 50.0
@@ -64,9 +65,8 @@ for t=2:N
   maxtrack[:, t] = SPF.getMaxTrack(particles, numSwitches)
   smoothedtrack[:, t] = RBPF.smoothedTrack(numSwitches, switchtrack, t, 10)
 
-
 end
-
+toc()
 # Plot results
 Results.plotSwitchSelection(numSwitches, switchtrack, ts, true)
 
