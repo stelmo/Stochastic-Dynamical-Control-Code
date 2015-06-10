@@ -1,7 +1,7 @@
 # Check the stability of the different linearisation points over time
 # Note: small time spans required here
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 # Divide state space into sectors: n by m
 nX = 20 # rows

@@ -1,6 +1,6 @@
 # Inference using two nonlinear models measuring only temperature
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 init_state = [0.50, 400]
 

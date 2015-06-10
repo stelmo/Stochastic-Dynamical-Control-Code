@@ -1,7 +1,7 @@
 # Qualitative Analysis of the CSTR
 # Nominal and bifurcation analysis
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 N = 100
 Ts = linspace(200, 600, N) # temperature range

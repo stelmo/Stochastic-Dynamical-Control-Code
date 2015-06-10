@@ -1,6 +1,6 @@
 # Compare the transient dynamics of two reactors
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 initial_states = [0.5, 400]
 

@@ -1,7 +1,7 @@
 # Inference using a linear model in the PF compared to the KF (which implicitly uses a linear model)
 # NOTE: don't run for too long because the linear model is unstable!
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 init_state = [0.50, 400]
 

@@ -1,6 +1,6 @@
 # Implement the augmented switching dynamical system
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 init_state = [0.5; 400] # initial state
 

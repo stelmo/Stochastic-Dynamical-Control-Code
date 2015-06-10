@@ -1,7 +1,7 @@
 # Compare the state space response of multiple linear models
 # Note that small time spans are required here
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 # Divide state space into sectors: n by m
 nX = 4 # rows

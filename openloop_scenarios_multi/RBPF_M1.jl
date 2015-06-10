@@ -1,6 +1,7 @@
 	# Switching Linear dynamical system measuring one state
 
-include("./params.jl") # load all the parameters and modules
+tend = 50
+include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.5; 400] # initial state
 

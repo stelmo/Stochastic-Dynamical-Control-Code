@@ -1,6 +1,6 @@
 # Linearisation Procedure
 
-include("../params.jl") # load all the parameters and modules
+include("./params.jl") # load all the parameters and modules
 
 xspace = [0.0, 1.0]
 yspace = [250, 650]
