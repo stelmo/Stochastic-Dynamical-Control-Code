@@ -332,7 +332,7 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   tend = ts[end]
   skipm = int(length(ts)/20)
   figure() # Plot filtered results
-  # rc("text", usetex=true)
+  rc("text", usetex=true)
   rc("font", family="serif", size=24)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -341,8 +341,8 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
     y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
   end
   k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
-  ylabel(L"Concentration [kmol.m$^{-3}$]")
-  legend([x1, k1],["Nonlinear Model","Filtered Mean"], loc="best")
+  ylabel(L"C_A~[kmol.m^{-3}]")
+  legend([x1, k1],[L"Underlying~Model",L"Filtered~Mean"], loc="best")
   xlim([0, tend])
   subplot(2,1,2)
   x2, = plot(ts, xs[2,:]', "k", linewidth=3)
@@ -353,9 +353,9 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
     y2, = plot(ts[1:skipm:end], ys[1:skipm:end], "kx", markersize=5, markeredgewidth=1)
   end
   k2, = plot(ts, fmeans[2,:]', "r--", linewidth=3)
-  ylabel("Temperature [K]")
-  xlabel("Time [min]")
-  legend([y2, x2nf],["Nonlinear Model Measured","Nonlinear Model No Switch"], loc="best")
+  ylabel(L"T_R~[K]")
+  xlabel(L"Time~[min]")
+  legend([y2, x2nf],[L"Observation",L"Underlying~Model~w/o~Break"], loc="best")
   xlim([0, tend])
 end
 

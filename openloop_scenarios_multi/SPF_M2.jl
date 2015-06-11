@@ -1,6 +1,6 @@
 # Inference using two nonlinear models measuring only temperature
 
-tend = 200
+tend = 150
 include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.55, 450]
@@ -69,9 +69,6 @@ end
 toc()
 # Plot results
 Results.plotSwitchSelection(numSwitches, switchtrack, ts, true)
-
 Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
-
-Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
-
 Results.plotTrackingBreak(ts, xs, xsnofix, ys2, spfmeans, 2)
+Results.calcError(xs, spfmeans)

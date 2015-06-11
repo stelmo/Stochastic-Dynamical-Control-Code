@@ -1,12 +1,13 @@
 # Inference using two nonlinear models measuring only temperature
 
-tend = 200
+tend = 150
 include("openloop_params.jl") # load all the parameters and modules
+srand(8745)
 
 init_state = [0.55, 450]
 
-A = [0.9 0.1;
-     0.1 0.9]
+A = [0.99 0.01;
+     0.01 0.99]
 # A = [0.5 0.5;0.5 0.5]
 fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
@@ -71,9 +72,6 @@ end
 toc()
 # Plot results
 Results.plotSwitchSelection(numSwitches, switchtrack, ts, true)
-
 Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
-
-Results.plotSwitchSelection(numSwitches, smoothedtrack, ts, false)
-
 Results.plotTrackingBreak(ts, xs, xsnofix, ys1, spfmeans, 1)
+Results.calcError(xs, spfmeans)
