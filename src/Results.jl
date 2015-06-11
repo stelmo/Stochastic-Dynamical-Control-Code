@@ -109,7 +109,7 @@ function plotStateSpaceSwitch(linsystems, xs)
   figure() # Model and state space
   for k=1:length(linsystems)
     plot(linsystems[k].op[1],linsystems[k].op[2],"kx",markersize=5, markeredgewidth=1)
-  annotate(latexstring("Switch:", k),
+  annotate(latexstring("M_",k),
         xy=[linsystems[k].op[1],linsystems[k].op[2]],
         xytext=[linsystems[k].op[1],linsystems[k].op[2]],
         fontsize=22.0,
@@ -138,7 +138,7 @@ function plotSwitchSelection(numSwitches, strack, ts, cbaron)
     im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
     tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
     tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
-    ylabel(latexstring("S::",k))
+    ylabel(latexstring("M_",k))
   end
 
   tick_params(axis="x", labelbottom = "on")
