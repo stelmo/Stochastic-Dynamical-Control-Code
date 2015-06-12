@@ -81,5 +81,5 @@ toc()
 # Plot results
 Results.plotStateSpaceSwitch(linsystems, xs)
 Results.plotSwitchSelection(numModels, maxtrack, ts, false)
-Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
+Results.plotSwitchSelection(numModels, switchtrack, ts, true)
 Results.plotTracking(ts, xs, ys2, rbpfmeans, us, 2, setpoint)
