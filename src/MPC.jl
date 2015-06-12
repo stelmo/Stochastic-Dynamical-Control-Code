@@ -6,7 +6,7 @@ using JuMP
 using Ipopt # the back up optimisation routine
 using Mosek # can't handle the nonconvex constraint
 
-function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
+function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, d=zeros(2))
   # return the MPC control input using a linear system
 
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -22,12 +22,12 @@ function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, u
 
   @addConstraint(m, x[1, 1] == adjmean[1])
   @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1])
+  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1])
+    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints
@@ -52,14 +52,14 @@ function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, u
 
   if status != :Optimal
     warn("Mosek did not converge. Attempting to use Ipopt...")
-    unow = mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
+    unow = mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, d)
     return unow
   end
 
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr)
+function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, d=zeros(2))
   # Back up optimiser.
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -74,12 +74,12 @@ function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp,
 
   @addConstraint(m, x[1, 1] == adjmean[1])
   @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1])
+  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1])
+    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints
@@ -109,7 +109,7 @@ function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp,
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar)
+function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar, d=zeros(2))
   # return the MPC control input using a linear system
 
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -126,12 +126,12 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
 
   @addConstraint(m, x[1, 1] == adjmean[1])
   @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1])
+  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1])
+    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints
@@ -177,14 +177,14 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
   status = solve(m)
   if status != :Optimal
     warn("Mosek did not converge. Attempting to use Ipopt...")
-    unow = mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar)
+    unow = mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar, d)
     return unow
   end
 
   return getValue(u[1]) # get the controller input
 end
 
-function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar)
+function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp, limu, limstepu, revconstr, swapcon, Q, sigma, growvar, d=zeros(2))
   # return the MPC control input using a linear system
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
@@ -200,12 +200,12 @@ function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, R
 
   @addConstraint(m, x[1, 1] == adjmean[1])
   @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1])
+  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1])
+    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints

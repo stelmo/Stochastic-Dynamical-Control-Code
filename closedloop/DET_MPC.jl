@@ -35,14 +35,14 @@ bline = 1.0
 d = zeros(2, N)
 # res = MPC.mpc_targets(ysp, d, A, B)
 usp = 0.0
-us[1] = MPC.mpc_mean(xs[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false)# get the controller input
+us[1] = MPC.mpc_mean(xs[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, d[:, 1])# get the controller input
 tic()
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1]+b, us[t-1], h, cstr_model) - b
   # xs[:, t] = A*xs[:, t-1] + B*us[t-1]
   d[:, t] = xs[:, t] - (A*xs[:, t-1] + B*us[t-1])
   # println(d)
-  us[t] = MPC.mpc_mean(xs[:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false)
+  us[t] = MPC.mpc_mean(xs[:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 15000.0, 1000.0, false, d[:, t])
 end
 toc()
 xs = xs .+ b
