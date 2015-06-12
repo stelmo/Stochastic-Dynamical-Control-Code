@@ -429,12 +429,11 @@ function plotKLdiv(ts, kldiv, basediv, unidiv, logged)
   kl, = plot(ts, kldiv, "r", linewidth=3)
   gd, = plot(ts, basediv, "b", linewidth=3)
   ud, = plot(ts, unidiv, "g", linewidth=3)
-  xlabel(L"Time~[min]")
   if logged
-    ylabel(L"Divergence~[ln(Nats)]")
-  else
-    ylabel(L"Divergence~[Nats]")
+    plt.yscale("log")
   end
+  xlabel(L"Time~[min]")
+  ylabel(L"Divergence~[Nats]")
   legend([kl, gd, ud],[L"Approximation",L"Baseline", L"Uniform"], loc="upper right")
 end
 
@@ -499,6 +498,21 @@ function checkConstraint(ts, xs, line)
   plot(ts, conmargin, "k", linewidth=3)
   xlabel(L"Time [min]")
   ylabel(L"Clearance")
+end
+
+function getMinMaxCons!(xs, sigmas, line, mcdistmat, counter)
+  # line = [b,c] => y + bx + c = 0
+  # line => y = - bx - c
+  d = [line[1], 1.0]
+  r, N = size(xs)
+  for k=1:N
+    temp = xs[2, k] + xs[1, k]*line[1] + line[2] # check constraint
+    if temp < 0.0
+      mcdistmat[k, counter] = -abs(temp)/sqrt(d'*sigmas[:,:, k]*d)[1]
+    else
+      mcdistmat[k, counter] = abs(temp)/sqrt(d'*sigmas[:,:, k]*d)[1]
+    end
+  end
 end
 
 end #module

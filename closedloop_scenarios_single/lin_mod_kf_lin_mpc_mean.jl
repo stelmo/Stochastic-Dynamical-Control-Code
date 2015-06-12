@@ -34,7 +34,7 @@ kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_cova
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -411.0 # negative of the y axis intercept
+cline = -411.0 # negative of the y axis intercept $ 412 works better
 bline = 1.0
 
 us[1] = MPC.mpc_mean(kfmeans[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false)# get the controller input
@@ -60,3 +60,4 @@ Results.plotEllipses(ts, xs, kfmeans, kfcovars, "MPC", [aline, cline], linsystem
 Results.checkConstraint(ts, xs, [aline, cline])
 Results.calcError(xs, ysp+b[1])
 Results.calcEnergy(us, 0.0, h)
+Results.getMinMaxCons(xs, kfcovars, [aline, cline])
