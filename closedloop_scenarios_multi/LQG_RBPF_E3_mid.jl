@@ -49,8 +49,8 @@ maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
 smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
-ind = indmax(smoothedtrack[:, 1]) # use this model and controller
-# ind = indmax(maxtrack[:, 1]) # use this model and controller
+# ind = indmax(smoothedtrack[:, 1]) # use this model and controller
+ind = indmax(maxtrack[:, 1]) # use this model and controller
 us[1] = -controllers[ind].K*(rbpfmeans[:, 1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
 
 #Loop through the rest of time
@@ -69,8 +69,8 @@ for t=2:N
 
   # Controller Input
   if t%10 == 0
-    ind = indmax(smoothedtrack[:, t]) # use this model and controller
-    # ind = indmax(maxtrack[:, t]) # use this model and controller
+    # ind = indmax(smoothedtrack[:, t]) # use this model and controller
+    ind = indmax(maxtrack[:, t]) # use this model and controller
     us[t] = -controllers[ind].K*(rbpfmeans[:, t] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
   else
     us[t] = us[t-1]

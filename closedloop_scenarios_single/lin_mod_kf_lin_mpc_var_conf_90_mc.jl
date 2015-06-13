@@ -33,7 +33,7 @@ cline = -411.0 # negative of the y axis intercept
 bline = 1.0
 
 
-mcN = 100
+mcN = 1000
 mcdists = zeros(N, mcN)
 tic()
 for mciter=1:mcN
@@ -59,5 +59,8 @@ for mciter=1:mcN
 end
 toc()
 
+rc("font", family="serif", size=24)
+rc("text", usetex=true)
 PyPlot.plt.hist(reshape(mcdists, N*mcN), 20, normed=true, cumulative=true)
-# PyPlot.plt.hist(filter(x-> x <= 2,reshape(mcdists, N*mcN)), 20, normed=true, cumulative=true)
+xlabel(L"Mahalanobis~Distance")
+ylabel(L"Cumulative~Probability")

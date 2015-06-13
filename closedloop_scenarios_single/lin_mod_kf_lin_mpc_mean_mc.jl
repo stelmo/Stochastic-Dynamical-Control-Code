@@ -33,7 +33,7 @@ cline = -411.0 # negative of the y axis intercept
 bline = 1.0
 
 
-mcN = 100
+mcN = 1000
 mcdists = zeros(N, mcN)
 tic()
 for mciter=1:mcN
@@ -43,7 +43,7 @@ for mciter=1:mcN
   kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys2[:, 1], kf_cstr) # filter
 
   us[1] = MPC.mpc_mean(kfmeans[:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false)# get the controller input
-  tic()
+
   for t=2:N
     xs[:, t] = A*xs[:, t-1] + B*us[t-1] + rand(state_noise_dist) # actual plant
     ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measure from actual plant
@@ -60,5 +60,9 @@ for mciter=1:mcN
 end
 toc()
 
+
+rc("font", family="serif", size=24)
+rc("text", usetex=true)
 PyPlot.plt.hist(reshape(mcdists, N*mcN), 20, normed=true, cumulative=true)
-# PyPlot.plt.hist(filter(x-> x <= 2,reshape(mcdists, N*mcN)), 20, normed=true, cumulative=true)
+xlabel(L"Mahalanobis~Distance")
+ylabel(L"Cumulative~Probability")
