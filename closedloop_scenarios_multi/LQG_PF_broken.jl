@@ -55,7 +55,7 @@ for t=2:N
 
   # Compute controller action
   if t%10==0
-    us[t] = -K*(pfmeans[:, t] - b - x_off + d) + u_off # controller action
+    us[t] = -K*(pfmeans[:, t] - b - x_off) + u_off # controller action
   else
     us[t] = us[t-1]
   end

@@ -1,6 +1,6 @@
 # Inference using two nonlinear models measuring only temperature
 
-tend = 150
+tend = 300
 include("openloop_params.jl") # load all the parameters and modules
 srand(8745)
 

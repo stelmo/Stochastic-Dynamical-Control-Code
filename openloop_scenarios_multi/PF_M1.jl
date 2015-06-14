@@ -1,6 +1,6 @@
 # PF Inference using the full nonlinear model
 
-tend = 150
+tend = 600
 include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.55; 450] # initial state

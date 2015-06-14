@@ -29,7 +29,7 @@ meas_noise_dist = MvNormal(R2)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -411.0 # negative of the y axis intercept
+cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
 
@@ -61,6 +61,7 @@ toc()
 
 rc("font", family="serif", size=24)
 rc("text", usetex=true)
-PyPlot.plt.hist(reshape(mcdists, N*mcN), 20, normed=true, cumulative=true)
+PyPlot.plt.hist(reshape(mcdists, N*mcN), int(mcN*0.2), normed=true, cumulative=true)
 xlabel(L"Mahalanobis~Distance")
 ylabel(L"Cumulative~Probability")
+println("Total violation probability: ",length(filter(x->x<0.0,mcdists))/(N*mcN))
