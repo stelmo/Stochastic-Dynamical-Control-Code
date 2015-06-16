@@ -1,6 +1,6 @@
 # PF inference using the full nonlinear model
 
-tend = 150
+tend = 300
 include("openloop_params.jl") # load all the parameters and modules
 srand(852)
 init_state = [0.55; 450] # initial state
@@ -41,5 +41,5 @@ end
 
 
 # Plot results
-Results.plotTrackingBreak(ts, xs, xsnofix, ys1, pfmeans, 1)
+Results.plotTrackingBreak(ts, xs, xsnofix, ys2, pfmeans, 2)
 Results.calcError(xs, pfmeans)

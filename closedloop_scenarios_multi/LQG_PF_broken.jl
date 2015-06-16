@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 200
+tend = 300
 include("closedloop_params.jl") # load all the parameters and modules
 
 init_state = [0.55, 450] # random initial point near operating point
@@ -41,9 +41,9 @@ PF.init_filter!(particles, 0.0, ys2[:, 1], meas_noise_dist, cstr_pf)
 pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 
 us[1] = -K*(pfmeans[:, 1] - b - x_off) + u_off # controller action
-
+tic()
 for t=2:N
-  if ts[t] < 50
+  if ts[t] < 100
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
   else
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model_broken) + rand(state_noise_dist) # actual plant
@@ -60,7 +60,7 @@ for t=2:N
     us[t] = us[t-1]
   end
 end
-
+toc()
 # Plot the results
 Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
 Results.calcError(xs, ysp+b[1])

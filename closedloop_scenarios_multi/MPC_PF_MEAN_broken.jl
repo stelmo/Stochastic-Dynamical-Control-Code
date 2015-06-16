@@ -1,7 +1,7 @@
 # Nonlinear plant model controlled with a linear MPC. The control goal is to steer
 # the system to the unstead operating point. Deterministic contraints.
 
-tend = 200
+tend = 300
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -52,7 +52,7 @@ tic()
 d = zeros(2)
 for t=2:N
   d = zeros(2)
-  if ts[t] < 50
+  if ts[t] < 100
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
     xtemp = xs[:, t-1] - b
     d = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) - (A*xtemp + B*us[t-1] + b)

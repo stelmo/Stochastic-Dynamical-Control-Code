@@ -1,6 +1,6 @@
 # Control using two nonlinear models and measuring both states
 
-tend = 200
+tend = 300
 include("closedloop_params.jl") # load all the parameters and modules
 
 init_state = [0.55; 450] # initial state
@@ -74,7 +74,7 @@ tic()
 for t=2:N
 
   random_element = rand(state_noise_dist)
-  if ts[t] < 50 # break here
+  if ts[t] < 100 # break here
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
   else
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model_broken) + random_element

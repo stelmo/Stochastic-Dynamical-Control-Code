@@ -1,6 +1,6 @@
 # Inference using two nonlinear models measuring only temperature
 
-tend = 150
+tend = 300
 include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.55, 450]
@@ -13,7 +13,7 @@ fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
 gs(x) = C2*x
 F = [fun1, fun2]
 G = [gs, gs]
-
+numSwitches = 2
 ydists = [MvNormal(R2);MvNormal(R2)]
 xdists = [MvNormal(Q); MvNormal(Q)]
 cstr_filter = SPF.Model(F, G, A, xdists, ydists)
