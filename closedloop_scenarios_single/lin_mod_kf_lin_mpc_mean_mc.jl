@@ -67,3 +67,4 @@ PyPlot.plt.hist(reshape(mcdists, N*mcN), int(mcN*0.2), normed=true, cumulative=t
 xlabel(L"Mahalanobis~Distance")
 ylabel(L"Cumulative~Probability")
 println("Total violation probability: ",length(filter(x->x<0.0,mcdists))/(N*mcN))
+println("Violations per run: ", length(filter(x->x<0.0,mcdists))/N*mcN)
