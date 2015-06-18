@@ -49,7 +49,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
     subplot(subplt,1,3)
     plot(ts, us)
     xlim([0, tend])
-    ylabel(L"Q~[kJ.min^{-1}]")
+    ylabel(L"Q [kJ.min$^{-1}$]")
   end
   xlabel("Time [min]")
 end
@@ -214,13 +214,13 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick,
   # temp = latexstring(conf,"\%", "Confidence~Region")
   # legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", temp], loc="best")
   if pick==1
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", "90\% Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"90$\%$ Confidence Region"], loc=legloc)
   elseif pick == 2
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", "99\% Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"99$\%$ Confidence Region"], loc=legloc)
   elseif pick == 3
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", "99.9\% Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"99.9$\%$ Confidence Region"], loc=legloc)
   else
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", "99.99\% Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"99.99$\%$ Confidence Region"], loc=legloc)
   end
 end
 
@@ -250,7 +250,7 @@ function plotEllipseComp(f1means, f1covars, f2means, f2covars, xs, ts, sigma=4.6
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel(L"T$_R$ [K]")
   xlabel(L"C$_A$ [kmol.m$^{-3}$]")
-  legend([x1,f1,f2, b1, b2],["Underlying Model","Particle Filter","Kalman Filter", "PF 90\% Confidence Region", "KF 90\% Confidence Region"], loc="best")
+  legend([x1,f1,f2, b1, b2],["Underlying Model","Particle Filter","Kalman Filter", L"PF 90$\%$ Confidence Region", L"KF 90$\%$ Confidence Region"], loc="best")
 end
 
 function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)

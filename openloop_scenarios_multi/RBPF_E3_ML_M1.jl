@@ -55,7 +55,6 @@ for t=2:N
 
 end
 toc()
-kfmeans = kfmeans .+ b
 
 # Plot results
 Results.plotStateSpaceSwitch(linsystems, xs)
