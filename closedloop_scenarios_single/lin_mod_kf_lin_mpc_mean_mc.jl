@@ -32,9 +32,7 @@ aline = 10. # slope of constraint line ax + by + c = 0
 cline = -412.0 # negative of the y axis intercept
 bline = 1.0
 
-
-mcN = 1000
-mcdists = zeros(N, mcN)
+mcdists = zeros(2, mcN)
 tic()
 for mciter=1:mcN
   # First time step of the simulation
@@ -56,15 +54,18 @@ for mciter=1:mcN
   end
 
   xs = xs .+ b
-  Results.getMinMaxCons!(xs, kfcovars, [aline, cline], mcdists, mciter)
+  Results.getMCRes!(xs, kfcovars, [aline, cline], mcdists, mciter, h)
 end
 toc()
 
+nocount = count(x->x==0.0, mcdists[1,:])
+filteredResults = zeros(2, mcN-nocount)
+counter = 1
+for k=1:mcN
+  if mcdists[1, k] != 0.0
+  filteredResults[:, counter] = mcdists[:, k]
+  counter += 1
+  end
+end
 
-rc("font", family="serif", size=24)
-rc("text", usetex=true)
-PyPlot.plt.hist(reshape(mcdists, N*mcN), int(mcN*0.2), normed=true, cumulative=true)
-xlabel(L"Mahalanobis~Distance")
-ylabel(L"Cumulative~Probability")
-println("Total violation probability: ",length(filter(x->x<0.0,mcdists))/(N*mcN))
-println("Violations per run: ", length(filter(x->x<0.0,mcdists))/N*mcN)
+writecsv("linmod_kf_mean.csv", filteredResults)

@@ -35,7 +35,7 @@ kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_cova
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -400.0 # negative of the y axis intercept
+cline = -406.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_var(kfmeans[:, 1], kfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false, 1.0, Q, 9.21, true) # get the controller input

@@ -134,7 +134,11 @@ function plotSwitchSelection(numSwitches, strack, ts, cbaron)
   for k=1:numSwitches
     ax = subplot(numSwitches, 1, k)
     axes[k] = ax
-    im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
+    if cbaron
+      im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
+    else
+      im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="binary",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
+    end
     tick_params(axis="y", which="both",left="off",right="off", labelleft = "off")
     tick_params(axis="x", which="both",bottom="off", labelbottom = "off")
     ylabel(latexstring("M_",k))
@@ -313,7 +317,6 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
   xlim([0, tend])
 end
 
-
 function plotKLdiv(ts, kldiv, basediv, unidiv, logged)
   rc("font", family="serif", serif="Computer Modern", size=24)
   rc("text", usetex=true)
@@ -393,19 +396,22 @@ function checkConstraint(ts, xs, line)
   ylabel(L"Clearance")
 end
 
-function getMinMaxCons!(xs, sigmas, line, mcdistmat, counter)
+function getMCRes!(xs, sigmas, line, mcdistmat, counter, h)
   # line = [b,c] => y + bx + c = 0
   # line => y = - bx - c
   d = [line[1], 1.0]
   r, N = size(xs)
+  negdist = 0.0
+  timeviolated = 0
   for k=1:N
     temp = xs[2, k] + xs[1, k]*line[1] + line[2] # check constraint
     if temp < 0.0
-      mcdistmat[k, counter] = -abs(temp)/sqrt(d'*sigmas[:,:, k]*d)[1]
-    else
-      mcdistmat[k, counter] = abs(temp)/sqrt(d'*sigmas[:,:, k]*d)[1]
+      negdist += -abs(temp)/sqrt(d'*sigmas[:,:, k]*d)[1]
+      timeviolated += 1
     end
   end
+  mcdistmat[1, counter] = negdist*h # area integral
+  mcdistmat[2,counter] = timeviolated*h # in minutes
 end
 
 end #module

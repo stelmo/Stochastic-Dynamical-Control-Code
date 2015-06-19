@@ -1,7 +1,7 @@
 # Linear Plant controlled with a linear MPC using a KF to estimate the state.
 # Stochastic constraints.
 
-tend = 40 # end time of simulation
+tend = 80 # end time of simulation
 include("closedloop_params.jl") # load all the parameters and modules
 
 #Get the linear model
@@ -29,30 +29,30 @@ meas_noise_dist = MvNormal(R2)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -412.0 # negative of the y axis intercept
+cline = -406.0 # negative of the y axis intercept
 bline = 1.0
 
 mcdists = zeros(2, mcN)
 tic()
 for mciter=1:mcN
   # First time step of the simulation
-  xs[:,1] = init_state - b # set simulation starting point to the random initial state
+  xs[:,1] = init_state # set simulation starting point to the random initial state
   ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measure from actual plant
-  kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys2[:, 1], kf_cstr) # filter
+  kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys2[:, 1]-b, kf_cstr) # filter
 
-  us[1] = MPC.mpc_var(kfmeans[:, 1], kfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false, 1.0, Q, 4.6052, true) # get the controller input
+  us[1] = MPC.mpc_var(kfmeans[:, 1], kfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false, 1.0, Q, 4.6052, true) # get the controller input
   for t=2:N
-    xs[:, t] = A*xs[:, t-1] +  B*us[t-1] + rand(state_noise_dist) # actual plant
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
     ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measure from actual plant
-    kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t], kf_cstr)
+    kfmeans[:, t], kfcovars[:,:, t] = LLDS.step_filter(kfmeans[:, t-1], kfcovars[:,:, t-1], us[t-1], ys2[:, t]-b, kf_cstr)
 
     if t%10 == 0
-      us[t] = MPC.mpc_var(kfmeans[:, t], kfcovars[:,:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false, 1.0, Q, 4.6052, true) # get the controller input
+      us[t] = MPC.mpc_var(kfmeans[:, t], kfcovars[:,:, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false, 1.0, Q, 4.6052, true) # get the controller input
     else
       us[t] = us[t-1]
     end
   end
-  xs = xs .+ b
+
   Results.getMCRes!(xs, kfcovars, [aline, cline], mcdists, mciter, h)
 end
 toc()
@@ -67,4 +67,4 @@ for k=1:mcN
   end
 end
 
-writecsv("linmod_kf_var90.csv", filteredResults)
+writecsv("nonlinmod_kf_var90.csv", filteredResults)

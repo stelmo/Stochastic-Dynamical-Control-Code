@@ -2,7 +2,7 @@
 # the system to the unstead operating point. Stochastic contraints. Numerical evaluation
 # of the Gaussian assumption.
 
-tend = 40
+tend = 80
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -43,7 +43,7 @@ pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -400.0 # negative of the y axis intercept
+cline = -406.0 # negative of the y axis intercept
 bline = 1.0
 
 Ndiv = length([0:3.0:tend])

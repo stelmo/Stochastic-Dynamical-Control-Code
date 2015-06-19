@@ -44,7 +44,7 @@ pfmeans[:,1], pfcovars[:,:,1] = PF.getStats(particles)
 horizon = 150
 # add state constraints
 aline = 10. # slope of constraint line ax + by + c = 0
-cline = -400.0 # negative of the y axis intercept
+cline = -406.0 # negative of the y axis intercept
 bline = 1.0
 
 us[1] = MPC.mpc_mean(pfmeans[:, 1]-b, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 20000.0, 1000.0, false)# get the controller input
