@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 40
+tend = 80
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model

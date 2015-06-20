@@ -82,4 +82,4 @@ for k=1:mcN
   end
 end
 
-writecsv("nonlinmod_kf_var90.csv", filteredResults)
+writecsv("nonlinmod_pf_var90.csv", filteredResults)

@@ -1,7 +1,7 @@
 # Linear Plant controlled with a linear MPC using a KF to estimate the state.
 # Stochastic constraints.
 
-tend = 40 # end time of simulation
+tend = 80 # end time of simulation
 include("closedloop_params.jl") # load all the parameters and modules
 
 #Get the linear model

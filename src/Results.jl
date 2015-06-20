@@ -16,7 +16,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   else
     subplt = 3
   end
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
 
   skipmeas = int(length(ts)/80)
@@ -67,7 +67,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   else
     subplt = 3
   end
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
 
   skipmeas = int(length(ts)/80)
@@ -109,7 +109,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
 end
 
 function plotStateSpaceSwitch(linsystems, xs)
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
   figure() # Model and state space
   for k=1:length(linsystems)
@@ -132,7 +132,7 @@ end
 function plotSwitchSelection(numSwitches, strack, ts, cbaron)
 
   figure() # Model selection
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
   axes = Array(Any, numSwitches)
   im = 0
@@ -167,7 +167,7 @@ end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)
 
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
   N = length(ts)
   skip = int(length(ts)/40)
@@ -176,7 +176,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)
   for k=1:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
     # b1, = plot(p1, p2, "b")
-    b1, = fill(p1, p2, "b", edgecolor="none")
+    b1, = fill(p1, p2, "c", edgecolor="none")
   end
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "mx", markersize=5, markeredgewidth = 2)
@@ -189,7 +189,7 @@ end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick, legloc)
 
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
   N = length(ts)
   skip = int(length(ts)/40)
@@ -199,7 +199,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick,
   for k=1:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k], sigma)
     # b1, = plot(p1, p2, "b")
-    b1, = fill(p1, p2, "b", edgecolor="none")
+    b1, = fill(p1, p2, "c", edgecolor="none")
   end
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "mx", markersize=5, markeredgewidth = 2)
@@ -239,7 +239,7 @@ function plotEllipseComp(f1means, f1covars, f2means, f2covars, xs, ts, sigma=4.6
   N = length(ts)
   skip = int(length(ts)/30)
   figure()
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "yx", markersize=5, markeredgewidth = 2)
@@ -269,7 +269,7 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   tend = ts[end]
   skipm = int(length(ts)/80)
   figure() # Plot filtered results
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -302,7 +302,7 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
   skip = int(length(ts)/40)
   tend = ts[end]
   figure() # Plot filtered results
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -324,14 +324,14 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
 end
 
 function plotKLdiv(ts, kldiv, basediv, unidiv, logged)
-  rc("font", family="serif", serif="Computer Modern", size=28)
+  rc("font", family="serif", serif="Computer Modern", size=32)
   rc("text", usetex=true)
 
   figure()
   if logged
-    kl, = semilogy(ts, kldiv, "r", linewidth=3, basey=e)
-    gd, = semilogy(ts, basediv, "b", linewidth=3, basey=e)
-    ud, = semilogy(ts, unidiv, "g", linewidth=3, basey=e)
+    kl, = semilogy(ts, kldiv, "r", linewidth=3)
+    gd, = semilogy(ts, basediv, "b", linewidth=3)
+    ud, = semilogy(ts, unidiv, "g", linewidth=3)
   else
     kl, = plot(ts, kldiv, "r", linewidth=3)
     gd, = plot(ts, basediv, "b", linewidth=3)
@@ -396,7 +396,7 @@ function checkConstraint(ts, xs, line)
   println("Minimum Negative Clearance: ", minneg)
 
   figure()
-  rc("font", family="serif", size=28)
+  rc("font", family="serif", size=32)
   rc("text", usetex=true)
 
   plot(ts, zeros(N), "r", linewidth=1)

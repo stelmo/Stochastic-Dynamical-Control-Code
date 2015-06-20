@@ -1,6 +1,6 @@
 # Controller using the linear reactor model measuring both concentration and temperature.
 
-tend = 40
+tend = 80
 include("closedloop_params.jl") # load all the parameters and modules
 
 # Get the linear model
@@ -52,7 +52,7 @@ klts = zeros(Ndiv)
 ndivcounter = 1
 temp_states = zeros(2, nP)
 
-us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false, 1.0, Q, 13.8155, true)# get the controller input
+us[1] = MPC.mpc_var(pfmeans[:, 1], pfcovars[:,:, 1], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
 
 kldiv[ndivcounter] = Auxiliary.KL(particles.x, particles.w, pfmeans[:, 1], pfcovars[:,:, 1], temp_states)
 basediv[ndivcounter] = Auxiliary.KLbase(pfmeans[:, 1], pfcovars[:,:, 1], temp_states, nP)
@@ -68,7 +68,7 @@ for t=2:N
   pfmeans[:,t], pfcovars[:,:,t] = PF.getStats(particles)
 
   if t%10==0
-    us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false, 1.0, Q, 13.8155, true)
+    us[t] = MPC.mpc_var(pfmeans[:, t], pfcovars[:, :, t], horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, usp[1], 10000.0, 1000.0, false, 1.0, Q, 9.21, true)
   else
     us[t] = us[t-1]
   end
@@ -87,12 +87,12 @@ ys2 = ys2 .+ b
 
 
 # # Plot the results
-Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
-
-Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1, "upper left")
+# Results.plotTracking(ts, xs, ys2, pfmeans, us, 2, ysp+b[1])
+#
+# Results.plotEllipses(ts, xs, pfmeans, pfcovars, "MPC", [aline, cline], linsystems[2].op, true, 4.6052, 1, "upper left")
 
 Results.plotKLdiv(klts, kldiv, basediv, unidiv, false)
-Results.plotKLdiv(klts, log(kldiv), log(basediv), log(unidiv), true)
+Results.plotKLdiv(klts, kldiv, basediv, unidiv, true)
 println("The average divergence for the baseline is: ",1.0/length(klts)*sum(basediv))
 println("The average divergence for the approximation is: ",1.0/length(klts)*sum(kldiv))
 println("The average divergence for the uniform is: ",1.0/length(klts)*sum(unidiv))
