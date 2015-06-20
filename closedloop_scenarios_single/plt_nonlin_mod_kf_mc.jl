@@ -14,10 +14,10 @@ using PyPlot
 rc("font", family="serif", serif="Computer Modern", size=24)
 rc("text", usetex=true)
 
-mc1 = abs(readcsv("linmod_kf_mean.csv"))
-mc2 = abs(readcsv("linmod_kf_var90.csv"))
-mc3 = abs(readcsv("linmod_kf_var99.csv"))
-mc4 = abs(readcsv("linmod_kf_var999.csv"))
+mc1 = abs(readcsv("nonlinmod_kf_mean.csv"))
+mc2 = abs(readcsv("nonlinmod_kf_var90.csv"))
+mc3 = abs(readcsv("nonlinmod_kf_var99.csv"))
+mc4 = abs(readcsv("nonlinmod_kf_var999.csv"))
 
 mc1 = Auxiliary.removeOutliers(mc1, 3)
 mc2 = Auxiliary.removeOutliers(mc2, 3)
@@ -62,4 +62,4 @@ axis(ymin=0.0, xmin=0.0)
 # # Blue = 99.9%
 xlabel("Mahalanobis Area")
 ylabel("Time in Violation [min]")
-legend([cs1, cs2, cs3, cs4],["Expected Value Constraint",L"90$\%$ Chance Constraint", L"99$\%$ Chance Constraint", L"99.9$\%$ Chance Constraint"])
+legend([cs1, cs2, cs3, cs4],["Expected Value Constraint",L"90$\%$ Chance Constraint", L"99$\%$ Chance Constraint", L"99.9$\%$ Chance Constraint"], loc="best")

@@ -57,4 +57,4 @@ axis(ymin=0.0, xmin=0.0)
 # # Blue = 99.9%
 xlabel("Mahalanobis Area")
 ylabel("Time in Violation [min]")
-legend([cs1, cs2, cs3, cs4],["Expected Value Constraint KF",L"90$\%$ Chance Constraint KF", "Expected Value Constraint PF", L"90$\%$ Chance Constraint PF"])
+legend([cs1, cs3, cs2, cs4],["Expected Value Constraint KF", "Expected Value Constraint PF",L"90$\%$ Chance Constraint KF", L"90$\%$ Chance Constraint PF"])

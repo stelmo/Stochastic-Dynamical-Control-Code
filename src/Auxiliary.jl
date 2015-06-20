@@ -64,11 +64,11 @@ function KLuniform(m, S, temp_states, N)
 
     dnorm = MvNormal(m, S)
 
-    m1 = [m[1]-sqrt(s11), m[1]+sqrt(s11)]
-    m2 = [m[2]-sqrt(s22), m[2]+sqrt(s22)]
+    m1 = [m[1]-sqrt(s11)*2, m[1]+sqrt(s11)*2]
+    m2 = [m[2]-sqrt(s22)*2, m[2]+sqrt(s22)*2]
 
-    dnorm1 = Uniform(minimum(m1)*2, maximum(m1)*2)
-    dnorm2 = Uniform(minimum(m2)*2, maximum(m2)*2)
+    dnorm1 = Uniform(minimum(m1), maximum(m1))
+    dnorm2 = Uniform(minimum(m2), maximum(m2))
 
     for k=1:N
       temp_states[1, k] = rand(dnorm1)

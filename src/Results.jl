@@ -176,7 +176,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)
   for k=1:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k])
     # b1, = plot(p1, p2, "b")
-    b1, = fill(p1, p2, "c", edgecolor="none")
+    b1, = fill(p1, p2, "b", edgecolor="none")
   end
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "mx", markersize=5, markeredgewidth = 2)
@@ -199,7 +199,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick,
   for k=1:N
     p1, p2 = Ellipse.ellipse(fmeans[:,k], fcovars[:,:, k], sigma)
     # b1, = plot(p1, p2, "b")
-    b1, = fill(p1, p2, "c", edgecolor="none")
+    b1, = fill(p1, p2, "b", edgecolor="none")
   end
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(fmeans[1, 1:skip:end][:], fmeans[2, 1:skip:end][:], "mx", markersize=5, markeredgewidth = 2)
