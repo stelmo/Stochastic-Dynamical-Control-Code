@@ -184,7 +184,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel(L"T$_R$ [K]")
   xlabel(L"C$_A$ [kmol.m$^{-3}$]")
-  legend([x1,f1, b1],["Underlying Model","Filtered Mean", "90\% Confidence Region"], loc=legloc)
+  legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"90$\%$ Confidence Region"], loc=legloc)
 end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick, legloc)

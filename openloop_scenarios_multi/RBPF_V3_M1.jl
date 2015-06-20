@@ -5,21 +5,12 @@ include("openloop_params.jl") # load all the parameters and modules
 
 init_state = [0.5; 400] # initial state
 
-# Divide state space into sectors: n by m
-nX = 2 # rows
-nY = 2 # cols
-xspace = [0.0, 1.0]
-yspace = [250, 550]
+linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 
-linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
 models, A = RBPF.setup_RBPF(linsystems, C1, Q, R1)
-A = [0.98 0.00 0.00 0.00 0.00 0.01 0.00;
-     0.00 0.98 0.00 0.01 0.01 0.01 0.00;
-     0.01 0.00 0.98 0.00 0.00 0.01 0.01;
-     0.00 0.00 0.00 0.98 0.00 0.01 0.00;
-     0.00 0.01 0.00 0.00 0.99 0.00 0.00;
-     0.01 0.01 0.01 0.01 0.00 0.96 0.00;
-     0.00 0.00 0.01 0.00 0.00 0.00 0.99]
+A = [0.5 0.25 0.25;
+     0.25 0.5 0.25;
+     0.25 0.25 0.5]
 numModels = length(models)
 
 nP = 500 # number of particles
@@ -37,8 +28,8 @@ xs[:,1] = init_state
 ys1[1] = C1*xs[:, 1] + rand(meas_noise_dist) # measured from actual plant
 
 RBPF.init_filter!(particles, 0.0, ys1[1], models)
-# rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
-rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
+rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getAveStats(particles)
+# rbpfmeans[:,1], rbpfcovars[:,:, 1] = RBPF.getMLStats(particles)
 
 for k=1:length(linsystems)
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
@@ -53,8 +44,8 @@ for t=2:N
   ys1[t] = C1*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
 
   RBPF.filter!(particles, us[t-1], ys1[t], models, A)
-  # rbpfmeans[:, t], rbpfcovars[:,:, t] = RBPF.getAveStats(particles)
-  rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getMLStats(particles)
+  rbpfmeans[:, t], rbpfcovars[:,:, t] = RBPF.getAveStats(particles)
+  # rbpfmeans[:,t], rbpfcovars[:,:, t] = RBPF.getMLStats(particles)
 
   for k=1:length(linsystems)
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
@@ -68,7 +59,7 @@ toc()
 # Plot results
 Results.plotStateSpaceSwitch(linsystems, xs)
 Results.plotSwitchSelection(numModels, switchtrack, ts, true)
-Results.plotSwitchSelection(numModels, maxtrack, ts, false)
+# Results.plotSwitchSelection(numModels, maxtrack, ts, false)
 # Results.plotSwitchSelection(numModels, smoothedtrack, ts, false)
 Results.plotTracking(ts, xs, ys1, rbpfmeans, us, 1)
-Results.calcError(xs, rbpfmeans)
+# Results.calcError(xs, rbpfmeans)
