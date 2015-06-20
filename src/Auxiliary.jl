@@ -108,12 +108,36 @@ function showEstimatedDensity(part_states, part_weights, temp_states)
   end
   estden = kde(temp_states')
   rc("text", usetex=true)
-  rc("font", family="serif", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=24)
 
   figure() # new figure otherwise very cluttered
   contour(estden)
   xlabel(L"C_A [kmol.m^{-3}]")
   ylabel(L"T_R [K]")
+end
+
+function removeOutliers(xs, multiple=2)
+  # remove columns if the column has an element which is more than twice as the mean
+
+  rows, cols = size(xs)
+  m1 = mean(xs, 2)
+  remindex = Int64[]
+  for k=1:cols
+    if xs[1, k] > m1[1]*multiple || xs[2, k] > m1[2]*multiple
+      push!(remindex, k)
+    end
+  end
+
+  fxs = zeros(rows, cols-length(remindex))
+  counter = 1
+  for k=1:cols
+    if !(k in remindex)
+    fxs[:, counter] = xs[:, k]
+    counter += 1
+    end
+  end
+
+  return fxs
 end
 
 end # module

@@ -16,7 +16,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   else
     subplt = 3
   end
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
 
   skipmeas = int(length(ts)/80)
@@ -30,6 +30,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ksp = plot(ts, setpoints, "g-", linewidth=3)
   ylabel(L"C$_A$ [kmol.m$^{-3}$]")
+  locator_params(nbins=4)
   legend([x1, ksp],["Underlying Model", "Set Point"], loc="best", ncol=2)
   xlim([0, tend])
 
@@ -42,15 +43,17 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   end
   k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ylabel(L"T$_R$ [K]")
+  locator_params(nbins=4)
   legend([k2, y2],["Filtered Mean", "Observations"], loc="best", ncol=2)
   xlim([0, tend])
   # ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
     subplot(subplt,1,3)
-    plot(ts, us)
+    plot(ts, (1/60.0)*us)
     xlim([0, tend])
-    ylabel(L"Q [kJ.min$^{-1}$]")
+    ylabel("Q [kW]")
   end
+  locator_params(nbins=4)
   xlabel("Time [min]")
 end
 
@@ -64,7 +67,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   else
     subplt = 3
   end
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
 
   skipmeas = int(length(ts)/80)
@@ -77,6 +80,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   end
   k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ylabel(L"C$_A$ [kmol.m$^{-3}$]")
+  locator_params(nbins=4)
   legend([x1],["Underlying Model"], loc="best")
   xlim([0, tend])
   # ylim([0, 1])
@@ -90,20 +94,22 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   end
   k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ylabel(L"T$_R$ [K]")
+  locator_params(nbins=4)
   legend([k2, y2],["Filtered Mean", "Observations"], loc="best")
   xlim([0, tend])
   # ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
     subplot(subplt,1,3)
-    plot(ts, us)
+    plot(ts, (1.0/60.0)*us)
     xlim([0, tend])
-    ylabel("Heat Input [kJ/min]")
+    ylabel("Q [kW]")
   end
+  locator_params(nbins=4)
   xlabel("Time [min]")
 end
 
 function plotStateSpaceSwitch(linsystems, xs)
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
   figure() # Model and state space
   for k=1:length(linsystems)
@@ -126,7 +132,7 @@ end
 function plotSwitchSelection(numSwitches, strack, ts, cbaron)
 
   figure() # Model selection
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
   axes = Array(Any, numSwitches)
   im = 0
@@ -161,7 +167,7 @@ end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)
 
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
   N = length(ts)
   skip = int(length(ts)/40)
@@ -183,7 +189,7 @@ end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick, legloc)
 
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
   N = length(ts)
   skip = int(length(ts)/40)
@@ -233,7 +239,7 @@ function plotEllipseComp(f1means, f1covars, f2means, f2covars, xs, ts, sigma=4.6
   N = length(ts)
   skip = int(length(ts)/30)
   figure()
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
   x1, = plot(xs[1,:][:], xs[2,:][:], "k",linewidth=3)
   f1, = plot(f1means[1, 1:skip:end][:], f1means[2, 1:skip:end][:], "yx", markersize=5, markeredgewidth = 2)
@@ -263,7 +269,7 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   tend = ts[end]
   skipm = int(length(ts)/80)
   figure() # Plot filtered results
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -296,7 +302,7 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
   skip = int(length(ts)/40)
   tend = ts[end]
   figure() # Plot filtered results
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
   subplot(2,1,1)
   x1, = plot(ts, xs[1,:]', "k", linewidth=3)
@@ -318,15 +324,18 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
 end
 
 function plotKLdiv(ts, kldiv, basediv, unidiv, logged)
-  rc("font", family="serif", serif="Computer Modern", size=24)
+  rc("font", family="serif", serif="Computer Modern", size=28)
   rc("text", usetex=true)
 
   figure()
-  kl, = plot(ts, kldiv, "r", linewidth=3)
-  gd, = plot(ts, basediv, "b", linewidth=3)
-  ud, = plot(ts, unidiv, "g", linewidth=3)
   if logged
-    plt.yscale("log")
+    kl, = semilogy(ts, kldiv, "r", linewidth=3, basey=e)
+    gd, = semilogy(ts, basediv, "b", linewidth=3, basey=e)
+    ud, = semilogy(ts, unidiv, "g", linewidth=3, basey=e)
+  else
+    kl, = plot(ts, kldiv, "r", linewidth=3)
+    gd, = plot(ts, basediv, "b", linewidth=3)
+    ud, = plot(ts, unidiv, "g", linewidth=3)
   end
   xlabel("Time [min]")
   ylabel("Divergence [Nats]")
@@ -355,8 +364,8 @@ end
 
 function calcEnergy(us, uss, h)
   N = length(us)
-  avecost = (h/N)*sum(abs(us-uss))
-  println("Average Input: ", avecost)
+  avecost = (1./(60.0*N))*sum(abs(us-uss))
+  println("Average Input (kW): ", avecost)
   return avecost
 end
 
@@ -387,7 +396,7 @@ function checkConstraint(ts, xs, line)
   println("Minimum Negative Clearance: ", minneg)
 
   figure()
-  rc("font", family="serif", size=24)
+  rc("font", family="serif", size=28)
   rc("text", usetex=true)
 
   plot(ts, zeros(N), "r", linewidth=1)
