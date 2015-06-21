@@ -140,4 +140,17 @@ function removeOutliers(xs, multiple=2)
   return fxs
 end
 
+function modelAverage(switches, models)
+  n = length(switches)
+  A = zeros(2,2)
+  B = zeros(2)
+  b = zeros(2)
+  for k=1:n
+    A += A + models[k].A*switches[k]
+    B += B + models[k].B*switches[k]
+    b += b + models[k].b*switches[k]
+  end
+  return A, B, b
+end
+
 end # module

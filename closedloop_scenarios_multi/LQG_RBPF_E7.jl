@@ -3,27 +3,35 @@
 tend = 200
 include("closedloop_params.jl") # load all the parameters and modules
 
-# Get the three linear models about the nominal operating points
-linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
+# Divide state space into sectors: n by m
+nX = 2 # rows
+nY = 2 # cols
+xspace = [0.0, 1.0]
+yspace = [250, 550]
 
-# Setup the RBPF
+linsystems = Reactor.getLinearSystems(nX, nY, xspace, yspace, h, cstr_model)
+
 models, A = RBPF.setup_RBPF(linsystems, C2, Q, R2)
-A = [0.99 0.01 0.00;
-     0.01 0.98 0.01;
-     0.00 0.01 0.99]
-numModels = length(models) # number of linear models (will be 3)
-nP = 500 # number of particles
+A = [0.98 0.00 0.00 0.00 0.00 0.01 0.00;
+     0.00 0.98 0.00 0.01 0.01 0.01 0.00;
+     0.01 0.00 0.98 0.00 0.00 0.01 0.01;
+     0.00 0.00 0.00 0.98 0.00 0.01 0.00;
+     0.00 0.01 0.00 0.00 0.99 0.00 0.00;
+     0.01 0.01 0.01 0.01 0.00 0.96 0.00;
+     0.00 0.00 0.01 0.00 0.00 0.00 0.99]
+numModels = length(models)
 
-init_state = linsystems[2].op
+nP = 500 # number of particles
+init_state = linsystems[6].op
 
 sguess =  RBPF.getInitialSwitches(init_state, linsystems) # prior switch distribution
 particles = RBPF.init_RBPF(Categorical(sguess), init_state, init_state_covar, 2, nP)
 
-maxtrack = zeros(length(linsystems), N) # keep track of the most likely model
-switchtrack = zeros(length(linsystems), N) # keep track of the model/switch distribution
+maxtrack = zeros(length(linsystems), N)
+switchtrack = zeros(length(linsystems), N)
 
-# Setup the controllers
-setpoint = linsystems[3].op[1]
+# # Setup the controllers
+setpoint = linsystems[7].op[1]
 H = [1.0 0.0]
 controllers = Array(LQR.controller, length(models))
 for k=1:length(models)
@@ -50,6 +58,7 @@ maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
 ind = indmax(maxtrack[:, 1]) # use this model and controller
 horizon = 150
 us[1] = MPC.mpc_lqr(rbpfmeans[:, 1] - models[ind].b, horizon, models[ind].A, models[ind].B, models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])
+
 #Loop through the rest of time
 tic()
 for t=2:N
@@ -66,7 +75,7 @@ for t=2:N
   # Controller Input
   if t%10 == 0
     ind = indmax(maxtrack[:, t]) # use this model and controller
-    us[t] = MPC.mpc_lqr(rbpfmeans[:, t] - models[ind].b, horizon, models[ind].A, models[ind].B, models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])#
+    us[t] = MPC.mpc_lqr(rbpfmeans[:, t] - models[ind].b, horizon, models[ind].A, models[ind].B, models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])
   else
     us[t] = us[t-1]
   end

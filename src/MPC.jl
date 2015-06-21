@@ -258,4 +258,67 @@ function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, R
   return getValue(u[1]) # get the controller input
 end
 
+function mpc_lqr(adjmean, horizon, A, B, b, QQ, RR, ysp, usp, d=zeros(2))
+  # return the MPC control input using a linear system
+
+  # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
+  m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
+
+  @defVar(m, x[1:2, 1:horizon])
+  @defVar(m, u[1:horizon-1])
+
+  @addConstraint(m, x[1, 1] == adjmean[1])
+  @addConstraint(m, x[2, 1] == adjmean[2])
+  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+
+  for k=3:horizon
+    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+  end
+
+
+  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+
+  status = solve(m)
+
+  if status != :Optimal
+    warn("Mosek did not converge. Attempting to use Ipopt...")
+    unow = mpc_lqr_i(adjmean, horizon, A, B, b, QQ, RR, ysp, usp, d)
+    return unow
+  end
+
+  return getValue(u[1]) # get the controller input
+end
+
+function mpc_lqr_i(adjmean, horizon, A, B, b, QQ, RR, ysp, usp, d=zeros(2))
+  # Back up optimiser.
+
+  m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
+
+  @defVar(m, x[1:2, 1:horizon])
+  @defVar(m, u[1:horizon-1])
+
+  @addConstraint(m, x[1, 1] == adjmean[1])
+  @addConstraint(m, x[2, 1] == adjmean[2])
+  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+
+  for k=3:horizon
+    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+  end
+
+
+  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+
+  status = solve(m)
+
+  if status == :Optimal
+    info("Ipopt converged!")
+  end
+
+  return getValue(u[1]) # get the controller input
+end
+
 end

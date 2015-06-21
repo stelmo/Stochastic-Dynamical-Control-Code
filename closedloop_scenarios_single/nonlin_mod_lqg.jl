@@ -20,7 +20,6 @@ ysp = linsystems[2].op[1] - b[1] # Medium concentration
 # Create the controller
 H = [1.0 0.0] # only attempt to control the concentration
 x_off, u_off = LQR.offset(A,B,C2,H, ysp) # control offset
-K = LQR.lqr(A, B, QQ, RR) # controller
 
 # Set up the KF
 kf_cstr = LLDS.llds(A, B, C2, Q, R2) # set up the KF object (measuring both states)
@@ -32,7 +31,8 @@ xs[:,1] = init_state # set simulation starting point to the random initial state
 ys2[:, 1] = C2*xs[:, 1] + rand(meas_noise_dist) # measure from actual plant
 kfmeans[:, 1], kfcovars[:,:, 1] = LLDS.init_filter(init_state-b, init_state_covar, ys2[:, 1]-b, kf_cstr) # filter
 
-us[1] = -K*(kfmeans[:, 1] - x_off) + u_off # controller action
+horizon = 150
+us[1] = MPC.mpc_lqr(kfmeans[:, 1], horizon, A, B, b, QQ, RR, 0.0, 0.0)# get the controller input
 
 for t=2:N
   xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + rand(state_noise_dist) # actual plant
@@ -42,7 +42,7 @@ for t=2:N
 
   # Compute controller action
   if t%10 == 0
-    us[t] = -K*(kfmeans[:, t] - x_off) + u_off # controller action
+    us[t] = MPC.mpc_lqr(kfmeans[:, t], horizon, A, B, b, QQ, RR, 0.0, 0.0)# get the controller input
   else
     us[t] = us[t-1]
   end

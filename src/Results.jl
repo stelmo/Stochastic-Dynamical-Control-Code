@@ -141,7 +141,7 @@ function plotSwitchSelection(numSwitches, strack, ts, cbaron)
     ax = subplot(numSwitches, 1, k)
     axes[k] = ax
     if cbaron
-      im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="cubehelix",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
+      im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="cubehelix_r",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
     else
       im = imshow(repeat(strack[k,:], outer=[width, 1]), cmap="binary",vmin=0.0, vmax=1.0, interpolation="nearest", aspect="auto")
     end

@@ -3,8 +3,6 @@
 tend = 200
 include("closedloop_params.jl") # load all the parameters and modules
 
-init_state = [0.5; 400] # initial state
-
 # Get the three linear models about the nominal operating points
 linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
 
@@ -16,15 +14,16 @@ A = [0.99 0.01 0.00;
 numModels = length(models) # number of linear models (will be 3)
 nP = 500 # number of particles
 
+init_state = linsystems[2].op
+
 sguess =  RBPF.getInitialSwitches(init_state, linsystems) # prior switch distribution
 particles = RBPF.init_RBPF(Categorical(sguess), init_state, init_state_covar, 2, nP)
 
 maxtrack = zeros(length(linsystems), N) # keep track of the most likely model
 switchtrack = zeros(length(linsystems), N) # keep track of the model/switch distribution
-smoothedtrack = zeros(length(linsystems), N)
 
 # Setup the controllers
-setpoint = 0.95
+setpoint = 0.9
 H = [1.0 0.0]
 controllers = Array(LQR.controller, length(models))
 for k=1:length(models)
@@ -46,13 +45,11 @@ for k=1:numModels
   switchtrack[k, 1] = sum(particles.ws[find((x)->x==k, particles.ss)])
 end
 maxtrack[:, 1] = RBPF.getMaxTrack(particles, numModels)
-smoothedtrack[:, 1] = RBPF.smoothedTrack(numModels, switchtrack, 1, 10)
 
 # Controller Input
-# ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 ind = indmax(maxtrack[:, 1]) # use this model and controller
-us[1] = -controllers[ind].K*(rbpfmeans[:, 1] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
-
+horizon = 150
+us[1] = MPC.mpc_lqr(rbpfmeans[:, 1] - models[ind].b, horizon, models[ind].A, models[ind].B, models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])
 #Loop through the rest of time
 tic()
 for t=2:N
@@ -65,13 +62,11 @@ for t=2:N
     switchtrack[k, t] = sum(particles.ws[find((x)->x==k, particles.ss)])
   end
   maxtrack[:, t] = RBPF.getMaxTrack(particles, numModels)
-  smoothedtrack[:, t] = RBPF.smoothedTrack(numModels, switchtrack, t, 20)
 
   # Controller Input
   if t%10 == 0
-    # ind = indmax(smoothedtrack[:, t]) # use this model and controller
     ind = indmax(maxtrack[:, t]) # use this model and controller
-    us[t] = -controllers[ind].K*(rbpfmeans[:, t] - models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+    us[t] = MPC.mpc_lqr(rbpfmeans[:, t] - models[ind].b, horizon, models[ind].A, models[ind].B, models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])#
   else
     us[t] = us[t-1]
   end
