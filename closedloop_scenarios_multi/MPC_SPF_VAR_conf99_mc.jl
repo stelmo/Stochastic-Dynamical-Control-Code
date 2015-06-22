@@ -1,10 +1,11 @@
 # Control using two nonlinear models and measuring both states
 
-tend = 150
+tend = 200
 include("closedloop_params.jl") # load all the parameters and modules
 
-mcN = 200
+mcN = 50
 mcdists = zeros(2, mcN)
+xconcen = zeros(N, mcN)
 mcerr = zeros(mcN)
 for mciter=1:mcN
 
@@ -114,23 +115,23 @@ for mciter=1:mcN
     end
   end
 
-  mcerr[mciter] = Results.calcError(xs, setpoint[1])
+  mcerr[mciter] = Results.calcError2(xs, setpoint[1])
+  xconcen[:, mciter] = xs[1, :]
   Results.getMCRes!(xs, spfcovars, [aline, cline], mcdists, mciter, h)
-
 end
 
-
-mcave = sum(abs(mcerr))/mciters
+mcave = sum(abs(mcerr))/mcN
 println("Monte Carlo average concentration error: ", mcave)
 
-nocount = count(x->x==0.0, mcdists[1,:])
-filteredResults = zeros(2, mcN-nocount)
-counter = 1
-for k=1:mcN
-if mcdists[1, k] != 0.0
-filteredResults[:, counter] = mcdists[:, k]
-counter += 1
-end
-end
-
-writecsv("spf_var99.csv", filteredResults)
+# nocount = count(x->x==0.0, mcdists[1,:])
+# filteredResults = zeros(2, mcN-nocount)
+# counter = 1
+# for k=1:mcN
+# if mcdists[1, k] != 0.0
+# filteredResults[:, counter] = mcdists[:, k]
+# counter += 1
+# end
+# end
+#
+# writecsv("spf_var99.csv", filteredResults)
+writecsv("spf_var99_mc2.csv", xconcen)

@@ -1,11 +1,12 @@
 # Control using two nonlinear models and measuring both states
 
-tend = 300
+tend = 200
 include("closedloop_params.jl") # load all the parameters and modules
 
-mciters = 5
-mcerr = zeros(mciters)
-for mc=1:mciters
+mcN = 50
+mcerr = zeros(mcN)
+xconcen = zeros(N, mcN)
+for mciter=1:mcN
   init_state = [0.55; 450] # initial state
 
   # Setup Switching Particle Filter
@@ -103,8 +104,11 @@ for mc=1:mciters
     end
   end
   # Plot results
-  mcerr[mc] = Results.calcError(xs, setpoint)
+  mcerr[mciter] = Results.calcError2(xs, setpoint)
+  xconcen[:, mciter] = xs[1, :]
 
 end
-mcave = sum(abs(mcerr))/mciters
+
+mcave = sum(abs(mcerr))/mcN
 println("Monte Carlo average concentration error: ",mcave)
+writecsv("spf_lqg_mc2.csv", xconcen)

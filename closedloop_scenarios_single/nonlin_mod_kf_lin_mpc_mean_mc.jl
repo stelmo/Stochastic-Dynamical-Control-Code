@@ -33,6 +33,8 @@ cline = -406.0 # negative of the y axis intercept
 bline = 1.0
 
 mcdists = zeros(2, mcN)
+xconcen = zeros(N, mcN)
+mcerrs = zeros(mcN)
 tic()
 for mciter=1:mcN
   # First time step of the simulation
@@ -53,18 +55,22 @@ for mciter=1:mcN
     end
   end
 
+  mcerrs[mciter] = Results.calcError2(xs, ysp+b[1])
+  xconcen[:, mciter] = xs[1, :]
   Results.getMCRes!(xs, kfcovars, [aline, cline], mcdists, mciter, h)
 end
 toc()
 
-nocount = count(x->x==0.0, mcdists[1,:])
-filteredResults = zeros(2, mcN-nocount)
-counter = 1
-for k=1:mcN
-  if mcdists[1, k] != 0.0
-  filteredResults[:, counter] = mcdists[:, k]
-  counter += 1
-  end
-end
-
-writecsv("nonlinmod_kf_mean.csv", filteredResults)
+# nocount = count(x->x==0.0, mcdists[1,:])
+# filteredResults = zeros(2, mcN-nocount)
+# counter = 1
+# for k=1:mcN
+#   if mcdists[1, k] != 0.0
+#   filteredResults[:, counter] = mcdists[:, k]
+#   counter += 1
+#   end
+# end
+#
+# writecsv("nonlinmod_kf_mean.csv", filteredResults)
+println("The absolute MC average error is: ", sum(abs(mcerrs))/mcN)
+writecsv("nonlinmod_kf_mean_mc2.csv", xconcen)

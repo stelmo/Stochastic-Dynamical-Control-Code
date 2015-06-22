@@ -364,6 +364,14 @@ function calcError(x, y::Float64)
   return avediff1
 end
 
+function calcError2(x, y::Float64)
+
+  r, N = size(x)
+  avediff1 = (1.0/N)*sum(abs((x[1, :] - y)./y))*100.0
+
+  return avediff1
+end
+
 function calcEnergy(us, uss, h)
   N = length(us)
   avecost = (1./(60.0*N))*sum(abs(us-uss))
