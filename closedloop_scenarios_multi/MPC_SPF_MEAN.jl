@@ -6,8 +6,8 @@ include("closedloop_params.jl") # load all the parameters and modules
 init_state = [0.55; 450] # initial state
 
 # Setup Switching Particle Filter
-A = [0.99 0.01;
-     0.01 0.99]
+A = [0.999 0.001;
+     0.001 0.999]
 
 fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
 fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
@@ -115,9 +115,9 @@ toc()
 
 # Plot results
 Results.plotSwitchSelection(numSwitches, maxtrack, ts, false)
-Results.plotSwitchSelection(numSwitches, switchtrack, ts, true)
+# Results.plotSwitchSelection(numSwitches, switchtrack, ts, true)
 Results.plotTracking(ts, xs, ys2, spfmeans, us, 2, setpoint[1])
-Results.plotEllipses(ts, xs, spfmeans, spfcovars, "MPC", [aline, cline], [setpoint[1], 422.6], true, 4.6052, 1, "upper right")
+Results.plotEllipses(ts, xs, spfmeans, spfcovars, "MPC", [aline, cline], [setpoint[1], 422.6], true, 4.6052, 1, "best")
 Results.calcError(xs, setpoint[1])
 Results.calcEnergy(us, 0.0, h)
-Results.checkConstraint(ts, xs, [aline, cline])
+# Results.checkConstraint(ts, xs, [aline, cline])

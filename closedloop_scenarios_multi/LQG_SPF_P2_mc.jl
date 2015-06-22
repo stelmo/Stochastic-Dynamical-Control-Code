@@ -1,25 +1,21 @@
 # Control using two nonlinear models and measuring both states
 
-tend = 150
+tend = 300
 include("closedloop_params.jl") # load all the parameters and modules
 
-mcN = 200
-mcdists = zeros(2, mcN)
-mcerr = zeros(mcN)
-for mciter=1:mcN
-
+mciters = 5
+mcerr = zeros(mciters)
+for mc=1:mciters
   init_state = [0.55; 450] # initial state
 
   # Setup Switching Particle Filter
   A = [0.999 0.001;
        0.001 0.999]
-  fun1(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model) + w
-  fun2(x, u, w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
+  fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
+  fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
   gs(x) = C2*x
-
   F = [fun1, fun2]
   G = [gs, gs]
-
   numSwitches = 2
 
   ydists = [MvNormal(R2); MvNormal(R2)]
@@ -47,20 +43,15 @@ for mciter=1:mcN
   lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystems[opoint].b, C2, Q, R2)
   lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
 
-  setpoint = linsystems[opoint].op
-  H = [1.0 0.0] # only attempt to control the concentration
-  usps = zeros(length(lin_models))
-  for k=1:length(lin_models)
-    sp = setpoint[1] - lin_models[k].b[1]
-    x_off, usp = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, sp) # control offset
-    usps[k] = usp[1]
+  H = [1.0 0.0]
+  setpoint = 0.49
+  controllers = Array(LQR.controller, 2)
+  for k=1:2
+    ysp = setpoint - lin_models[k].b[1] # set point is set here
+    x_off, u_off = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, ysp)
+    K = LQR.lqr(lin_models[k].A, lin_models[k].B, QQ, RR)
+    controllers[k] = LQR.controller(K, x_off, u_off)
   end
-
-  horizon = 150
-  # add state constraints
-  aline = 10. # slope of constraint line ax + by + c = 0
-  cline = -400.0 # negative of the y axis intercept
-  bline = 1.0
 
   # Setup simulation
   xs[:, 1] = init_state
@@ -77,10 +68,10 @@ for mciter=1:mcN
   spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 
   # Controller Input
-  # ind = indmax(smoothedtrack[:, 1]) # use this model and controller
   ind = indmax(maxtrack[:, 1]) # use this model and controller
-  yspfix = setpoint[1] - lin_models[ind].b[1]
-  us[1] = MPC.mpc_var(spfmeans[:, 1] - lin_models[ind].b, spfcovars[:,:, 1], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+  horizon = 150
+  us[1] = MPC.mpc_lqr(spfmeans[:, 1] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])
+  #Loop through the rest of time
 
   # Loop through the rest of time
   for t=2:N
@@ -105,32 +96,15 @@ for mciter=1:mcN
 
     # Controller Input
     if t%10 == 0
-      # ind = indmax(smoothedtrack[:, t]) # use this model and controller
       ind = indmax(maxtrack[:, t]) # use this model and controller
-      yspfix = setpoint[1] - lin_models[ind].b[1]
-      us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+      us[t] = MPC.mpc_lqr(spfmeans[:, t] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])#
     else
       us[t] = us[t-1]
     end
   end
-
-  mcerr[mciter] = Results.calcError(xs, setpoint[1])
-  Results.getMCRes!(xs, spfcovars, [aline, cline], mcdists, mciter, h)
+  # Plot results
+  mcerr[mc] = Results.calcError(xs, setpoint)
 
 end
-
-
 mcave = sum(abs(mcerr))/mciters
-println("Monte Carlo average concentration error: ", mcave)
-
-nocount = count(x->x==0.0, mcdists[1,:])
-filteredResults = zeros(2, mcN-nocount)
-counter = 1
-for k=1:mcN
-if mcdists[1, k] != 0.0
-filteredResults[:, counter] = mcdists[:, k]
-counter += 1
-end
-end
-
-writecsv("spf_var99.csv", filteredResults)
+println("Monte Carlo average concentration error: ",mcave)

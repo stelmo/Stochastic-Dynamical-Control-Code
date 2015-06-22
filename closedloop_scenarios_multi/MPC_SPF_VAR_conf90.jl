@@ -75,7 +75,7 @@ spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 # ind = indmax(smoothedtrack[:, 1]) # use this model and controller
 ind = indmax(maxtrack[:, 1]) # use this model and controller
 yspfix = setpoint[1] - lin_models[ind].b[1]
-us[1] = MPC.mpc_var(spfmeans[:, 1] - lin_models[ind].b, spfcovars[:,:, 1], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+us[1] = MPC.mpc_var(spfmeans[:, 1] - lin_models[ind].b, spfcovars[:,:, 1], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
 
 # Loop through the rest of time
 tic()
@@ -104,7 +104,7 @@ for t=2:N
     # ind = indmax(smoothedtrack[:, t]) # use this model and controller
     ind = indmax(maxtrack[:, t]) # use this model and controller
     yspfix = setpoint[1] - lin_models[ind].b[1]
-    us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+    us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
   else
     us[t] = us[t-1]
   end

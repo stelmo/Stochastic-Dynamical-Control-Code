@@ -1,67 +1,66 @@
 # Control using two nonlinear models and measuring both states
 
-tend = 300
+tend = 150
 include("closedloop_params.jl") # load all the parameters and modules
 
-init_state = [0.55; 450] # initial state
-
-# Setup Switching Particle Filter
-A = [0.99 0.01;
-     0.01 0.99]
-
-fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
-fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
-gs(x) = C2*x
-
-F = [fun1, fun2]
-G = [gs, gs]
-numSwitches = 2
-
-ydists = [MvNormal(R2); MvNormal(R2)]
-xdists = [MvNormal(Q); MvNormal(Q)]
-cstr_filter = SPF.Model(F, G, A, xdists, ydists)
-
-nP = 500 # number of particles
-xdist = MvNormal(init_state, init_state_covar)
-sdist = Categorical([0.9, 0.1])
-particles = SPF.init_SPF(xdist, sdist, nP, 2)
-
-switchtrack = zeros(numSwitches, N)
-maxtrack = zeros(numSwitches, N)
-smoothedtrack = zeros(numSwitches, N)
-
-state_noise_dist = MvNormal(Q)
-meas_noise_dist = MvNormal(R2)
-
-# Setup control (use linear control)
-linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
-linsystems_broken = Reactor.getNominalLinearSystems(h, cstr_model_broken)
-opoint = 2 # the specific linear model we will use
-
-lin_models = Array(RBPF.Model, 2)
-lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystems[opoint].b, C2, Q, R2)
-lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
-
-setpoint = linsystems[opoint].op
-H = [1.0 0.0] # only attempt to control the concentration
-usps = zeros(length(lin_models))
-for k=1:length(lin_models)
-  sp = setpoint[1] - lin_models[k].b[1]
-  x_off, usp = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, sp) # control offset
-  usps[k] = usp[1]
-end
-
-# Setup controller
-horizon = 150
-# add state constraints
-aline = 10. # slope of constraint line ax + by + c = 0
-cline = -400.0 # negative of the y axis intercept
-bline = 1.0
-
 mcN = 100
-mcdists = zeros(N, mcN)
-tic()
+mcdists = zeros(2, mcN)
+mcerr = zeros(mcN)
 for mciter=1:mcN
+  init_state = [0.55; 450] # initial state
+
+  # Setup Switching Particle Filter
+  A = [0.999 0.001;
+       0.001 0.999]
+
+  fun1(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model) + w
+  fun2(x,u,w) = Reactor.run_reactor(x, u, h, cstr_model_broken) + w
+  gs(x) = C2*x
+
+  F = [fun1, fun2]
+  G = [gs, gs]
+  numSwitches = 2
+
+  ydists = [MvNormal(R2); MvNormal(R2)]
+  xdists = [MvNormal(Q); MvNormal(Q)]
+  cstr_filter = SPF.Model(F, G, A, xdists, ydists)
+
+  nP = 500 # number of particles
+  xdist = MvNormal(init_state, init_state_covar)
+  sdist = Categorical([0.9, 0.1])
+  particles = SPF.init_SPF(xdist, sdist, nP, 2)
+
+  switchtrack = zeros(numSwitches, N)
+  maxtrack = zeros(numSwitches, N)
+  smoothedtrack = zeros(numSwitches, N)
+
+  state_noise_dist = MvNormal(Q)
+  meas_noise_dist = MvNormal(R2)
+
+  # Setup control (use linear control)
+  linsystems = Reactor.getNominalLinearSystems(h, cstr_model)
+  linsystems_broken = Reactor.getNominalLinearSystems(h, cstr_model_broken)
+  opoint = 2 # the specific linear model we will use
+
+  lin_models = Array(RBPF.Model, 2)
+  lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystems[opoint].b, C2, Q, R2)
+  lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
+
+  setpoint = linsystems[opoint].op
+  H = [1.0 0.0] # only attempt to control the concentration
+  usps = zeros(length(lin_models))
+  for k=1:length(lin_models)
+    sp = setpoint[1] - lin_models[k].b[1]
+    x_off, usp = LQR.offset(lin_models[k].A, lin_models[k].B, C2, H, sp) # control offset
+    usps[k] = usp[1]
+  end
+
+  # Setup controller
+  horizon = 150
+  # add state constraints
+  aline = 10. # slope of constraint line ax + by + c = 0
+  cline = -400.0 # negative of the y axis intercept
+  bline = 1.0
 
   # Setup simulation
   xs[:, 1] = init_state
@@ -116,14 +115,23 @@ for mciter=1:mcN
     end
   end
 
-  Results.getMinMaxCons!(xs, spfcovars, [aline, cline], mcdists, mciter)
-end
-toc()
+  mcerr[mciter] = Results.calcError(xs, setpoint[1])
+  Results.getMCRes!(xs, spfcovars, [aline, cline], mcdists, mciter, h)
 
-rc("font", family="serif", size=24)
-rc("text", usetex=true)
-PyPlot.plt.hist(reshape(mcdists, N*mcN), int(mcN*0.2), normed=true, cumulative=true)
-xlabel(L"Mahalanobis~Distance")
-ylabel(L"Cumulative~Probability")
-println("Total violation probability: ",length(filter(x->x<0.0,mcdists))/(N*mcN))
-println("Violations per run: ", length(filter(x->x<0.0,mcdists))/N*mcN)
+end
+
+
+mcave = sum(abs(mcerr))/mciters
+println("Monte Carlo average concentration error: ", mcave)
+
+nocount = count(x->x==0.0, mcdists[1,:])
+filteredResults = zeros(2, mcN-nocount)
+counter = 1
+for k=1:mcN
+if mcdists[1, k] != 0.0
+filteredResults[:, counter] = mcdists[:, k]
+counter += 1
+end
+end
+
+writecsv("spf_mean.csv", filteredResults)

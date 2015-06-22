@@ -3,7 +3,7 @@
 tend = 150
 include("closedloop_params.jl") # load all the parameters and modules
 
-mcN = 200
+mcN = 150
 mcdists = zeros(2, mcN)
 mcerr = zeros(mcN)
 for mciter=1:mcN
@@ -80,7 +80,7 @@ for mciter=1:mcN
   # ind = indmax(smoothedtrack[:, 1]) # use this model and controller
   ind = indmax(maxtrack[:, 1]) # use this model and controller
   yspfix = setpoint[1] - lin_models[ind].b[1]
-  us[1] = MPC.mpc_var(spfmeans[:, 1] - lin_models[ind].b, spfcovars[:,:, 1], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+  us[1] = MPC.mpc_var(spfmeans[:, 1] - lin_models[ind].b, spfcovars[:,:, 1], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0, 1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
 
   # Loop through the rest of time
   for t=2:N
@@ -108,7 +108,7 @@ for mciter=1:mcN
       # ind = indmax(smoothedtrack[:, t]) # use this model and controller
       ind = indmax(maxtrack[:, t]) # use this model and controller
       yspfix = setpoint[1] - lin_models[ind].b[1]
-      us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 9.21, true)# get the controller input
+      us[t] = MPC.mpc_var(spfmeans[:, t] - lin_models[ind].b, spfcovars[:,:, t], horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, aline, bline, cline, QQ, RR, yspfix, usps[ind], 15000.0,1000.0, false, 1.0, Q, 4.6052, true)# get the controller input
     else
       us[t] = us[t-1]
     end
@@ -133,4 +133,4 @@ counter += 1
 end
 end
 
-writecsv("spf_var99.csv", filteredResults)
+writecsv("spf_var90.csv", filteredResults)

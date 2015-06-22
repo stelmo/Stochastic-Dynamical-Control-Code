@@ -41,7 +41,7 @@ lin_models[1] = RBPF.Model(linsystems[opoint].A, linsystems[opoint].B, linsystem
 lin_models[2] = RBPF.Model(linsystems_broken[opoint].A, linsystems_broken[opoint].B, linsystems_broken[opoint].b, C2, Q, R2)
 
 H = [1.0 0.0]
-setpoint = 0.48
+setpoint = 0.49
 controllers = Array(LQR.controller, 2)
 for k=1:2
   ysp = setpoint - lin_models[k].b[1] # set point is set here
@@ -65,19 +65,25 @@ smoothedtrack[:, 1] = RBPF.smoothedTrack(numSwitches, switchtrack, 1, 10)
 spfmeans[:,1], spfcovars[:,:,1] = SPF.getStats(particles)
 
 # Controller Input
-ind = indmax(smoothedtrack[:, 1]) # use this model and controller
-us[1] = -controllers[ind].K*(spfmeans[:, 1] - lin_models[ind].b - controllers[ind].x_off) + controllers[ind].u_off # controller action
+ind = indmax(maxtrack[:, 1]) # use this model and controller
+horizon = 150
+us[1] = MPC.mpc_lqr(spfmeans[:, 1] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])
+#Loop through the rest of time
 
 # Loop through the rest of time
-d = zeros(2)
 tic()
 for t=2:N
 
   random_element = rand(state_noise_dist)
-  if ts[t] < 100 # break here
+  d = zeros(2)
+  if ts[t] < 100
     xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) + random_element # actual plant
+    xtemp = xs[:, t-1] - b
+    d = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model) - (A*xtemp + B*us[t-1] + b)
   else
-    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model_broken) + random_element
+    xs[:, t] = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model_broken) + random_element # actual plant
+    xtemp = xs[:, t-1] - b
+    d = Reactor.run_reactor(xs[:, t-1], us[t-1], h, cstr_model_broken) - (A*xtemp + B*us[t-1] + b)
   end
 
   ys2[:, t] = C2*xs[:, t] + rand(meas_noise_dist) # measured from actual plant
@@ -93,9 +99,8 @@ for t=2:N
 
   # Controller Input
   if t%10 == 0
-    # ind = indmax(smoothedtrack[:, t]) # use this model and controller
-    ind = indmax(maxtrack[:, t])
-    us[t] = -controllers[ind].K*(spfmeans[:, t] - lin_models[ind].b - controllers[ind].x_off ) + controllers[ind].u_off # controller action
+    ind = indmax(maxtrack[:, t]) # use this model and controller
+    us[t] = MPC.mpc_lqr(spfmeans[:, t] - lin_models[ind].b, horizon, lin_models[ind].A, lin_models[ind].B, lin_models[ind].b, QQ, RR, controllers[ind].x_off[1], controllers[ind].u_off[1])#
   else
     us[t] = us[t-1]
   end
