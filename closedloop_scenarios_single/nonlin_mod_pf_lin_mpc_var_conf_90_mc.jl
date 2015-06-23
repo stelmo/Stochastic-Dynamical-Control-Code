@@ -80,11 +80,11 @@ toc()
 # counter = 1
 # for k=1:mcN
 #   if mcdists[1, k] != 0.0
-#   filteredResults[:, counter] = mcdists[:, k]
+#   filteredResults[:, counter] = mcdists[:, k
 #   counter += 1
 #   end
 # end
 #
 # writecsv("nonlinmod_pf_var90.csv", filteredResults)
 println("The absolute MC average error is: ", sum(abs(mcerrs))/mcN)
-writecsv("nonlinmod_kf_var90_mc2.csv", xconcen)
+writecsv("nonlinmod_pf_var90_mc2.csv", xconcen)

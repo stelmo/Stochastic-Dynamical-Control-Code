@@ -31,7 +31,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   ksp = plot(ts, setpoints, "g-", linewidth=3)
   ylabel(L"C$_A$ [kmol.m$^{-3}$]")
   locator_params(nbins=4)
-  legend([x1, ksp],["Underlying Model", "Set Point"], loc="best", ncol=2)
+  legend([x1, ksp],["Underlying model", "Set point"], loc="best", ncol=2)
   xlim([0, tend])
 
   subplot(subplt,1,2)
@@ -44,7 +44,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs, setpoint)
   k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ylabel(L"T$_R$ [K]")
   locator_params(nbins=4)
-  legend([k2, y2],["Filtered Mean", "Observations"], loc="best", ncol=2)
+  legend([k2, y2],["Filtered mean", "Observations"], loc="best", ncol=2)
   xlim([0, tend])
   # ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
@@ -81,7 +81,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   k1, = plot(ts[1:skipmean:end], fmeans[1, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ylabel(L"C$_A$ [kmol.m$^{-3}$]")
   locator_params(nbins=4)
-  legend([x1],["Underlying Model"], loc="best")
+  legend([x1],["Underlying model"], loc="best")
   xlim([0, tend])
   # ylim([0, 1])
 
@@ -95,7 +95,7 @@ function plotTracking(ts, xs, ys, fmeans, us, obs)
   k2, = plot(ts[1:skipmean:end], fmeans[2, 1:skipmean:end]', "bx", markersize=5, markeredgewidth = 2)
   ylabel(L"T$_R$ [K]")
   locator_params(nbins=4)
-  legend([k2, y2],["Filtered Mean", "Observations"], loc="best")
+  legend([k2, y2],["Filtered mean", "Observations"], loc="best")
   xlim([0, tend])
   # ylim([minimum(xs[2,:]), maximum(xs[2,:])])
   if subplt == 3
@@ -184,7 +184,7 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, legloc)
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel(L"T$_R$ [K]")
   xlabel(L"C$_A$ [kmol.m$^{-3}$]")
-  legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"90$\%$ Confidence Region"], loc=legloc)
+  legend([x1,f1, b1],["Underlying model","Filtered mean", L"90$\%$ Confidence region"], loc=legloc)
 end
 
 function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick, legloc)
@@ -224,13 +224,13 @@ function plotEllipses(ts, xs, fmeans, fcovars, fname, line, sp, nf, sigma, pick,
   # temp = latexstring(conf,"\%", "Confidence~Region")
   # legend([x1,f1, b1],[L"Underlying~Model",L"Filtered~Mean", temp], loc="best")
   if pick==1
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"90$\%$ Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying model","Filtered mean", L"90$\%$ Confidence region"], loc=legloc)
   elseif pick == 2
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"99$\%$ Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying model","Filtered mean", L"99$\%$ Confidence region"], loc=legloc)
   elseif pick == 3
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"99.9$\%$ Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying model","Filtered mean", L"99.9$\%$ Confidence region"], loc=legloc)
   else
-    legend([x1,f1, b1],["Underlying Model","Filtered Mean", L"99.99$\%$ Confidence Region"], loc=legloc)
+    legend([x1,f1, b1],["Underlying model","Filtered mean", L"99.99$\%$ Confidence region"], loc=legloc)
   end
 end
 
@@ -260,7 +260,7 @@ function plotEllipseComp(f1means, f1covars, f2means, f2covars, xs, ts, sigma=4.6
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   ylabel(L"T$_R$ [K]")
   xlabel(L"C$_A$ [kmol.m$^{-3}$]")
-  legend([x1,f1,f2, b1, b2],["Underlying Model","Particle Filter","Kalman Filter", L"PF 90$\%$ Confidence Region", L"KF 90$\%$ Confidence Region"], loc="best")
+  legend([x1,f1,f2, b1, b2],["Underlying model","Particle filter","Kalman filter", L"PF 90$\%$ Confidence region", L"KF 90$\%$ Confidence region"], loc="best")
 end
 
 function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
@@ -280,7 +280,7 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   k1, = plot(ts, fmeans[1,:]', "r--", linewidth=3)
   ylabel(L"C$_A$ [kmol.m$^{-3}$]")
   locator_params(nbins=4)
-  legend([x1, k1],["Underlying Model","Filtered Mean"], loc="best")
+  legend([x1, k1],["Underlying model","Filtered mean"], loc="best")
   xlim([0, tend])
   subplot(2,1,2)
   x2, = plot(ts, xs[2,:]', "k", linewidth=3)
@@ -294,7 +294,7 @@ function plotTrackingBreak(ts, xs, xsb, ys, fmeans, obs)
   ylabel(L"T$_R$ [K]")
   locator_params(nbins=4)
   xlabel("Time [min]")
-  legend([y2, x2nf],["Observations","Underlying Model w/o Break"], loc="best")
+  legend([y2, x2nf],["Observations","Underlying model w/o fault"], loc="best")
   xlim([0, tend])
 end
 
@@ -312,7 +312,7 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
   y2, = plot(ts[1:skipm:end], ys[1, 1:skipm:end][:], "kx", markersize=5, markeredgewidth=1)
   k12, = plot(ts[1:skip:end], f2means[1, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
   ylabel(L"C$_A$ [kmol.m$^{-3}$]")
-  legend([x1, k1],["Underlying Model","Particle Filter"], loc="best", ncol=2)
+  legend([x1, k1],["Underlying model","Particle filter"], loc="best", ncol=2)
   xlim([0, tend])
   subplot(2,1,2)
   x2, = plot(ts, xs[2,:]', "k", linewidth=3)
@@ -321,7 +321,7 @@ function plotTrackingTwoFilters(ts, xs, ys, f1means, f2means)
   k22, = plot(ts[1:skip:end], f2means[2, 1:skip:end]', "bx", markersize=5, markeredgewidth=2)
   ylabel(L"T$_R$ [K]")
   xlabel("Time [min]")
-  legend([y2, k22],["Observations", "Kalman Filter"], loc="best", ncol=2)
+  legend([y2, k22],["Observations", "Kalman filter"], loc="best", ncol=2)
   xlim([0, tend])
 end
 
@@ -368,6 +368,14 @@ function calcError2(x, y::Float64)
 
   r, N = size(x)
   avediff1 = (1.0/N)*sum(abs((x[1, :] - y)./y))*100.0
+
+  return avediff1
+end
+
+function calcError3(x, y::Float64)
+
+  N = length(x)
+  avediff1 = (1.0/N)*sum(abs((x .- y)./y))*100.0
 
   return avediff1
 end

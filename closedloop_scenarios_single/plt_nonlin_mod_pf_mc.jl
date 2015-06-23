@@ -6,7 +6,7 @@ using PyPlot
 # mcN = 700
 # include("nonlin_mod_pf_lin_mpc_var_conf_90_mc.jl")
 
-rc("font", family="serif", serif="Computer Modern", size=24)
+rc("font", family="serif", serif="Computer Modern", size=32)
 rc("text", usetex=true)
 
 mc1 = abs(readcsv("nonlinmod_kf_mean.csv"))
@@ -30,8 +30,6 @@ cmc3 = cov(mc3')
 cmc4 = cov(mc4')
 
 # Now plot 90 % confidence regions!
-rc("text", usetex=true)
-rc("font", family="serif", serif="Computer Modern", size=24)
 a = 0.5
 xs1, ys1 = Ellipse.ellipse(mmc1, cmc1)
 cs1 = fill(xs1, ys1, "m", alpha=a, edgecolor="none")
@@ -57,4 +55,4 @@ axis(ymin=0.0, xmin=0.0)
 # # Blue = 99.9%
 xlabel("Mahalanobis area in violation")
 ylabel("Time in iolation [min]")
-legend([cs1, cs3, cs2, cs4],["Expected Value Constraint KF", "Expected Value Constraint PF",L"90$\%$ Chance Constraint KF", L"90$\%$ Chance Constraint PF"], loc="best")
+legend([cs1, cs3, cs2, cs4],["Expected value constraint KF", "Expected value constraint PF",L"90$\%$ Chance constraint KF", L"90$\%$ Chance constraint PF"], loc="best")

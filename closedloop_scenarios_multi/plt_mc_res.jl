@@ -2,7 +2,7 @@
 using PyPlot
 using KernelDensity
 
-rc("font", family="serif", serif="Computer Modern", size=24)
+rc("font", family="serif", serif="Computer Modern", size=32)
 rc("text", usetex=true)
 
 mc1 = abs(readcsv("spf_mean.csv"))
@@ -22,8 +22,6 @@ cmc2 = cov(mc2')
 cmc3 = cov(mc3')
 
 # Now plot 90 % confidence regions!
-rc("text", usetex=true)
-rc("font", family="serif", serif="Computer Modern", size=24)
 a = 0.5
 xs1, ys1 = Ellipse.ellipse(mmc1, cmc1)
 cs1 = fill(xs1, ys1, "m", alpha=a, edgecolor="none")
@@ -45,4 +43,4 @@ axis(ymin=0.0, xmin=0.0)
 # # Blue = 99.9%
 xlabel("Mahalanobis area in violation")
 ylabel("Time in violation [min]")
-legend([cs1, cs2, cs3],["Expected Value Constraint",L"90$\%$ Chance Constraint", L"99$\%$ Chance Constraint"], loc="best")
+legend([cs1, cs2, cs3],["Expected value constraint",L"90$\%$ Chance constraint", L"99$\%$ Chance constraint"], loc="best")
