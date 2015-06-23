@@ -1,12 +1,15 @@
 # Linearisation Procedure
 
+tend = 50
 include("./params.jl") # load all the parameters and modules
 
 xspace = [0.0, 1.0]
 yspace = [250, 650]
 linsystems = Reactor.getLinearSystems_randomly(0, xspace, yspace, h, cstr_model)
 
-rc("font", family="serif", size=24)
+
+rc("font", family="serif", serif="Computer Modern", size=32)
+rc("text", usetex=true)
 figure(1)
 k=3 # set which operating point to use
 # also remember to change +- on line 47 and the SS points on lines 75-81
@@ -38,17 +41,23 @@ for dd=1:nDD # only loop through
   plot(xs[1,end], xs[2,end], "kx", markersize=10, markeredgewidth = 4)
   plot(linxs[1,1], linxs[2,1], "ro", markersize=10, markeredgewidth = 4)
   plot(linxs[1,end], linxs[2,end], "rx", markersize=10, markeredgewidth = 4)
-  ylabel("Temperature [K]")
+  ylabel(L"T$_R$ [K]")
+  locator_params(nbins=6)
+
 
   ## Comment out as necessary!
-  # ss1 = readcsv("ss1.csv")
-  # ss2 = readcsv("ss2.csv")
-  ss3 = readcsv("ss3.csv")
-  # x3, = plot(ss1[1], ss1[2], "gx", markersize=10, markeredgewidth = 4)
-  # x3, = plot(ss2[1], ss2[2], "gx", markersize=10, markeredgewidth = 4)
-  x3, = plot(ss3[1], ss3[2], "gx", markersize=10, markeredgewidth = 4)
-
+  if k==1
+    ss1 = [0.0097, 508.0562]
+    x3, = plot(ss1[1], ss1[2], "gx", markersize=10, markeredgewidth = 4)
+  elseif k==2
+    ss2 = [0.4893, 412.1302]
+    x3, = plot(ss2[1], ss2[2], "gx", markersize=10, markeredgewidth = 4)
+  else
+    ss3 = [0.9996, 310.0709]
+    x3, = plot(ss3[1], ss3[2], "gx", markersize=10, markeredgewidth = 4)
+  end
 end
 
-legend([x1, x2, x3],["Nonlinear Model","Linear Model","Operating Point"], loc="best")
-xlabel(L"Concentration [kmol.m$^{-3}$]")
+legend([x1, x2, x3],["Nonlinear model","Linear model","Operating point"], loc="best")
+xlabel(L"C$_A$ [kmol.m$^{-3}$]")
+locator_params(nbins=6)

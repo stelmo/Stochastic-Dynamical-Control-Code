@@ -55,24 +55,24 @@ xlabel("Time [min]")
 
 mcerr1 = 0
 for k=1:cols
-  mcerr1 +=  abs(Results.calcError3(mc1[:, k], ysp+b[1]))
+  mcerr1 +=  abs(Results.calcError3(mc1[end-100:end, k], ysp+b[1]))
 end
 println("The average MC error is:", mcerr1/cols)
 
 mcerr2 = 0
 for k=1:cols
-  mcerr2 +=  abs(Results.calcError3(mc2[:, k], ysp+b[1]))
+  mcerr2 +=  abs(Results.calcError3(mc2[end-100:end, k], ysp+b[1]))
 end
 println("The average MC error is:", mcerr2/cols)
 
 mcerr3 = 0
 for k=1:cols
-  mcerr3 +=  abs(Results.calcError3(mc3[:, k], ysp+b[1]))
+  mcerr3 +=  abs(Results.calcError3(mc3[end-100:end, k], ysp+b[1]))
 end
 println("The average MC error is:", mcerr3/cols)
 
 mcerr4 = 0
 for k=1:cols
-  mcerr4 +=  abs(Results.calcError3(mc4[:, k], ysp+b[1]))
+  mcerr4 +=  abs(Results.calcError3(mc4[end-100:end, k], ysp+b[1]))
 end
 println("The average MC error is:", mcerr4/cols)

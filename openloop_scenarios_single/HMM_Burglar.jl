@@ -72,7 +72,7 @@ for k=2:T
   predmove[:,:, k] = round(reshape(pstate, n, n), 2) # round to make predictions stand out more
 end
 
-rc("font", family="serif", size = 24)
+rc("font", family="serif", serif="Computer Modern", size = 24)
 rc("text", usetex=true)
 fs = 18
 figure(1) # Inference - no prediction
@@ -120,5 +120,3 @@ subplot(1,2,2)
 imshow(house.bumps, cmap="Greys", interpolation="nearest")
 title("Bumps",fontsize=fs)
 tick_params(axis="both", which="both", bottom="off", top="off", left="off", right="off", labelbottom="off", labelleft="off")
-
-rc("font", family="serif")

@@ -1,6 +1,6 @@
 # Qualitative Analysis of the CSTR
 # Nominal and bifurcation analysis
-
+tend = 150
 include("./params.jl") # load all the parameters and modules
 
 N = 100
@@ -17,7 +17,10 @@ for k=1:N
   qgs1[k] = Reactor.QG(Ts[k], cstr_model)
 end
 
-rc("font", family="serif", size=24)
+
+rc("font", family="serif", serif="Computer Modern", size=32)
+rc("text", usetex=true)
+
 figure(1)
 q1, = plot(Ts, qrs1, "b", linewidth=3)
 q2, = plot(Ts, qrs2, "g", linewidth=3)
