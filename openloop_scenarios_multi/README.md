@@ -6,8 +6,12 @@ This folder contains all the scripts used to generate the open loop figures as s
 
 The abbreviations used to name the scripts are explained here:
 
-1) PF => Particle Filter
-2) RBPF => Rao-Blackwellised PF
-3) SPF => Switching PF
+1) `PF` => Particle Filter
+
+2) `RBPF` => Rao-Blackwellised PF
+
+3) `SPF` => Switching PF
+
 4) `_E3` => the observer uses 3 models to perform inference
-5) `_M1` => the observer measures 1 state 
+
+5) `_M1` => the observer measures 1 state

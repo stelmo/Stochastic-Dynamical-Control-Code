@@ -10,6 +10,6 @@ This folder contains stand alone scripts for illustration purposes. They are der
 
 3) `_VAR_conf*` => the controller uses chance constraints to a confidence level indicated by the script name
 
-4_ `_mc` => some monte carlo simulation
+4) `_mc` => some monte carlo simulation
 
 5) `_break` => the controller does not work as expected (the same as `_broken`)

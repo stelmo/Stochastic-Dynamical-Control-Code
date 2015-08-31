@@ -6,8 +6,12 @@ This folder contains stand alone scripts for illustration purposes. They are der
 
 The abbreviations used to name the scripts are explained here:
 
-1) HMM = hidden markov model
-2) KL = Kullback-Leibler
-3) PF = Particle Filter
-4) KF = Kalman Filter
-5) M1 = the observer uses 1 state measurement
+1) `HMM` = Hidden markov model
+
+2) `KL` = Kullback-Leibler
+
+3) `PF` = Particle Filter
+
+4) `KF` = Kalman Filter
+
+5) `M1` = The observer uses 1 state measurement
