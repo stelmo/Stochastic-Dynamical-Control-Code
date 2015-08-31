@@ -1,10 +1,6 @@
 # Stochastic Dynamical Control [![Build Status](https://travis-ci.org/stelmo/Stochastic-Dynamical-Control-Code.svg?branch=master)](https://travis-ci.org/stelmo/Stochastic-Dynamical-Control-Code)
 Code for M. Eng. in Control Engineering
 
-## Required Internal Modules:
-
-**NB: Run the script `init_sys.jl` at startup to load all the required modules!**
-
 ## Required External Julia Packages:
 
 1. Distributions
@@ -17,7 +13,7 @@ Code for M. Eng. in Control Engineering
 
 ## Running the Code:
 
-Please see the folder `openloop_scenarios` or `closedloop_scenarios` to run simulations/demonstrations. The folders `openloop` and `closedloop` are meant as testing ground before scripts move into the scenario folders.
+Please see the folder `openloop_scenarios_*` or `closedloop_scenarios_*` to run simulations/demonstrations. The folders `openloop` and `closedloop` are meant as testing ground before scripts move into the scenario folders. The names of the scripts indicate their function.
 
 ## Testing:
 
