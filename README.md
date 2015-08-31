@@ -13,7 +13,7 @@ Code for M. Eng. in Control Engineering
 
 ## Running the Code:
 
-Please see the folder `openloop_scenarios_*` or `closedloop_scenarios_*` to run simulations/demonstrations. The folders `openloop` and `closedloop` are meant as testing ground before scripts move into the scenario folders. The names of the scripts indicate their function.
+Please see the folder `openloop_scenarios_*` or `closedloop_scenarios_*` to run simulations/demonstrations. The folders `openloop` and `closedloop` are meant as testing ground before scripts move into the scenario folders. If the readme is cryptic it is because the names of the scripts indicate their function (this is explained in the relevant readmes).
 
 ## Testing:
 
