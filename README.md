@@ -13,6 +13,8 @@ Code for M. Eng. in Control Engineering
 
 ## Running the Code:
 
+**It is necessary to run the script `init_sys.jl` in the root directory to load all the external and internal libraries.**
+
 Please see the folder `openloop_scenarios_*` or `closedloop_scenarios_*` to run simulations/demonstrations. The folders `openloop` and `closedloop` are meant as testing ground before scripts move into the scenario folders. If the readmes in the scenratio folders are cryptic it is because the names of the scripts indicate their function (this is explained in the relevant readmes).
 
 ## Testing:
