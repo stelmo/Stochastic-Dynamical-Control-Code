@@ -14,7 +14,7 @@ mc3 = readcsv("spf_var90_mc2.csv")
 mc4 = readcsv("spf_var99_mc2.csv")
 
 rows, cols = size(mc1) # all will have the same dimension
-ts = [0.0:0.1:200]
+ts = 0.0:0.1:200
 
 # Now plot 90 % confidence regions!
 rc("text", usetex=true)

@@ -67,12 +67,12 @@ filter_handler(r::Test.Success) = println("Successful filter test!")
 filter_handler(r::Test.Failure) = error("Failure with the filter test: $(r.expr)")
 filter_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(filter_handler) do
-  @test maximum(abs(filter_me - filter_barber)) < 1e-4
+  @test maximum(abs.(filter_me - filter_barber)) < 1e-4
 end
 # Smoother Inference
 smooth_handler(r::Test.Success) = println("Successful smoothing test!")
 smooth_handler(r::Test.Failure) = error("Failure with the moothing test: $(r.expr)")
 smooth_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(smooth_handler) do
-  @test maximum(abs(fbs_me - fbs_barber)) < 1e-4
+  @test maximum(abs.(fbs_me - fbs_barber)) < 1e-4
 end

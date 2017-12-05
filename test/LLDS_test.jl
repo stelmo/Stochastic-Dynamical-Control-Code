@@ -98,7 +98,7 @@ function unroll(a::Array{Float64, 3}, b::Array{Float64, 3}, T::Int64)
   # Finds maximum difference between two 3d matrices.
   maxdiff = 0.0
   for t=1:T
-    tempdiff = maximum(abs(a[:,:,t] - b[:,:,t]))
+    tempdiff = maximum(abs.(a[:,:,t] - b[:,:,t]))
     (maxdiff < tempdiff) && (maxdiff = tempdiff)
   end
   return maxdiff
@@ -109,7 +109,7 @@ filtermean_handler(r::Test.Success) = println("Successful filter mean test for L
 filtermean_handler(r::Test.Failure) = error("Failure with the filter mean test  for LLDS: $(r.expr)")
 filtermean_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(filtermean_handler) do
-  @test maximum(abs(filtermeans_own - filtermeans)) < tol
+  @test maximum(abs.(filtermeans_own - filtermeans)) < tol
 end
 filtercovar_handler(r::Test.Success) = println("Successful filter covariance test for LLDS!")
 filtercovar_handler(r::Test.Failure) = error("Failure with the filter covariance test for LLDS: $(r.expr)")
@@ -123,7 +123,7 @@ smoothingmean_handler(r::Test.Success) = println("Successful smoothing mean test
 smoothingmean_handler(r::Test.Failure) = error("Failure with the smoothing mean test for LLDS: $(r.expr)")
 smoothingmean_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(smoothingmean_handler) do
-  @test maximum(abs(smoothedmeans_own - smoothedmeans)) < tol
+  @test maximum(abs.(smoothedmeans_own - smoothedmeans)) < tol
 end
 smoothingcovar_handler(r::Test.Success) = println("Successful smoothing covariance test for LLDS!")
 smoothingcovar_handler(r::Test.Failure) = error("Failure with the smoothing covariance test for LLDS: $(r.expr)")

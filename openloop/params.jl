@@ -54,7 +54,7 @@ end
 
 # Discretise the system
 h = 0.1 # time discretisation
-ts = [0.0:h:tend]
+ts = 0.0:h:tend
 N = length(ts)
 xs = zeros(2, N) # nonlinear plant
 linxs = zeros(2, N) # linear plant

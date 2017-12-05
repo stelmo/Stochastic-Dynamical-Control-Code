@@ -10,7 +10,7 @@ mc1 = readcsv("nonlinmod_pf_mean_mc2.csv")
 mc2 = readcsv("nonlinmod_pf_var90_mc2.csv")
 
 rows, cols = size(mc1) # all will have the same dimension
-ts = [0.0:0.1:80]
+ts = 0.0:0.1:80
 
 
 # Now plot 90 % confidence regions!

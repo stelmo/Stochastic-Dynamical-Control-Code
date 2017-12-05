@@ -15,7 +15,7 @@ mc4 = readcsv("linmod_kf_var999_mc2.csv")
 
 
 rows, cols = size(mc1) # all will have the same dimension
-ts = [0.0:0.1:80]
+ts = 0.0:0.1:80
 
 # Now plot 90 % confidence regions!
 rc("text", usetex=true)

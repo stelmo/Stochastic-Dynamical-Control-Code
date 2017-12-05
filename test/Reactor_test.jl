@@ -32,7 +32,7 @@ end
 
 h = 0.001 # time discretisation
 tend = 5. # end simulation time
-ts = [0.0:h:tend]
+ts = 0.0:h:tend
 N = length(ts)
 xs = zeros(2, N)
 initial_states = [0.57, 395]
@@ -49,5 +49,5 @@ reactor_handler(r::Test.Success) = println("Successful Reactor Integration test!
 reactor_handler(r::Test.Failure) = error("Failure with the Reactor Integration test: $(r.expr)")
 reactor_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(reactor_handler) do
-  @test maximum(abs(state_solutions'-xs)) < tol
+  @test maximum(abs.(state_solutions'-xs)) < tol
 end

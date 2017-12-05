@@ -40,7 +40,7 @@ end
 init_state = [0.50; 400]
 h = 0.01 # time discretisation
 tend = 20.0 # end simulation time
-ts = [0.0:h:tend]
+ts = 0.0:h:tend
 N = length(ts)
 xs = zeros(2, N)
 xs[:,1] = init_state
@@ -97,5 +97,5 @@ pf_handler(r::Test.Success) = println("Successful Particle Filter test!")
 pf_handler(r::Test.Failure) = error("Failure with the Particle Filter test: $(r.expr)")
 pf_handler(r::Test.Error) = rethrow(r)
 Test.with_handler(pf_handler) do
-  @test maximum(abs(fmeans-kfmeans)) < tol
+  @test maximum(abs.(fmeans-kfmeans)) < tol
 end
