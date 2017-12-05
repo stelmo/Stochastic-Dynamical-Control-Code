@@ -46,7 +46,7 @@ function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, u
     @constraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @objective(m, Min, sum(QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1) + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
 
@@ -98,7 +98,7 @@ function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp,
     @constraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @objective(m, Min, sum(QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1) + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
 
@@ -172,7 +172,7 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
     @constraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @objective(m, Min, sum(QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1) + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
   if status != :Optimal
@@ -234,7 +234,7 @@ function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, R
     for k=2:horizon # don't do anything about k=1
       rsquared = [aline, bline]'*predvar*[aline, bline]
       r = rsquared[1]
-      @addNLConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
+      @NLconstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
       predvar = Q + A*predvar*transpose(A)
     end
   else
@@ -243,11 +243,11 @@ function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, R
     for k=2:horizon # don't do anything about k=1
       rsquared = [aline, bline]'*predvar*[aline, bline]
       r = rsquared[1]
-      @addNLConstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
+      @NLconstraint(m, aline^2*x[1, k]^2 + bline^2*x[2, k]^2 + c^2 + 2.0*aline*c*x[1, k] + 2.0*aline*bline*x[1, k]*x[2, k] + 2.0*bline*c*x[2, k] >= sigma*r)
     end
   end
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @objective(m, Min, sum(QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1) + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
 
@@ -278,7 +278,7 @@ function mpc_lqr(adjmean, horizon, A, B, b, QQ, RR, ysp, usp, d=zeros(2))
   end
 
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @objective(m, Min, sum(QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1) + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
 
@@ -310,7 +310,7 @@ function mpc_lqr_i(adjmean, horizon, A, B, b, QQ, RR, ysp, usp, d=zeros(2))
   end
 
 
-  @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
+  @objective(m, Min, sum(QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1) + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
 
   status = solve(m)
 
