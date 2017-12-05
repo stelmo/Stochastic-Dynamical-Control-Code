@@ -1,6 +1,12 @@
 # Test the Particle Filter.
 
-using Base.Test
+if VERSION >= v"0.5-"
+    using BaseTestDeprecated
+    const Test = BaseTestDeprecated
+else
+    using Base.Test
+end
+
 using PF
 using Reactor
 

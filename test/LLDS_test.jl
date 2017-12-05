@@ -13,7 +13,13 @@
 # The functions were all compared to his demo program in Matlab:
 # demoLDSTracking.m
 
-using Base.Test
+if VERSION >= v"0.5-"
+    using BaseTestDeprecated
+    const Test = BaseTestDeprecated
+else
+    using Base.Test
+end
+
 
 using LLDS
 

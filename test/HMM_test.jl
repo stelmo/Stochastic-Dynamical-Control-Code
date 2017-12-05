@@ -11,7 +11,13 @@
 # The functions were all compared to their Matlab equivalent.
 # I used: HMMforward, HMMsmooth and HMMviterbi
 
-using Base.Test
+if VERSION >= v"0.5-"
+    using BaseTestDeprecated
+    const Test = BaseTestDeprecated
+else
+    using Base.Test
+end
+
 using HMM
 
 # First get current working directory - to make Travis happy

@@ -2,7 +2,12 @@
 # the solution to Matlab's solution.
 
 import Reactor
-using Base.Test
+if VERSION >= v"0.5-"
+    using BaseTestDeprecated
+    const Test = BaseTestDeprecated
+else
+    using Base.Test
+end
 
 dircontent = readdir()
 if "state_solutions.csv" in dircontent

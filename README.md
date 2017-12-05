@@ -11,6 +11,8 @@ Code for M. Eng. in Control Engineering
 6. Mosek (including the optimisation library)
 7. KernelDensity
 
+If running in Julia >= 0.5, you also need BaseTestDeprecated
+
 ## Running the Code:
 
 **It is necessary to run the script `init_sys.jl` in the root directory to load all the external and internal libraries.**
