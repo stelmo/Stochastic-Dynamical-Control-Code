@@ -12,38 +12,38 @@ function mpc_mean(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp, u
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
   m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
 
-  @defVar(m, x[1:2, 1:horizon])
+  @variable(m, x[1:2, 1:horizon])
 
   if limu == 0.0
-    @defVar(m, u[1:horizon-1])
+    @variable(m, u[1:horizon-1])
   else
-    @defVar(m, -limu <= u[1:horizon-1] <= limu)
+    @variable(m, -limu <= u[1:horizon-1] <= limu)
   end
 
-  @addConstraint(m, x[1, 1] == adjmean[1])
-  @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+  @constraint(m, x[1, 1] == adjmean[1])
+  @constraint(m, x[2, 1] == adjmean[2])
+  @constraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @constraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+    @constraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @constraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints
   if revconstr
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
     end
   else
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
     end
   end
 
   for k=2:horizon-1
-    @addConstraint(m, u[k]-u[k-1] <= limstepu)
-    @addConstraint(m, u[k]-u[k-1] >= -limstepu)
+    @constraint(m, u[k]-u[k-1] <= limstepu)
+    @constraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
   @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
@@ -64,38 +64,38 @@ function mpc_mean_i(adjmean, horizon, A, B, b, aline, bline, cline, QQ, RR, ysp,
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
 
-  @defVar(m, x[1:2, 1:horizon])
+  @variable(m, x[1:2, 1:horizon])
 
   if limu == 0.0
-    @defVar(m, u[1:horizon-1])
+    @variable(m, u[1:horizon-1])
   else
-    @defVar(m, -limu <= u[1:horizon-1] <= limu)
+    @variable(m, -limu <= u[1:horizon-1] <= limu)
   end
 
-  @addConstraint(m, x[1, 1] == adjmean[1])
-  @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+  @constraint(m, x[1, 1] == adjmean[1])
+  @constraint(m, x[2, 1] == adjmean[2])
+  @constraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @constraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+    @constraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @constraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints
   if revconstr
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
     end
   else
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
     end
   end
 
   for k=2:horizon-1
-    @addConstraint(m, u[k]-u[k-1] <= limstepu)
-    @addConstraint(m, u[k]-u[k-1] >= -limstepu)
+    @constraint(m, u[k]-u[k-1] <= limstepu)
+    @constraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
   @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
@@ -115,33 +115,33 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
   m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
 
-  @defVar(m, x[1:2, 1:horizon])
+  @variable(m, x[1:2, 1:horizon])
 
   if limu == 0.0
-    @defVar(m, u[1:horizon-1])
+    @variable(m, u[1:horizon-1])
   else
-    @defVar(m, -limu <= u[1:horizon-1] <= limu)
+    @variable(m, -limu <= u[1:horizon-1] <= limu)
   end
 
 
-  @addConstraint(m, x[1, 1] == adjmean[1])
-  @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+  @constraint(m, x[1, 1] == adjmean[1])
+  @constraint(m, x[2, 1] == adjmean[2])
+  @constraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @constraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+    @constraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @constraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints
   if revconstr
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
     end
   else
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
     end
   end
 
@@ -155,7 +155,7 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
     for k=2:horizon # don't do anything about k=1
       rsquared = [aline, bline]'*predvar*[aline, bline]
       r = sqrt(sigma*rsquared[1])
-      @addConstraint(m, swapcon*(cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2])) >= r)
+      @constraint(m, swapcon*(cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2])) >= r)
       predvar = Q + A*predvar*transpose(A)
     end
   else
@@ -163,13 +163,13 @@ function mpc_var(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, RR,
     for k=2:horizon # don't do anything about k=1
       rsquared = [aline, bline]'*predvar*[aline, bline]
       r = sqrt(sigma*rsquared[1])
-      @addConstraint(m, swapcon*(cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2])) >= r)
+      @constraint(m, swapcon*(cline + aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2])) >= r)
     end
   end
 
   for k=2:horizon-1
-    @addConstraint(m, u[k]-u[k-1] <= limstepu)
-    @addConstraint(m, u[k]-u[k-1] >= -limstepu)
+    @constraint(m, u[k]-u[k-1] <= limstepu)
+    @constraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
   @setObjective(m, Min, sum{QQ[1]*x[1, i]^2 - 2.0*ysp*QQ[1]*x[1, i] + RR*u[i]^2 - 2.0*usp*RR*u[i], i=1:horizon-1} + QQ[1]*x[1, horizon]^2 - 2.0*QQ[1]*ysp*x[1, horizon])
@@ -189,39 +189,39 @@ function mpc_var_i(adjmean, fcovar, horizon, A, B, b, aline, bline, cline, QQ, R
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
 
-  @defVar(m, x[1:2, 1:horizon])
+  @variable(m, x[1:2, 1:horizon])
 
   if limu == 0.0
-    @defVar(m, u[1:horizon-1])
+    @variable(m, u[1:horizon-1])
   else
-    @defVar(m, -limu <= u[1:horizon-1] <= limu)
+    @variable(m, -limu <= u[1:horizon-1] <= limu)
   end
 
 
-  @addConstraint(m, x[1, 1] == adjmean[1])
-  @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+  @constraint(m, x[1, 1] == adjmean[1])
+  @constraint(m, x[2, 1] == adjmean[2])
+  @constraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @constraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+    @constraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @constraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
   # # add state constraints
   if revconstr
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) <= -1.0*cline)
     end
   else
     for k=2:horizon # can't do anything about k=1
-      @addConstraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
+      @constraint(m, aline*(x[1, k] + b[1]) + bline*(x[2, k] + b[2]) >= -1.0*cline)
     end
   end
 
   for k=2:horizon-1
-    @addConstraint(m, u[k]-u[k-1] <= limstepu)
-    @addConstraint(m, u[k]-u[k-1] >= -limstepu)
+    @constraint(m, u[k]-u[k-1] <= limstepu)
+    @constraint(m, u[k]-u[k-1] >= -limstepu)
   end
 
   # add distribution constraints
@@ -264,17 +264,17 @@ function mpc_lqr(adjmean, horizon, A, B, b, QQ, RR, ysp, usp, d=zeros(2))
   # m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
   m = Model(solver=MosekSolver(LOG=0)) # chooses optimiser by itself
 
-  @defVar(m, x[1:2, 1:horizon])
-  @defVar(m, u[1:horizon-1])
+  @variable(m, x[1:2, 1:horizon])
+  @variable(m, u[1:horizon-1])
 
-  @addConstraint(m, x[1, 1] == adjmean[1])
-  @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+  @constraint(m, x[1, 1] == adjmean[1])
+  @constraint(m, x[2, 1] == adjmean[2])
+  @constraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @constraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+    @constraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @constraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
 
@@ -296,17 +296,17 @@ function mpc_lqr_i(adjmean, horizon, A, B, b, QQ, RR, ysp, usp, d=zeros(2))
 
   m = Model(solver=IpoptSolver(print_level=0)) # chooses optimiser by itself
 
-  @defVar(m, x[1:2, 1:horizon])
-  @defVar(m, u[1:horizon-1])
+  @variable(m, x[1:2, 1:horizon])
+  @variable(m, u[1:horizon-1])
 
-  @addConstraint(m, x[1, 1] == adjmean[1])
-  @addConstraint(m, x[2, 1] == adjmean[2])
-  @addConstraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
-  @addConstraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
+  @constraint(m, x[1, 1] == adjmean[1])
+  @constraint(m, x[2, 1] == adjmean[2])
+  @constraint(m, x[1, 2] == A[1,1]*adjmean[1] + A[1,2]*adjmean[2] + B[1]*u[1] + d[1])
+  @constraint(m, x[2, 2] == A[2,1]*adjmean[1] + A[2,2]*adjmean[2] + B[2]*u[1] + d[2])
 
   for k=3:horizon
-    @addConstraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
-    @addConstraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
+    @constraint(m, x[1, k] == A[1,1]*x[1, k-1] + A[1,2]*x[2, k-1] + B[1]*u[k-1] + d[1])
+    @constraint(m, x[2, k] == A[2,1]*x[1, k-1] + A[2,2]*x[2, k-1] + B[2]*u[k-1] + d[2])
   end
 
 
